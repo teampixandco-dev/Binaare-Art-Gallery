@@ -67,10 +67,8 @@ export default function Home() {
         const innerpanel = panel.querySelector<HTMLElement>(".section-inner");
         if (!innerpanel) return;
 
-        const heroContent = panel.querySelector<HTMLElement>(".hero-panel-content");
         const isHero = panel.id === "section-3-1219";
-        const scrollTarget =
-          isHero && heroContent ? heroContent : innerpanel;
+        const scrollTarget = innerpanel;
 
         const panelHeight = innerpanel.offsetHeight;
         const windowHeight = window.innerHeight;
@@ -96,19 +94,14 @@ export default function Home() {
         });
 
         if (isHero) {
+          // Only parallax the video/grain layer — hero copy stays fixed (no coupling to scroll below).
           const upward =
             difference > 0
               ? difference
               : Math.min(240, Math.round(windowHeight * 0.24));
-          tl.to(scrollTarget, { y: -upward, ease: "none", duration: 1 }, 0);
-          // Background layer scrolls at half the text's speed → "stays stuck" longer.
           const bgLayer = panel.querySelector<HTMLElement>("#hero-scroll-layer");
           if (bgLayer) {
-            tl.to(
-              bgLayer,
-              { y: -upward * 0.5, ease: "none", duration: 1 },
-              0
-            );
+            tl.to(bgLayer, { y: -upward, ease: "none", duration: 1 }, 0);
           }
         } else if (difference > 0) {
           tl.to(scrollTarget, { y: -difference, ease: "none", duration: 1 }, 0);
@@ -242,7 +235,7 @@ export default function Home() {
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
           </motion.div>
 
-          {/* Hero Content — GSAP scroll layer (moves up while section is pinned) */}
+          {/* Hero copy — static; scroll parallax applies only to #hero-scroll-layer */}
           <div className="hero-panel-content relative z-10 w-full px-8 lg:px-16 pb-16 lg:pb-24">
             <motion.div
               className="mx-auto flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8"
