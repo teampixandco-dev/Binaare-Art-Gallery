@@ -7,8 +7,9 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 import { ArrowRight } from "lucide-react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const featuredWorks = [
   { src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop", title: "Whispers of Stillness", medium: "Acrylic on Canvas" },
@@ -19,12 +20,39 @@ const featuredWorks = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
+const HERO_BG_IMAGE =
+  "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=1080&fit=crop";
+
 export default function Home() {
   useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
+    gsap.registerPlugin(ScrollTrigger);
+
+    // Hero background parallax (tween the layer that actually has background-image)
+    gsap.to("#hero-parallax-bg", {
+      backgroundPosition: "50% 100%",
+      ease: "none",
+      scrollTrigger: {
+        trigger: "#section-3-1219",
+        start: "top bottom",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+
+    gsap.to("#section-10-1219", {
+      backgroundPosition: "50% 0%",
+      ease: "none",
+      scrollTrigger: {
+        trigger: "#section-10-1219",
+        start: "top bottom",
+        end: "bottom top",
+        scrub: 1
+      }
+    });
+
+    return () => {
+      ScrollTrigger.getAll().forEach(t => t.kill());
+    };
   }, []);
 
   return (
@@ -32,40 +60,57 @@ export default function Home() {
       <Navbar />
 
       {/* ═══ HERO ═══ */}
-      <section className="relative h-screen w-full flex items-end overflow-hidden">
+      <section className="relative h-screen w-full flex items-end overflow-hidden" id="section-3-1219">
         {/* Background Image */}
         <motion.div
+          id="hero-parallax-bg"
           className="absolute inset-0 z-0"
           initial={{ scale: 1.15, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 2.5, ease: [0.16, 1, 0.3, 1] }}
+          style={{
+            backgroundImage: `url('${HERO_BG_IMAGE}')`,
+            backgroundSize: "cover",
+            backgroundPosition: "50% 0%",
+          }}
         >
-          <Image
-            src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=1080&fit=crop"
-            alt="Binaare Art Gallery hero"
-            fill
-            priority
-            className="object-cover"
-          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
         </motion.div>
 
         {/* Hero Content */}
-        <div className="relative z-10 w-full px-8 md:px-16 pb-16 md:pb-24">
-          <div className="max-w-[1400px] mx-auto flex flex-col md:flex-row md:items-end md:justify-between gap-8">
-            {/* Left */}
+        <div className="relative z-10 w-full px-8 lg:px-16 pb-16 lg:pb-24">
+          <div className="mx-auto flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
+            {/* Left — text masking (background clipped to glyphs) */}
             <motion.div
-              className="text-white"
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1.8, delay: 0.6, ease }}
             >
-              <p className="text-[10px] md:text-xs tracking-[0.3em] uppercase opacity-80 font-semibold mb-4">
+              <p
+                className="text-[10px] lg:text-xs tracking-[0.3em] uppercase font-semibold mb-4"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, var(--accent-light) 55%, var(--accent) 100%)",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  WebkitTextFillColor: "transparent",
+                }}
+              >
                 Colors of Love
               </p>
               <h1
                 className="font-serif leading-[1.08] uppercase font-light"
-                style={{ fontSize: "clamp(2.5rem, 6vw, 4.5rem)" }}
+                style={{
+                  fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
+                  backgroundImage: `url('${HERO_BG_IMAGE}')`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center center",
+                  WebkitBackgroundClip: "text",
+                  backgroundClip: "text",
+                  color: "transparent",
+                  WebkitTextFillColor: "transparent",
+                }}
               >
                 Binaare <br /> Art Gallery
               </h1>
@@ -93,14 +138,14 @@ export default function Home() {
 
       {/* ═══ ABOUT PREVIEW ═══ */}
       <SectionReveal>
-        <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem" }}>
-          <div className="flex flex-col md:flex-row gap-12 md:gap-20 items-start">
-            <div className="md:w-1/2">
+        <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem", background: "var(--bg)" }}>
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
+            <div className="lg:w-1/2">
               <p className="section-label">The Gallery</p>
               <h2 className="section-title">Where Art Is Felt</h2>
               <div className="section-divider" />
             </div>
-            <div className="md:w-1/2">
+            <div className="lg:w-1/2">
               <p className="section-text" style={{ marginBottom: "1.5rem" }}>
                 Binaare Art Gallery is a contemplative creative space where emotion finds form
                 and colour becomes a language of the soul. Rooted in the philosophy of Colors of
@@ -135,8 +180,8 @@ export default function Home() {
               <motion.div
                 key={work.title}
                 className="artwork-card"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ y: 50 }}
+                whileInView={{ y: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.9, delay: i * 0.12, ease }}
               >
@@ -168,9 +213,9 @@ export default function Home() {
 
       {/* ═══ ARTIST PREVIEW ═══ */}
       <SectionReveal>
-        <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem" }}>
-          <div className="flex flex-col md:flex-row gap-12 items-center">
-            <div className="md:w-5/12">
+        <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem", background: "var(--bg)" }}>
+          <div className="flex flex-col lg:flex-row gap-12 items-center">
+            <div className="lg:w-5/12">
               <div style={{ overflow: "hidden", borderRadius: "2px" }}>
                 <Image
                   src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=750&fit=crop"
@@ -181,7 +226,7 @@ export default function Home() {
                 />
               </div>
             </div>
-            <div className="md:w-7/12">
+            <div className="lg:w-7/12">
               <p className="section-label">The Artist</p>
               <h2 className="section-title">Binari Gamage</h2>
               <div className="section-divider" />
@@ -206,20 +251,20 @@ export default function Home() {
 
       {/* ═══ QUOTE BANNER ═══ */}
       <section
-        className="relative flex items-center justify-center text-center"
+        id="section-10-1219"
+        className="relative flex items-center justify-center text-center overflow-hidden"
         style={{
           minHeight: "60vh",
           backgroundImage: "url('https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop')",
           backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundAttachment: "fixed",
+          backgroundPosition: "50% 100%",
         }}
       >
         <div className="absolute inset-0" style={{ background: "rgba(26,26,26,0.65)" }} />
         <motion.div
           className="relative z-10 px-8"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial={{ y: 30 }}
+          whileInView={{ y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 1.2, ease }}
         >
@@ -235,7 +280,7 @@ export default function Home() {
 
       {/* ═══ CTA SECTION ═══ */}
       <SectionReveal>
-        <section className="gallery-section text-center" style={{ paddingTop: "6rem", paddingBottom: "6rem" }}>
+        <section className="gallery-section text-center" style={{ paddingTop: "6rem", paddingBottom: "6rem", background: "var(--bg)" }}>
           <p className="section-label">Begin Your Journey</p>
           <h2 className="section-title">Discover Colors of Love</h2>
           <p className="section-text" style={{ margin: "0 auto 2.5rem", textAlign: "center" }}>

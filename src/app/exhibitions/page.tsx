@@ -1,20 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 
 export default function ExhibitionsPage() {
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -44,8 +36,8 @@ export default function ExhibitionsPage() {
       <section style={{ background: "var(--bg-alt)", padding: "6rem 2rem" }}>
         <SectionReveal>
           <div style={{ maxWidth: "1000px", margin: "0 auto" }}>
-            <div className="flex flex-col md:flex-row gap-16">
-              <div className="md:w-1/2">
+            <div className="flex flex-col lg:flex-row gap-16">
+              <div className="lg:w-1/2">
                 <p className="section-label">Our Vision</p>
                 <h2 className="section-title">Intimate Emotional Experiences</h2>
                 <div className="section-divider" />
@@ -57,7 +49,7 @@ export default function ExhibitionsPage() {
                   art to be experienced rather than simply viewed.
                 </p>
               </div>
-              <div className="md:w-1/2">
+              <div className="lg:w-1/2">
                 <p className="section-label">The Experience</p>
                 <h2 className="section-title">Beyond Traditional Display</h2>
                 <div className="section-divider" />
@@ -84,7 +76,7 @@ export default function ExhibitionsPage() {
             private viewing experiences, we would love to hear from you.
           </p>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5" style={{ marginBottom: "3rem" }}>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" style={{ marginBottom: "3rem" }}>
             <div className="exhibit-cta">
               <div style={{ fontSize: "2rem", marginBottom: "0.8rem" }}>✉</div>
               <h4>Join the Exhibition List</h4>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -8,7 +8,6 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 
 const collections = [
   { title: "Acrylic Paintings", desc: "Bold expressions of emotion through vibrant acrylic layers", src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=750&fit=crop" },
@@ -29,13 +28,6 @@ const shopItems = [
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function ShopPage() {
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -67,8 +59,8 @@ export default function ShopPage() {
               <motion.div
                 key={col.title}
                 className="collection-card"
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ y: 30 }}
+                whileInView={{ y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.7, delay: i * 0.1, ease }}
               >
@@ -93,8 +85,8 @@ export default function ShopPage() {
               <motion.div
                 key={item.title}
                 className="artwork-card"
-                initial={{ opacity: 0, y: 40 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ y: 40 }}
+                whileInView={{ y: 0 }}
                 viewport={{ once: true, margin: "-50px" }}
                 transition={{ duration: 0.8, delay: i * 0.08, ease }}
               >

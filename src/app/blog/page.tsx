@@ -1,13 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
@@ -30,13 +29,6 @@ const blogPreviews = [
 ];
 
 export default function BlogPage() {
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -74,13 +66,13 @@ export default function BlogPage() {
 
       {/* Blog Previews */}
       <section className="gallery-section" style={{ paddingTop: "2rem" }}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {blogPreviews.map((post, i) => (
             <motion.div
               key={post.title}
               className="blog-card"
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ y: 30 }}
+              whileInView={{ y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.7, delay: i * 0.12, ease }}
             >

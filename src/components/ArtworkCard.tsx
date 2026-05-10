@@ -15,8 +15,8 @@ export default function ArtworkCard({ src, title, medium, index = 0 }: ArtworkCa
   return (
     <motion.div
       className="artwork-card"
-      initial={{ opacity: 0, y: 40 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ y: 40 }}
+      whileInView={{ y: 0 }}
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.8, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
     >

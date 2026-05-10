@@ -22,7 +22,6 @@ export default function SectionReveal({ children, className = "", delay = 0 }: S
 
     const ctx = gsap.context(() => {
       gsap.from(ref.current, {
-        opacity: 0,
         y: 50,
         duration: 1.2,
         delay,
@@ -30,7 +29,8 @@ export default function SectionReveal({ children, className = "", delay = 0 }: S
         scrollTrigger: {
           trigger: ref.current,
           start: "top 85%",
-          toggleActions: "play none none reverse",
+          end: "bottom top",
+          scrub: 1
         },
       });
     }, ref);

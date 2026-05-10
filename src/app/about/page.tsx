@@ -1,21 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 
 export default function AboutPage() {
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -27,8 +19,8 @@ export default function AboutPage() {
 
       <SectionReveal>
         <section className="gallery-section" style={{ paddingTop: "6rem" }}>
-          <div className="flex flex-col md:flex-row gap-12 md:gap-20">
-            <div className="md:w-1/2">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+            <div className="lg:w-1/2">
               <p className="section-label">Our Story</p>
               <h2 className="section-title">Colors of Love</h2>
               <div className="section-divider" />
@@ -52,7 +44,7 @@ export default function AboutPage() {
                 connection with life experience.
               </p>
             </div>
-            <div className="md:w-1/2">
+            <div className="lg:w-1/2">
               <Image
                 src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&h=900&fit=crop"
                 alt="Gallery atmosphere"
@@ -67,8 +59,8 @@ export default function AboutPage() {
 
       <SectionReveal>
         <section className="gallery-section">
-          <div className="flex flex-col md:flex-row gap-12 md:gap-20">
-            <div className="md:w-1/2 order-2 md:order-1">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+            <div className="lg:w-1/2 order-2 lg:order-1">
               <Image
                 src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=700&h=900&fit=crop"
                 alt="Artistic journey"
@@ -77,7 +69,7 @@ export default function AboutPage() {
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
               />
             </div>
-            <div className="md:w-1/2 order-1 md:order-2">
+            <div className="lg:w-1/2 order-1 lg:order-2">
               <p className="section-label">The Artistic Voice</p>
               <h2 className="section-title">Sensitivity, Depth &amp; Emotional Restraint</h2>
               <div className="section-divider" />

@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
-import Lenis from "lenis";
 
 const artworks = [
   { src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop", title: "Whispers of Stillness", medium: "Acrylic" },
@@ -29,13 +28,6 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export default function GalleryPage() {
   const [filter, setFilter] = useState("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
-
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
 
   const filtered = filter === "All" ? artworks : artworks.filter((a) => a.medium === filter);
 
@@ -71,9 +63,9 @@ export default function GalleryPage() {
                 key={work.title}
                 className="artwork-card"
                 layout
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
+                initial={{ y: 30 }}
+                animate={{ y: 0 }}
+                exit={{ scale: 0.95 }}
                 transition={{ duration: 0.6, delay: i * 0.05, ease }}
                 onClick={() => setLightbox(artworks.indexOf(work))}
               >

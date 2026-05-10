@@ -1,20 +1,12 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 
 export default function ContactPage() {
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -26,9 +18,9 @@ export default function ContactPage() {
 
       <SectionReveal>
         <section className="gallery-section">
-          <div className="flex flex-col md:flex-row gap-16">
+          <div className="flex flex-col lg:flex-row gap-16">
             {/* Left — Form */}
-            <div className="md:w-7/12">
+            <div className="lg:w-7/12">
               <p className="section-label">Get in Touch</p>
               <h2 className="section-title">Send Us a Message</h2>
               <div className="section-divider" style={{ marginBottom: "2rem" }} />
@@ -57,7 +49,7 @@ export default function ContactPage() {
             </div>
 
             {/* Right — Info */}
-            <div className="md:w-5/12">
+            <div className="lg:w-5/12">
               <div style={{ background: "var(--bg-alt)", padding: "2.5rem", marginBottom: "2rem" }}>
                 <p className="section-label">Connect with Us</p>
                 <h3 className="font-serif text-xl mb-4">Contact Details</h3>

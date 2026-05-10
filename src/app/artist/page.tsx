@@ -1,21 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
-import Lenis from "lenis";
 
 export default function ArtistPage() {
-  useEffect(() => {
-    const lenis = new Lenis({ duration: 2.2, smoothWheel: true });
-    function raf(time: number) { lenis.raf(time); requestAnimationFrame(raf); }
-    requestAnimationFrame(raf);
-    return () => lenis.destroy();
-  }, []);
-
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -27,8 +19,8 @@ export default function ArtistPage() {
 
       <SectionReveal>
         <section className="gallery-section" style={{ paddingTop: "6rem" }}>
-          <div className="flex flex-col md:flex-row gap-12 md:gap-20 items-start">
-            <div className="md:w-5/12 md:sticky md:top-32">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
+            <div className="lg:w-5/12 lg:sticky lg:top-32">
               <Image
                 src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=800&fit=crop"
                 alt="Binari Gamage"
@@ -45,7 +37,7 @@ export default function ArtistPage() {
               </div>
             </div>
 
-            <div className="md:w-7/12">
+            <div className="lg:w-7/12">
               <p className="section-label">Biography</p>
               <h2 className="section-title">A Journey of Discovery</h2>
               <div className="section-divider" />
