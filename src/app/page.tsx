@@ -3,7 +3,7 @@
 import React, { useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import SectionReveal from "@/components/SectionReveal";
@@ -20,24 +20,33 @@ const featuredWorks = [
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const HERO_BG_IMAGE = "/hero-bg.png";
+const HERO_VIDEO = "/hero-video-new.mp4";
+const HERO_GRAIN = "/grain.png";
+
+const heroStagger: Variants = {
+  hidden: {},
+  show: {
+    transition: {
+      delayChildren: 0.45,
+      staggerChildren: 0.14,
+    },
+  },
+};
+
+const heroItem: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: {
+    opacity: 1,
+    y: 0,
+    transition: { type: "spring", stiffness: 130, damping: 18, mass: 0.9 },
+  },
+};
 
 export default function Home() {
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
     const ctx = gsap.context(() => {
-      gsap.to("#hero-parallax-bg", {
-        backgroundPosition: "50% 100%",
-        ease: "none",
-        scrollTrigger: {
-          trigger: "#section-3-1219",
-          start: "top bottom",
-          end: "bottom top",
-          scrub: 1,
-        },
-      });
-
       gsap.to("#section-10-1219", {
         backgroundPosition: "50% 0%",
         ease: "none",
@@ -49,10 +58,12 @@ export default function Home() {
         },
       });
 
-      // Pin + scrub on `.section-move` (hero, about, featured collection).
+      // Pin + scrub on `.section-move` (hero, about). Featured collection is excluded.
       const panels = gsap.utils.toArray<HTMLElement>(".section-move");
 
       panels.forEach((panel) => {
+        if (panel.id === "section-featured-collection") return;
+
         const innerpanel = panel.querySelector<HTMLElement>(".section-inner");
         if (!innerpanel) return;
 
@@ -90,6 +101,15 @@ export default function Home() {
               ? difference
               : Math.min(240, Math.round(windowHeight * 0.24));
           tl.to(scrollTarget, { y: -upward, ease: "none", duration: 1 }, 0);
+          // Background layer scrolls at half the text's speed → "stays stuck" longer.
+          const bgLayer = panel.querySelector<HTMLElement>("#hero-scroll-layer");
+          if (bgLayer) {
+            tl.to(
+              bgLayer,
+              { y: -upward * 0.5, ease: "none", duration: 1 },
+              0
+            );
+          }
         } else if (difference > 0) {
           tl.to(scrollTarget, { y: -difference, ease: "none", duration: 1 }, 0);
         } else {
@@ -109,6 +129,63 @@ export default function Home() {
     };
   }, []);
 
+  // Hero mouse parallax — video drifts subtly, grain drifts more.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!window.matchMedia("(hover: hover)").matches) return;
+
+    const hero = document.getElementById("section-3-1219");
+    const mBg = document.getElementById("hero-mouse-bg");
+    const mGrain = document.getElementById("hero-mouse-grain");
+    if (!hero || !mBg || !mGrain) return;
+
+    let tx = 0,
+      ty = 0,
+      cx = 0,
+      cy = 0;
+    let raf = 0;
+    let active = false;
+
+    const onMove = (e: MouseEvent) => {
+      const rect = hero.getBoundingClientRect();
+      tx = ((e.clientX - rect.left) / rect.width - 0.5) * 2;
+      ty = ((e.clientY - rect.top) / rect.height - 0.5) * 2;
+      if (!active) {
+        active = true;
+        raf = requestAnimationFrame(tick);
+      }
+    };
+
+    const onLeave = () => {
+      tx = 0;
+      ty = 0;
+    };
+
+    const tick = () => {
+      cx += (tx - cx) * 0.06;
+      cy += (ty - cy) * 0.06;
+      mBg.style.transform = `translate3d(${cx * -10}px, ${cy * -10}px, 0)`;
+      mGrain.style.transform = `translate3d(${cx * -22}px, ${cy * -22}px, 0)`;
+
+      if (Math.abs(cx - tx) < 0.001 && Math.abs(cy - ty) < 0.001 && tx === 0 && ty === 0) {
+        active = false;
+        return;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+
+    hero.addEventListener("mousemove", onMove);
+    hero.addEventListener("mouseleave", onLeave);
+
+    return () => {
+      hero.removeEventListener("mousemove", onMove);
+      hero.removeEventListener("mouseleave", onLeave);
+      cancelAnimationFrame(raf);
+      mBg.style.transform = "";
+      mGrain.style.transform = "";
+    };
+  }, []);
+
   return (
     <main className="relative min-h-screen overflow-x-hidden" style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -119,32 +196,64 @@ export default function Home() {
         id="section-3-1219"
       >
         <div className="section-inner relative flex min-h-screen w-full flex-col justify-end overflow-hidden">
-          {/* Background Image */}
+          {/* Background Video — layered parallax (scroll + mouse) */}
           <motion.div
             id="hero-parallax-bg"
-            className="absolute inset-0 z-0"
-            initial={{ scale: 1.15, opacity: 0 }}
-            animate={{ scale: 1.15, opacity: 1 }}
-            transition={{ duration: 2.5, ease: [0.16, 1, 0.3, 1] }}
-            style={{
-              backgroundImage: `url('${HERO_BG_IMAGE}')`,
-              backgroundSize: "cover",
-              backgroundPosition: "50% 0%",
+            className="absolute inset-0 z-0 overflow-hidden"
+            initial={{ scale: 0.95, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              opacity: { duration: 1.6, ease: [0.16, 1, 0.3, 1] },
+              scale: { duration: 2.4, ease: [0.16, 1, 0.3, 1] },
             }}
           >
+            {/* Scroll layer — moves at 0.5x scroll speed (handled by GSAP). */}
+            <div id="hero-scroll-layer" className="absolute inset-0">
+              {/* Mouse-parallax wrapper for the video (subtle drift). */}
+              <div
+                id="hero-mouse-bg"
+                className="absolute"
+                style={{ top: "-6%", left: "-6%", right: "-6%", bottom: "-6%" }}
+              >
+                <video
+                  className="absolute inset-0 h-full w-full object-cover"
+                  src={HERO_VIDEO}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                />
+              </div>
+              {/* Grain texture — drifts more than the video for layered feel. */}
+              <div
+                id="hero-mouse-grain"
+                aria-hidden
+                className="pointer-events-none absolute mix-blend-overlay"
+                style={{
+                  inset: 0,
+                  backgroundImage: `url("${HERO_GRAIN}")`,
+                  backgroundRepeat: "repeat",
+                  backgroundSize: "240px 240px",
+                }}
+              />
+            </div>
+            {/* Foreground gradient — stays anchored. */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-black/10" />
           </motion.div>
 
           {/* Hero Content — GSAP scroll layer (moves up while section is pinned) */}
           <div className="hero-panel-content relative z-10 w-full px-8 lg:px-16 pb-16 lg:pb-24">
-            <div className="mx-auto flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-              {/* Left — text masking (background clipped to glyphs) */}
-              <motion.div
-                initial={{ opacity: 0, x: -40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1.8, delay: 0.6, ease }}
-              >
-                <p
+            <motion.div
+              className="mx-auto flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8"
+              variants={heroStagger}
+              initial="hidden"
+              animate="show"
+            >
+              {/* Left — eyebrow + headline */}
+              <div>
+                <motion.p
+                  variants={heroItem}
                   className="text-[10px] lg:text-xs tracking-[0.3em] uppercase font-semibold mb-4"
                   style={{
                     backgroundImage:
@@ -156,41 +265,35 @@ export default function Home() {
                   }}
                 >
                   Colors of Love
-                </p>
-                <h1
-                  className="font-serif leading-[1.08] uppercase font-light"
+                </motion.p>
+                <motion.h1
+                  variants={heroItem}
+                  className="font-serif leading-[1.08] uppercase font-light text-white"
                   style={{
                     fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
-                    backgroundImage: `url('${HERO_BG_IMAGE}')`,
-                    backgroundSize: "cover",
-                    backgroundPosition: "center center",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
-                    WebkitTextFillColor: "transparent",
                   }}
                 >
                   Binaare <br /> Art Gallery
-                </h1>
-              </motion.div>
+                </motion.h1>
+              </div>
 
-              {/* Right */}
-              <motion.div
-                className="text-white max-w-[380px]"
-                initial={{ opacity: 0, x: 40 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ duration: 1.8, delay: 0.9, ease }}
-              >
-                <p className="text-sm leading-relaxed opacity-85 mb-6">
+              {/* Right — subtext + CTA */}
+              <div className="text-white max-w-[380px]">
+                <motion.p
+                  variants={heroItem}
+                  className="text-sm leading-relaxed opacity-85 mb-6"
+                >
                   Moving with Emotion, Reflection, Inner Peace, Love, and Presence.
                   A contemplative creative space where emotion finds form and colour
                   becomes a language of the soul.
-                </p>
-                <Link href="/gallery" className="btn-white">
-                  Explore Gallery <ArrowRight className="w-4 h-4" />
-                </Link>
-              </motion.div>
-            </div>
+                </motion.p>
+                <motion.div variants={heroItem}>
+                  <Link href="/gallery" className="btn-white btn-arrow">
+                    Explore Gallery <ArrowRight className="w-4 h-4 btn-arrow-icon" />
+                  </Link>
+                </motion.div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -214,8 +317,8 @@ export default function Home() {
                 the work invites viewers to pause, reflect, and connect with what is often felt
                 but rarely spoken.
               </p>
-              <Link href="/about" className="btn-outline">
-                Learn More <ArrowRight className="w-3.5 h-3.5" />
+              <Link href="/about" className="btn-outline btn-arrow">
+                Learn More <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
               </Link>
             </div>
           </div>
@@ -223,7 +326,7 @@ export default function Home() {
       </section>
       <SectionReveal>
         {/* ═══ FEATURED COLLECTION (Parallax Gallery) ═══ */}
-        <section style={{ background: "var(--bg-alt)", padding: "6rem 0" }}>
+        <section id="section-featured-collection" style={{ background: "var(--bg-alt)", padding: "6rem 0" }}>
           <div className="gallery-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
             <div className="text-center" style={{ marginBottom: "4rem" }}>
               <p className="section-label">Featured Collection</p>
@@ -259,8 +362,8 @@ export default function Home() {
             </div>
 
             <div className="text-center" style={{ marginTop: "3rem" }}>
-              <Link href="/gallery" className="btn-primary">
-                View Full Gallery <ArrowRight className="w-4 h-4" />
+              <Link href="/gallery" className="btn-primary btn-arrow">
+                View Full Gallery <ArrowRight className="w-4 h-4 btn-arrow-icon" />
               </Link>
             </div>
           </div>
@@ -296,8 +399,8 @@ export default function Home() {
                 art becomes a personal language — one that speaks of transformation, presence,
                 and the quiet unfolding of self.
               </p>
-              <Link href="/artist" className="btn-outline">
-                Read Full Story <ArrowRight className="w-3.5 h-3.5" />
+              <Link href="/artist" className="btn-outline btn-arrow">
+                Read Full Story <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
               </Link>
             </div>
           </div>

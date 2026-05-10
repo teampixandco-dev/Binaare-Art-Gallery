@@ -52,7 +52,9 @@ export default function Footer() {
       </div>
 
       <div className="footer-bottom">
-        <span>Copyright {new Date().getFullYear()}, Binaare</span>
+        <span>
+          Copyright {new Date().getFullYear()}, Binaare · PIXANDCO
+        </span>
         <span style={{ fontStyle: "italic", fontFamily: "var(--font-serif)" }}>
           Colors of Love
         </span>

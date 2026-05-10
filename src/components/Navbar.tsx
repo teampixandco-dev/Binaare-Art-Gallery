@@ -54,10 +54,10 @@ export default function Navbar() {
         <div className="nav-right">
           <div className="nav-actions">
             <button aria-label="Search" className="nav-action-btn">
-              <Search className="w-4 h-4" />
+              <Search className="w-5 h-5" />
             </button>
             <Link href="/shop" aria-label="Shop" className="nav-action-link">
-              <ShoppingBag className="w-4 h-4" />
+              <ShoppingBag className="w-5 h-5" />
             </Link>
           </div>
 
