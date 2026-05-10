@@ -82,6 +82,7 @@ export default function BlogPage() {
                   alt={post.title}
                   width={600}
                   height={400}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   style={{ width: "100%", height: "100%", objectFit: "cover", transition: "transform 0.6s ease" }}
                 />
               </div>

@@ -1,17 +1,21 @@
 import type { Metadata } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import { Cormorant_Garamond, DM_Sans } from "next/font/google";
 import "./globals.css";
 import SmoothScroll from "@/components/SmoothScroll";
 import ScrollToTop from "@/components/ScrollToTop";
+import Preloader from "@/components/Preloader";
+import Providers from "@/components/Providers";
 
-const inter = Inter({
-  variable: "--font-inter",
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
-const playfair = Playfair_Display({
-  variable: "--font-playfair",
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
   subsets: ["latin"],
+  weight: ["400", "500", "600"],
 });
 
 export const metadata: Metadata = {
@@ -26,14 +30,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="h-full antialiased">
-      <body
-        className={`${inter.variable} ${playfair.variable} font-sans min-h-full flex flex-col`}
-      >
+    <html
+      lang="en"
+      className={`${dmSans.variable} ${cormorant.variable} h-full antialiased`}
+    >
+      <body className="font-sans min-h-full flex flex-col">
+        <Preloader />
         <div className="noise-overlay" />
         <SmoothScroll>
-          {children}
-          <ScrollToTop />
+          <Providers>
+            {children}
+            <ScrollToTop />
+          </Providers>
         </SmoothScroll>
       </body>
     </html>

@@ -26,6 +26,7 @@ export default function ArtworkCard({ src, title, medium, index = 0 }: ArtworkCa
           alt={title}
           width={600}
           height={800}
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="artwork-card-img"
           style={{ width: "100%", height: "auto" }}
         />

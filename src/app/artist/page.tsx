@@ -26,6 +26,7 @@ export default function ArtistPage() {
                 alt="Binari Gamage"
                 width={600}
                 height={800}
+                sizes="(max-width: 1024px) 100vw, 42vw"
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
               />
               <div style={{ marginTop: "1.5rem", padding: "1.5rem", background: "var(--bg-alt)" }}>

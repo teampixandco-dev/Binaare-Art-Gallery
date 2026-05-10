@@ -5,17 +5,11 @@ import {
   useContext,
   useEffect,
   useState,
+  startTransition,
   type ReactNode,
 } from "react";
-import Lenis from "lenis";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-
+import type Lenis from "lenis";
 import "lenis/dist/lenis.css";
-
-if (typeof window !== "undefined") {
-  gsap.registerPlugin(ScrollTrigger);
-}
 
 const LenisContext = createContext<Lenis | null>(null);
 
@@ -27,42 +21,69 @@ export default function SmoothScroll({ children }: { children: ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    const instance = new Lenis({
-      duration: 1.2,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
-      orientation: "vertical",
-      gestureOrientation: "vertical",
-      smoothWheel: true,
-      syncTouch: true,
-      wheelMultiplier: 1,
-      touchMultiplier: 1.75,
-      infinite: false,
-    });
+    let cancelled = false;
+    let idleHandle: number | undefined;
+    let timerHandle: ReturnType<typeof setTimeout> | undefined;
+    let cleanup: (() => void) | undefined;
 
-    setLenis(instance);
+    const init = async () => {
+      const [{ default: LenisCtor }, gsapMod, scrollTriggerMod] = await Promise.all([
+        import("lenis"),
+        import("gsap"),
+        import("gsap/ScrollTrigger"),
+      ]);
 
-    instance.on("scroll", ScrollTrigger.update);
+      if (cancelled) return;
 
-    const raf = (time: number) => {
-      instance.raf(time * 1000);
+      const gsap = gsapMod.default;
+      const ScrollTrigger = scrollTriggerMod.ScrollTrigger;
+      gsap.registerPlugin(ScrollTrigger);
+
+      const instance = new LenisCtor({
+        duration: 1.2,
+        easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+        orientation: "vertical",
+        gestureOrientation: "vertical",
+        smoothWheel: true,
+        syncTouch: true,
+        wheelMultiplier: 1,
+        touchMultiplier: 1.75,
+        infinite: false,
+      });
+
+      startTransition(() => setLenis(instance));
+
+      instance.on("scroll", ScrollTrigger.update);
+
+      const raf = (time: number) => instance.raf(time * 1000);
+      gsap.ticker.add(raf);
+      gsap.ticker.lagSmoothing(0);
+
+      const onResize = () => ScrollTrigger.refresh();
+      window.addEventListener("resize", onResize);
+      requestAnimationFrame(() => ScrollTrigger.refresh());
+
+      cleanup = () => {
+        window.removeEventListener("resize", onResize);
+        instance.destroy();
+        gsap.ticker.remove(raf);
+        startTransition(() => setLenis(null));
+      };
     };
 
-    gsap.ticker.add(raf);
-    gsap.ticker.lagSmoothing(0);
-
-    const onResize = () => {
-      ScrollTrigger.refresh();
-    };
-    window.addEventListener("resize", onResize);
-    requestAnimationFrame(() => {
-      ScrollTrigger.refresh();
-    });
+    if (typeof window.requestIdleCallback === "function") {
+      idleHandle = window.requestIdleCallback(() => init(), { timeout: 1200 });
+    } else {
+      timerHandle = setTimeout(init, 200);
+    }
 
     return () => {
-      window.removeEventListener("resize", onResize);
-      instance.destroy();
-      gsap.ticker.remove(raf);
-      setLenis(null);
+      cancelled = true;
+      if (idleHandle !== undefined && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(idleHandle);
+      }
+      if (timerHandle) clearTimeout(timerHandle);
+      cleanup?.();
     };
   }, []);
 

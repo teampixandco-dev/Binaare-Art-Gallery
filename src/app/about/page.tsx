@@ -50,6 +50,7 @@ export default function AboutPage() {
                 alt="Gallery atmosphere"
                 width={700}
                 height={900}
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
               />
             </div>
@@ -66,6 +67,7 @@ export default function AboutPage() {
                 alt="Artistic journey"
                 width={700}
                 height={900}
+                sizes="(max-width: 1024px) 100vw, 50vw"
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
               />
             </div>

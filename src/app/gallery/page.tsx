@@ -10,7 +10,7 @@ import PageHero from "@/components/PageHero";
 const artworks = [
   { src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop", title: "Whispers of Stillness", medium: "Acrylic" },
   { src: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=900&fit=crop", title: "Emotional Currents", medium: "Mixed Media" },
-  { src: "https://images.unsplash.com/photo-1578301978693-85fa9fd0c369?w=600&h=700&fit=crop", title: "Inner Landscape", medium: "Watercolour" },
+  { src: "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=700&fit=crop", title: "Inner Landscape", medium: "Watercolour" },
   { src: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop", title: "Presence in Gold", medium: "Texture" },
   { src: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600&h=850&fit=crop", title: "Reflections of Peace", medium: "Acrylic" },
   { src: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=750&fit=crop", title: "Memory and Light", medium: "Mixed Media" },
@@ -75,6 +75,7 @@ export default function GalleryPage() {
                     alt={work.title}
                     width={600}
                     height={800}
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                     className="artwork-card-img"
                     style={{ width: "100%", height: "auto" }}
                   />
@@ -117,6 +118,7 @@ export default function GalleryPage() {
                 alt={artworks[lightbox].title}
                 width={1200}
                 height={1600}
+                sizes="80vw"
                 style={{ maxHeight: "85vh", width: "auto", objectFit: "contain" }}
               />
               <div style={{ textAlign: "center", color: "#fff", marginTop: "1rem" }}>

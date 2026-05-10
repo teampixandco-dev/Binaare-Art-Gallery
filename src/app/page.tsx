@@ -14,13 +14,14 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 const featuredWorks = [
   { src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop", title: "Whispers of Stillness", medium: "Acrylic on Canvas" },
   { src: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=800&fit=crop", title: "Emotional Currents", medium: "Mixed Media" },
-  { src: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=800&fit=crop", title: "Inner Landscape", medium: "Watercolour" },
+  { src: "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=800&fit=crop", title: "Inner Landscape", medium: "Watercolour" },
   { src: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop", title: "Presence in Gold", medium: "Textured Abstraction" },
 ];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const HERO_VIDEO = "/hero-video-new.mp4";
+const HERO_VIDEO = "/hero-video-optimized.mp4";
+const HERO_POSTER = "/hero-bg.png";
 const HERO_GRAIN = "/grain.png";
 
 const heroStagger: Variants = {
@@ -193,12 +194,9 @@ export default function Home() {
           <motion.div
             id="hero-parallax-bg"
             className="absolute inset-0 z-0 overflow-hidden"
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              opacity: { duration: 1.6, ease: [0.16, 1, 0.3, 1] },
-              scale: { duration: 2.4, ease: [0.16, 1, 0.3, 1] },
-            }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1.4, ease: [0.16, 1, 0.3, 1] }}
           >
             {/* Scroll layer — moves at 0.5x scroll speed (handled by GSAP). */}
             <div id="hero-scroll-layer" className="absolute inset-0">
@@ -211,11 +209,13 @@ export default function Home() {
                 <video
                   className="absolute inset-0 h-full w-full object-cover"
                   src={HERO_VIDEO}
+                  poster={HERO_POSTER}
                   autoPlay
                   muted
                   loop
                   playsInline
-                  preload="auto"
+                  preload="metadata"
+                  disablePictureInPicture
                 />
               </div>
               {/* Grain texture — drifts more than the video for layered feel. */}
@@ -247,23 +247,15 @@ export default function Home() {
               <div>
                 <motion.p
                   variants={heroItem}
-                  className="text-[10px] lg:text-xs tracking-[0.3em] uppercase font-semibold mb-4"
-                  style={{
-                    backgroundImage:
-                      "linear-gradient(90deg, rgba(255,255,255,0.98) 0%, var(--accent-light) 55%, var(--accent) 100%)",
-                    WebkitBackgroundClip: "text",
-                    backgroundClip: "text",
-                    color: "transparent",
-                    WebkitTextFillColor: "transparent",
-                  }}
+                  className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90"
                 >
                   Colors of Love
                 </motion.p>
                 <motion.h1
                   variants={heroItem}
-                  className="font-serif leading-[1.08] uppercase font-light text-white"
+                  className="font-serif font-medium uppercase tracking-[-0.04em] text-white leading-[1.06]"
                   style={{
-                    fontSize: "clamp(2.5rem, 6vw, 4.5rem)",
+                    fontSize: "clamp(2.75rem, 7vw, 5rem)",
                   }}
                 >
                   Binaare <br /> Art Gallery
@@ -271,10 +263,10 @@ export default function Home() {
               </div>
 
               {/* Right — subtext + CTA */}
-              <div className="text-white max-w-[380px]">
+              <div className="max-w-[26rem] text-white">
                 <motion.p
                   variants={heroItem}
-                  className="text-sm leading-relaxed opacity-85 mb-6"
+                  className="mb-6 text-[15px] leading-[1.68] tracking-[-0.015em] text-white/[0.82]"
                 >
                   Moving with Emotion, Reflection, Inner Peace, Love, and Presence.
                   A contemplative creative space where emotion finds form and colour
@@ -342,6 +334,7 @@ export default function Home() {
                       alt={work.title}
                       width={600}
                       height={800}
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                       className="artwork-card-img"
                       style={{ width: "100%", height: "auto" }}
                     />
@@ -373,6 +366,7 @@ export default function Home() {
                   alt="Binari Gamage - Artist"
                   width={600}
                   height={750}
+                  sizes="(max-width: 1024px) 100vw, 42vw"
                   style={{ width: "100%", height: "auto", objectFit: "cover" }}
                 />
               </div>
@@ -420,8 +414,8 @@ export default function Home() {
           transition={{ duration: 1.2, ease }}
         >
           <p
-            className="font-serif text-white italic leading-relaxed"
-            style={{ fontSize: "clamp(1.4rem, 3vw, 2.2rem)", maxWidth: "800px" }}
+            className="font-serif font-normal italic leading-[1.55] text-white tracking-[-0.02em]"
+            style={{ fontSize: "clamp(1.5rem, 3.2vw, 2.35rem)", maxWidth: "44rem" }}
           >
             &ldquo;Binaare Art Gallery is more than a gallery. It is a space where art is felt,
             where colour remembers, and where emotion becomes presence.&rdquo;

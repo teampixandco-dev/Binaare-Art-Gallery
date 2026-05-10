@@ -4,10 +4,12 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, ShoppingBag } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 const links = [
   { href: "/", label: "Home" },
   { href: "/gallery", label: "Gallery" },
+  { href: "/shop", label: "Shop" },
   { href: "/about", label: "About Us" },
   { href: "/artist", label: "Artist" },
   { href: "/exhibitions", label: "Exhibitions" },
@@ -19,6 +21,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { itemCount } = useCart();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 60);
@@ -56,8 +59,13 @@ export default function Navbar() {
             <button aria-label="Search" className="nav-action-btn">
               <Search className="w-5 h-5" />
             </button>
-            <Link href="/shop" aria-label="Shop" className="nav-action-link">
+            <Link href="/cart" aria-label={`Shopping cart${itemCount ? `, ${itemCount} items` : ""}`} className="nav-action-link nav-cart-link">
               <ShoppingBag className="w-5 h-5" />
+              {itemCount > 0 ? (
+                <span className="cart-badge" aria-hidden>
+                  {itemCount > 99 ? "99+" : itemCount}
+                </span>
+              ) : null}
             </Link>
           </div>
 
@@ -91,7 +99,7 @@ export default function Navbar() {
         >
           ✕
         </button>
-        <Link href="/shop" onClick={() => setMenuOpen(false)}>Shop</Link>
+        <Link href="/cart" onClick={() => setMenuOpen(false)}>Cart</Link>
         {links.map((l) => (
           <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>
             {l.label}
