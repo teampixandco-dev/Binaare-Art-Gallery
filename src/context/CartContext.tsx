@@ -7,6 +7,7 @@ import React, {
   useEffect,
   useMemo,
   useState,
+  startTransition,
 } from "react";
 import { PRODUCTS, type Product, formatPriceUSD } from "@/data/products";
 
@@ -60,11 +61,13 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const loaded = loadStored();
     const knownSlugs = new Set(PRODUCTS.map((p) => p.slug));
     const cleaned = loaded.filter((l) => knownSlugs.has(l.slug));
-    setLines(cleaned);
+    startTransition(() => {
+      setLines(cleaned);
+      setHydrated(true);
+    });
     if (typeof window !== "undefined" && cleaned.length !== loaded.length) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned));
     }
-    setHydrated(true);
   }, []);
 
   useEffect(() => {

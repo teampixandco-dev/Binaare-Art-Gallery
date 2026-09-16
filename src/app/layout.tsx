@@ -32,9 +32,10 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      suppressHydrationWarning
       className={`${dmSans.variable} ${cormorant.variable} h-full antialiased`}
     >
-      <body className="font-sans min-h-full flex flex-col">
+      <body className="font-sans min-h-full flex flex-col" suppressHydrationWarning>
         <Preloader />
         <div className="noise-overlay" />
         <SmoothScroll>
