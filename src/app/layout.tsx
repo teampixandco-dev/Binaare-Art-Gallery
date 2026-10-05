@@ -1,22 +1,12 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, DM_Sans } from "next/font/google";
+import "./fonts.css";
 import "./globals.css";
-import SmoothScroll from "@/components/SmoothScroll";
-import ScrollToTop from "@/components/ScrollToTop";
-import Preloader from "@/components/Preloader";
 import Providers from "@/components/Providers";
+import { getPublicContent } from "@/lib/content-store";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
 
-const cormorant = Cormorant_Garamond({
-  variable: "--font-cormorant",
-  subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
 
 export const metadata: Metadata = {
   title: "Binaare Art Gallery | Colors of Love",
@@ -33,17 +23,14 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${dmSans.variable} ${cormorant.variable} h-full antialiased`}
+      className="h-full antialiased"
     >
+      <head>
+        <link rel="preload" href="/fonts/dm-sans-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/cormorant-garamond-latin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="font-sans min-h-full flex flex-col" suppressHydrationWarning>
-        <Preloader />
-        <div className="noise-overlay" />
-        <SmoothScroll>
-          <Providers>
-            {children}
-            <ScrollToTop />
-          </Providers>
-        </SmoothScroll>
+        <Providers initial={getPublicContent()}>{children}</Providers>
       </body>
     </html>
   );

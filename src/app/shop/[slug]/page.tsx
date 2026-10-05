@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import Image from "next/image";
+import ProductImages from "@/components/ProductImages";
+import { getPublicContent } from "@/lib/content-store";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import Navbar from "@/components/Navbar";
@@ -7,20 +8,16 @@ import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import AddToCartButton from "@/components/AddToCartButton";
 import {
-  PRODUCTS,
   formatPriceUSD,
-  getProductBySlug,
 } from "@/data/products";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  return PRODUCTS.map((p) => ({ slug: p.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = getPublicContent().products.find(p => p.slug === slug);
   if (!product) return { title: "Artwork | Binaare" };
   return {
     title: `${product.title} | Shop | Binaare`,
@@ -30,7 +27,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ProductPage({ params }: Props) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = getPublicContent().products.find(p => p.slug === slug);
   if (!product) notFound();
 
   return (
@@ -44,24 +41,7 @@ export default async function ProductPage({ params }: Props) {
 
       <section className="gallery-section" style={{ paddingTop: "3rem", paddingBottom: "6rem" }}>
         <div className="product-detail-grid">
-          <div
-            style={{
-              position: "relative",
-              aspectRatio: "5 / 6.5",
-              maxHeight: "85vh",
-              overflow: "hidden",
-              background: "var(--bg-alt)",
-            }}
-          >
-            <Image
-              src={product.src}
-              alt={product.title}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
-              className="object-cover"
-              priority
-            />
-          </div>
+          <ProductImages images={product.images} title={product.title} />
 
           <div className="product-detail-copy">
             <p className="section-label" style={{ marginBottom: "0.75rem" }}>

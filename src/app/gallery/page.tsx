@@ -5,27 +5,18 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageSections from "@/components/PageSections";
+import { usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 
-const artworks = [
-  { src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop", title: "Whispers of Stillness", medium: "Acrylic" },
-  { src: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=900&fit=crop", title: "Emotional Currents", medium: "Mixed Media" },
-  { src: "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=700&fit=crop", title: "Inner Landscape", medium: "Watercolour" },
-  { src: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop", title: "Presence in Gold", medium: "Texture" },
-  { src: "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600&h=850&fit=crop", title: "Reflections of Peace", medium: "Acrylic" },
-  { src: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=750&fit=crop", title: "Memory and Light", medium: "Mixed Media" },
-  { src: "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=900&fit=crop", title: "The Quiet Unfolding", medium: "Watercolour" },
-  { src: "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?w=600&h=700&fit=crop", title: "Layers of Emotion", medium: "Texture" },
-  { src: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=800&fit=crop", title: "Vulnerability in Blue", medium: "Acrylic" },
-  { src: "https://images.unsplash.com/photo-1482160549825-59d1b23cb208?w=600&h=850&fit=crop", title: "Connection", medium: "Mixed Media" },
-  { src: "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=600&h=750&fit=crop", title: "Passage of Time", medium: "Watercolour" },
-  { src: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=900&fit=crop", title: "Balance", medium: "Texture" },
-];
 
-const filters = ["All", "Acrylic", "Watercolour", "Mixed Media", "Texture"];
+
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function GalleryPage() {
+  const page = usePageContent("gallery");
+  const artworks = (page?.sections.find(s => s.id === "artworks")?.items || []).map(item => ({ ...item, medium: item.category }));
+  const filters = ["All", ...new Set(artworks.map(a => a.medium).filter(Boolean))];
   const [filter, setFilter] = useState("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
 
@@ -60,7 +51,7 @@ export default function GalleryPage() {
           <AnimatePresence mode="popLayout">
             {filtered.map((work, i) => (
               <motion.div
-                key={work.title}
+                key={work.id}
                 className="artwork-card"
                 layout
                 initial={{ y: 30 }}
@@ -83,6 +74,7 @@ export default function GalleryPage() {
                 <div className="artwork-card-info">
                   <h3 className="artwork-card-title">{work.title}</h3>
                   <p className="artwork-card-medium">{work.medium}</p>
+                  {work.description && <p className="section-text mt-2">{work.description}</p>}
                 </div>
               </motion.div>
             ))}
@@ -92,7 +84,7 @@ export default function GalleryPage() {
 
       {/* Lightbox */}
       <AnimatePresence>
-        {lightbox !== null && (
+        {lightbox !== null && artworks[lightbox] && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -143,6 +135,7 @@ export default function GalleryPage() {
         )}
       </AnimatePresence>
 
+      <PageSections slug="gallery" />
       <Footer />
     </main>
   );

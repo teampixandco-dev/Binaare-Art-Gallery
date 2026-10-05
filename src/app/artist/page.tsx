@@ -4,10 +4,13 @@ import React from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageSections from "@/components/PageSections";
+import { usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
 
 export default function ArtistPage() {
+  const page = usePageContent("artist");
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -22,8 +25,8 @@ export default function ArtistPage() {
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
             <div className="lg:w-5/12 lg:sticky lg:top-32">
               <Image
-                src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=800&fit=crop"
-                alt="Binari Gamage"
+                src={page?.sections.find(s => s.id === "image-0")?.items[0]?.src || "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=800&fit=crop"}
+                alt={page?.sections.find(s => s.id === "image-0")?.items[0]?.title || "Binari Gamage"}
                 width={600}
                 height={800}
                 sizes="(max-width: 1024px) 100vw, 42vw"
@@ -91,6 +94,7 @@ export default function ArtistPage() {
         </section>
       </SectionReveal>
 
+      <PageSections slug="artist" />
       <Footer />
     </main>
   );

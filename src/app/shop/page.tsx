@@ -7,21 +7,20 @@ import { motion } from "framer-motion";
 import { ArrowUpRight, Eye } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageSections from "@/components/PageSections";
+import { useContent, usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
 import AddToCartButton from "@/components/AddToCartButton";
-import { PRODUCTS, formatPriceUSD } from "@/data/products";
+import { formatPriceUSD } from "@/data/products";
 
-const collections = [
-  { title: "Acrylic Paintings", desc: "Bold expressions of emotion through vibrant acrylic layers", src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=750&fit=crop" },
-  { title: "Watercolour", desc: "Fluid compositions capturing light, memory, and feeling", src: "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=750&fit=crop" },
-  { title: "Textured Abstraction", desc: "Tactile surfaces where texture carries meaning", src: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=750&fit=crop" },
-  { title: "Mixed Media", desc: "Layered works blending materials and techniques", src: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=750&fit=crop" },
-];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function ShopPage() {
+  const page = usePageContent("shop");
+  const { products: PRODUCTS } = useContent();
+  const collections = (page?.sections.find(s => s.id === "collections")?.items || []).map(item => ({ ...item, desc: item.description }));
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -74,6 +73,7 @@ export default function ShopPage() {
         <div className="gallery-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
           <p className="section-label text-center">Available Works</p>
           <h2 className="section-title text-center" style={{ marginBottom: "3rem" }}>Discover Artworks</h2>
+          {PRODUCTS.length === 0 && <p className="section-text text-center">New artworks will be available soon.</p>}
           <div className="product-grid">
             {PRODUCTS.map((item, i) => (
               <motion.article
@@ -127,6 +127,7 @@ export default function ShopPage() {
         </div>
       </section>
 
+      <PageSections slug="shop" />
       <Footer />
     </main>
   );

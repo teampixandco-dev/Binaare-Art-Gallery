@@ -6,21 +6,17 @@ import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageSections from "@/components/PageSections";
+import { usePageContent } from "@/context/ContentContext";
 import SectionReveal from "@/components/SectionReveal";
 import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 
-const featuredWorks = [
-  { src: "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop", title: "Whispers of Stillness", medium: "Acrylic on Canvas" },
-  { src: "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=800&fit=crop", title: "Emotional Currents", medium: "Mixed Media" },
-  { src: "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=800&fit=crop", title: "Inner Landscape", medium: "Watercolour" },
-  { src: "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop", title: "Presence in Gold", medium: "Textured Abstraction" },
-];
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const HERO_VIDEO = "/Woman_posing_in_white_costume_20260916151429.mp4";
+const HERO_VIDEO = "/02.mp4";
 const HERO_POSTER = "/hero-woman-poster.jpg";
 
 const heroStagger: Variants = {
@@ -43,6 +39,8 @@ const heroItem: Variants = {
 };
 
 export default function Home() {
+  const page = usePageContent("home");
+  const featuredWorks = (page?.sections.find(s => s.id === "featured")?.items || []).map(item => ({ ...item, medium: item.category }));
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -187,6 +185,7 @@ export default function Home() {
                 className="absolute"
                 style={{ top: "-6%", left: "-6%", right: "-6%", bottom: "-6%" }}
               >
+                {page?.hero && page.hero !== HERO_POSTER ? <Image src={page.hero} alt={page.title} fill priority sizes="100vw" className="object-cover" /> : (
                 <video
                   className="absolute inset-0 h-full w-full object-cover"
                   src={HERO_VIDEO}
@@ -199,6 +198,7 @@ export default function Home() {
                   disablePictureInPicture
                   suppressHydrationWarning
                 />
+                )}
               </div>
             </div>
             {/* Foreground gradient — stays anchored. */}
@@ -223,7 +223,7 @@ export default function Home() {
                   variants={heroItem}
                   className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/90"
                 >
-                  Colors of Love
+                  {page?.subtitle || "Colors of Love"}
                 </motion.p>
                 <motion.h1
                   variants={heroItem}
@@ -232,7 +232,7 @@ export default function Home() {
                     fontSize: "clamp(2.75rem, 7vw, 5rem)",
                   }}
                 >
-                  Binaare <br /> Art Gallery
+                  {page?.title === "Binaare Art Gallery" ? <>Binaare <br /> Art Gallery</> : page?.title}
                 </motion.h1>
               </div>
 
@@ -305,7 +305,7 @@ export default function Home() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {featuredWorks.map((work, i) => (
               <motion.div
-                key={work.title}
+                key={work.id}
                 className="artwork-card"
                 initial={{ y: 50 }}
                 whileInView={{ y: 0 }}
@@ -326,6 +326,7 @@ export default function Home() {
                 <div className="artwork-card-info">
                   <h3 className="artwork-card-title">{work.title}</h3>
                   <p className="artwork-card-medium">{work.medium}</p>
+                  {work.description && <p className="section-text mt-2">{work.description}</p>}
                 </div>
               </motion.div>
             ))}
@@ -348,8 +349,8 @@ export default function Home() {
               <div className="lg:w-5/12">
                 <div style={{ overflow: "hidden", borderRadius: "2px" }}>
                   <Image
-                    src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=750&fit=crop"
-                    alt="Binari Gamage - Artist"
+                    src={page?.sections.find(s => s.id === "artist")?.items[0]?.src || HERO_POSTER}
+                    alt={page?.sections.find(s => s.id === "artist")?.items[0]?.title || "Binari Gamage - Artist"}
                     width={600}
                     height={750}
                     sizes="(max-width: 1024px) 100vw, 42vw"
@@ -386,7 +387,7 @@ export default function Home() {
           className="relative flex items-center justify-center text-center overflow-hidden"
           style={{
             minHeight: "60vh",
-            backgroundImage: "url('https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop')",
+            backgroundImage: `url(${page?.sections.find(s => s.id === "quote")?.items[0]?.src || HERO_POSTER})`,
             backgroundSize: "cover",
             backgroundPosition: "50% 100%",
           }}
@@ -429,7 +430,8 @@ export default function Home() {
           </section>
         </SectionReveal>
 
-        <Footer />
+        <PageSections slug="home" />
+      <Footer />
       </div>
     </main>
   );

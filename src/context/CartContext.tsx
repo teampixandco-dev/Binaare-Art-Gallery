@@ -9,7 +9,8 @@ import React, {
   useState,
   startTransition,
 } from "react";
-import { PRODUCTS, type Product, formatPriceUSD } from "@/data/products";
+import { type Product, formatPriceUSD } from "@/data/products";
+import { useContent } from "@/context/ContentContext";
 
 const STORAGE_KEY = "binaare-cart";
 
@@ -54,13 +55,13 @@ function loadStored(): CartLine[] {
 }
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
+  const { products: PRODUCTS } = useContent();
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
     const loaded = loadStored();
-    const knownSlugs = new Set(PRODUCTS.map((p) => p.slug));
-    const cleaned = loaded.filter((l) => knownSlugs.has(l.slug));
+    const cleaned = loaded;
     startTransition(() => {
       setLines(cleaned);
       setHydrated(true);
@@ -116,7 +117,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         const product = PRODUCTS.find((p) => p.slug === line.slug);
         return product ? { line, product } : null;
       })
-      .filter((e): e is { line: CartLine; product: Product } => e !== null);
+      .filter((e) => e !== null);
 
     const itemCount = lineEntries.reduce((n, e) => n + e.line.quantity, 0);
     const subtotal = lineEntries.reduce(
@@ -136,7 +137,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       getProduct: (slug: string) => PRODUCTS.find((p) => p.slug === slug),
       lineEntries,
     };
-  }, [lines, addItem, removeItem, setQuantity, clearCart]);
+  }, [lines, addItem, removeItem, setQuantity, clearCart, PRODUCTS]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

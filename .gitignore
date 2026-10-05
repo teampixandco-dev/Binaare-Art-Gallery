@@ -55,3 +55,11 @@ next-env.d.ts
 *.sublime-workspace
 *.sublime-project
 .project
+
+# Local backend data and admin credentials
+/data/
+/.admin-credentials
+/test-results/
+/playwright-report/
+/.next-test/
+/.next-build/

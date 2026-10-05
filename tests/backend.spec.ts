@@ -1,0 +1,160 @@
+import { expect, test, type APIRequestContext } from "@playwright/test";
+import sharp from "sharp";
+import { randomUUID } from "node:crypto";
+import { execFileSync } from "node:child_process";
+import type { SiteContent } from "../src/lib/content-types";
+const origin = "http://localhost:3100";
+const headers = { origin };
+async function signIn(request: APIRequestContext) {
+  const result = await request.post("/api/admin/login", { headers, data: { username: "test-admin", password: "test-password-for-local-tests" } });
+  expect(result.status()).toBe(200);
+}
+async function content(request: APIRequestContext): Promise<SiteContent> {
+  const result = await request.get("/api/admin/content"); expect(result.ok()).toBeTruthy(); return result.json();
+}
+test.beforeEach(async ({ page }) => {
+  await page.route("https://images.unsplash.com/**", async route => route.fulfill({ contentType: "image/png", body: await image() }));
+  await page.route("**/_next/image?**", async route => {
+    if ((new URL(route.request().url()).searchParams.get("url") || "").startsWith("https://images.unsplash.com/")) await route.fulfill({ contentType: "image/png", body: await image() });
+    else await route.continue();
+  });
+});
+async function image() { return sharp({ create: { width: 640, height: 480, channels: 3, background: "#597c68" } }).png().toBuffer(); }
+
+test("admin authentication, validation, stale edits and persistent storage", async ({ request }) => {
+  expect((await request.get("/api/admin/content")).status()).toBe(401);
+  expect((await request.post("/api/admin/upload", { headers, multipart: { file: { name: "test.png", mimeType: "image/png", buffer: await image() } } })).status()).toBe(401);
+  expect((await request.post("/api/admin/login", { headers: { origin: "https://unrelated.example" }, data: { username: "test-admin", password: "test-password-for-local-tests" } })).status()).toBe(403);
+  expect((await request.post("/api/admin/login", { headers, data: { username: "test-admin", password: "wrong" } })).status()).toBe(401);
+  await signIn(request);
+  const initial = await content(request);
+  const invalid = await request.post("/api/admin/upload", { headers, multipart: { file: { name: "fake.png", mimeType: "image/png", buffer: Buffer.from('<svg onload="alert(1)"></svg>') } } });
+  expect(invalid.status()).toBe(400);
+  const badPrice = await request.post("/api/admin/save", { headers, data: { revision: initial.revision, resource: "products", value: { ...initial.products[0], price: -1 } } });
+  expect(badPrice.status()).toBe(400);
+  const saved = await request.post("/api/admin/save", { headers, data: { revision: initial.revision, resource: "products", value: initial.products[0] } });
+  expect(saved.status()).toBe(200);
+  const stale = await request.post("/api/admin/save", { headers, data: { revision: initial.revision, resource: "products", value: initial.products[0] } });
+  expect(stale.status()).toBe(409);
+  const updated = await content(request);
+  const duplicate = await request.post("/api/admin/save", { headers, data: { revision: updated.revision, resource: "products", value: { ...initial.products[0], id: randomUUID() } } });
+  expect(duplicate.status()).toBe(400);
+  const publicResponse = await request.get("/api/content"); const publicContent = await publicResponse.json();
+  expect(publicContent.media).toBeUndefined();
+  const output = execFileSync(process.execPath, ["--input-type=module", "-e", "import { getDatabase } from './src/lib/database.mjs'; const row = getDatabase().prepare('SELECT document FROM content WHERE id=1').get(); process.stdout.write(String(JSON.parse(row.document).revision))"], { env: { ...process.env, BINAARE_DATA_DIR: process.env.BINAARE_TEST_DATA }, encoding: "utf8" });
+  expect(Number(output.trim())).toBe(updated.revision);
+  expect((await request.post("/api/admin/logout", { headers })).status()).toBe(200);
+  expect((await request.get("/api/admin/content")).status()).toBe(401);
+});
+
+test("upload artwork and publish it to the shop, detail page and persistent cart", async ({ page }, testInfo) => {
+  const errors: string[] = []; page.on("pageerror", error => errors.push(error.message));
+  await page.goto("/admin");
+  await page.getByLabel("Username", { exact: true }).fill("test-admin");
+  await page.getByLabel("Password", { exact: true }).fill("test-password-for-local-tests");
+  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Shop artworks" })).toBeVisible();
+  await page.getByRole("button", { name: "Add artwork", exact: true }).click();
+  await page.getByLabel("Title", { exact: true }).fill("Test Studio Painting");
+  await page.getByLabel("Medium", { exact: true }).fill("Oil on canvas");
+  await page.getByLabel("Dimensions", { exact: true }).fill("50 × 70 cm");
+  await page.getByLabel("Price (USD)").fill("250");
+  await page.getByLabel("Description", { exact: true }).fill("An original artwork uploaded from the studio.");
+  await page.getByRole("button", { name: "Add image", exact: true }).click();
+  const chooser = page.waitForEvent("filechooser");
+  await page.getByRole("button", { name: "Upload & use image" }).click();
+  await (await chooser).setFiles({ name: "studio-painting.png", mimeType: "image/png", buffer: await image() });
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await page.getByLabel("Published — visible on the website after saving").check();
+  await page.getByRole("button", { name: "Save & publish" }).click();
+  await expect(page.getByRole("status")).toContainText("now visible");
+  await expect.poll(() => page.locator(".admin-thumb img").first().evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.screenshot({ path: testInfo.outputPath("admin-desktop.png"), fullPage: true });
+  const state = await content(page.request);
+  const product = state.products.find(p => p.slug === "test-studio-painting")!;
+  expect(product.src).toMatch(/^\/media\/.+\.webp$/);
+  const uploaded = await page.request.get(product.src); expect(uploaded.status()).toBe(200); expect(uploaded.headers()["content-type"]).toBe("image/webp");
+  await page.goto("/shop");
+  await expect(page.getByRole("heading", { name: "Test Studio Painting" })).toBeVisible();
+  await page.goto("/shop/test-studio-painting");
+  await expect(page.getByText("An original artwork uploaded from the studio.")).toBeVisible();
+  await page.getByRole("button", { name: "Add to cart" }).click();
+  await page.goto("/cart");
+  await expect(page.getByText("Test Studio Painting", { exact: true })).toBeVisible();
+  await page.reload(); await expect(page.getByText("Test Studio Painting", { exact: true })).toBeVisible();
+  await page.goto("/admin"); await page.setViewportSize({ width: 390, height: 844 });
+  await expect(page.getByRole("heading", { name: "Shop artworks" })).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBeTruthy();
+  await page.screenshot({ path: testInfo.outputPath("admin-mobile.png"), fullPage: true });
+  expect(errors).toEqual([]);
+});
+
+test("blog drafts, cover and article images publish to list and article pages", async ({ page }, testInfo) => {
+  await signIn(page.request); await page.goto("/admin");
+  await page.getByRole("button", { name: /Blog posts/ }).click();
+  await page.getByRole("button", { name: "New post", exact: true }).click();
+  await page.getByLabel("Title", { exact: true }).fill("A Morning in the Studio");
+  await page.getByLabel("Short excerpt").fill("New colours and quiet moments.");
+  await page.getByLabel("Article text").fill("Today I explored new colours.\n\nEach layer tells a story.");
+  await page.getByRole("button", { name: "Choose or upload image", exact: true }).click();
+  await page.locator('input[type="file"]').setInputFiles({ name: "blog-cover.png", mimeType: "image/png", buffer: await image() });
+  await expect(page.getByRole("dialog")).not.toBeVisible();
+  await page.getByRole("button", { name: "Add image", exact: true }).click();
+  await page.getByRole("dialog").getByRole("button", { name: /blog-cover.png/ }).click();
+  await page.getByRole("button", { name: "Save draft" }).click();
+  await expect(page.getByRole("status")).toContainText("Draft saved");
+  const publicDraft = await (await page.request.get("/api/content")).json();
+  expect(publicDraft.posts.some((p: { slug: string }) => p.slug === "a-morning-in-the-studio")).toBeFalsy();
+  expect((await page.request.get("/blog/a-morning-in-the-studio")).status()).toBe(404);
+  await page.getByLabel("Published — visible on the website after saving").check();
+  await page.getByRole("button", { name: "Save & publish" }).click();
+  await expect(page.getByRole("status")).toContainText("now visible");
+  await page.goto("/blog"); await expect(page.getByRole("heading", { name: "A Morning in the Studio" })).toBeVisible();
+  await page.getByRole("heading", { name: "A Morning in the Studio" }).getByRole("link").click();
+  await expect(page.getByText("Today I explored new colours.", { exact: false })).toBeVisible();
+  const photo = page.getByRole("img", { name: "A Morning in the Studio — photograph 1" }); await expect(photo).toBeVisible();
+  await expect.poll(() => photo.evaluate((image: HTMLImageElement) => image.complete && image.naturalWidth > 0)).toBeTruthy();
+  await page.screenshot({ path: testInfo.outputPath("published-blog.png"), fullPage: true });
+});
+
+test("page image placement, custom pages and referenced media protection", async ({ page }) => {
+  await signIn(page.request);
+  let state = await content(page.request);
+  const upload = await page.request.post("/api/admin/upload", { headers, multipart: { file: { name: "gallery-image.png", mimeType: "image/png", buffer: await image() } } });
+  expect(upload.status()).toBe(201);
+  const { asset, content: uploaded } = await upload.json(); state = uploaded;
+  const about = structuredClone(state.pages.find(p => p.slug === "about")!);
+  const originalArtist = state.pages.find(p => p.slug === "artist")!.hero;
+  about.hero = asset.src; about.sections[0].items[0].src = asset.src;
+  let saved = await page.request.post("/api/admin/save", { headers, data: { resource: "pages", revision: state.revision, value: about } }); expect(saved.status()).toBe(200); state = await saved.json();
+  await page.goto("/about");
+  await expect(page.locator(".page-hero")).toHaveCSS("background-image", `url("${origin}${asset.src}")`);
+  expect(await page.locator('main img').first().getAttribute("src")).toContain(encodeURIComponent(asset.src));
+  await page.goto("/artist"); await expect(page.locator(".page-hero")).toHaveCSS("background-image", `url("${originalArtist}")`);
+  const custom = { id: randomUUID(), slug: "studio-notes", title: "Studio Notes", subtitle: "A look inside", hero: asset.src, body: "Welcome to the studio.", builtin: false, published: false, showInNav: true, sections: [{ id: randomUUID(), title: "New paintings", kind: "grid", builtin: false, items: [{ id: randomUUID(), title: "Morning light", description: "The latest work.", category: "", src: asset.src }] }] };
+  saved = await page.request.post("/api/admin/save", { headers, data: { resource: "pages", revision: state.revision, value: custom } }); expect(saved.status()).toBe(200); state = await saved.json();
+  expect((await page.request.get("/pages/studio-notes")).status()).toBe(404);
+  custom.published = true;
+  saved = await page.request.post("/api/admin/save", { headers, data: { resource: "pages", revision: state.revision, value: custom } }); expect(saved.status()).toBe(200); state = await saved.json();
+  await page.goto("/pages/studio-notes");
+  await expect(page.getByRole("heading", { name: "Studio Notes", exact: true })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Morning light" })).toBeVisible();
+  await expect(page.locator("nav").getByRole("link", { name: "Studio Notes", exact: true })).toBeVisible();
+  const deleted = await page.request.post("/api/admin/delete", { headers, data: { resource: "media", id: asset.id, revision: state.revision } }); expect(deleted.status()).toBe(409);
+  const deleteBuiltin = await page.request.post("/api/admin/delete", { headers, data: { resource: "pages", id: about.id, revision: state.revision } }); expect(deleteBuiltin.status()).toBe(400);
+  const removeCustom = await page.request.post("/api/admin/delete", { headers, data: { resource: "pages", id: custom.id, revision: state.revision } }); expect(removeCustom.status()).toBe(200);
+  expect((await page.request.get("/pages/studio-notes")).status()).toBe(404);
+  await page.goto("/admin");
+  await page.getByRole("button", { name: /Pages & sections/ }).click();
+  await page.getByRole("button", { name: "Published Gallery 1 image sections" }).click();
+  await page.getByRole("button", { name: "Add image to this section" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: /gallery-image.png/ }).click();
+  await page.getByLabel("Image title / description for accessibility").last().fill("New gallery addition");
+  await page.getByLabel("Medium / category").last().fill("Studio collection");
+  await page.getByRole("button", { name: "Save & publish" }).click();
+  await expect(page.getByRole("status")).toContainText("now visible");
+  await page.goto("/gallery");
+  await page.getByRole("button", { name: "Studio collection", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "New gallery addition" })).toBeVisible();
+});

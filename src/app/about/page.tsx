@@ -4,10 +4,13 @@ import React from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageSections from "@/components/PageSections";
+import { usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
 
 export default function AboutPage() {
+  const page = usePageContent("about");
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
@@ -46,8 +49,8 @@ export default function AboutPage() {
             </div>
             <div className="lg:w-1/2">
               <Image
-                src="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&h=900&fit=crop"
-                alt="Gallery atmosphere"
+                src={page?.sections.find(s => s.id === "image-0")?.items[0]?.src || "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&h=900&fit=crop"}
+                alt={page?.sections.find(s => s.id === "image-0")?.items[0]?.title || "Gallery atmosphere"}
                 width={700}
                 height={900}
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -63,8 +66,8 @@ export default function AboutPage() {
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
             <div className="lg:w-1/2 order-2 lg:order-1">
               <Image
-                src="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=700&h=900&fit=crop"
-                alt="Artistic journey"
+                src={page?.sections.find(s => s.id === "image-1")?.items[0]?.src || "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=700&h=900&fit=crop"}
+                alt={page?.sections.find(s => s.id === "image-1")?.items[0]?.title || "Artistic journey"}
                 width={700}
                 height={900}
                 sizes="(max-width: 1024px) 100vw, 50vw"
@@ -97,6 +100,7 @@ export default function AboutPage() {
         </section>
       </SectionReveal>
 
+      <PageSections slug="about" />
       <Footer />
     </main>
   );

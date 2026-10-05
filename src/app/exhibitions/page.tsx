@@ -3,6 +3,7 @@
 import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import PageSections from "@/components/PageSections";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
 
@@ -101,6 +102,7 @@ export default function ExhibitionsPage() {
         </section>
       </SectionReveal>
 
+      <PageSections slug="exhibitions" />
       <Footer />
     </main>
   );

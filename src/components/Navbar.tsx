@@ -5,6 +5,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Search, ShoppingBag } from "lucide-react";
 import { useCart } from "@/context/CartContext";
+import { useContent } from "@/context/ContentContext";
+import { pageHref } from "@/lib/content-types";
 
 const links = [
   { href: "/", label: "Home" },
@@ -18,6 +20,8 @@ const links = [
 ];
 
 export default function Navbar() {
+  const customLinks = useContent().pages.filter(p => !p.builtin && p.showInNav).map(p => ({ href: pageHref(p), label: p.title }));
+  const navigation = [...links, ...customLinks];
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
@@ -41,7 +45,7 @@ export default function Navbar() {
 
         <div className="nav-center">
           <ul className="nav-links">
-            {links.map((l) => (
+            {navigation.map((l) => (
               <li key={l.href}>
                 <Link
                   href={l.href}
@@ -100,7 +104,7 @@ export default function Navbar() {
           ✕
         </button>
         <Link href="/cart" onClick={() => setMenuOpen(false)}>Cart</Link>
-        {links.map((l) => (
+        {navigation.map((l) => (
           <Link key={l.href} href={l.href} onClick={() => setMenuOpen(false)}>
             {l.label}
           </Link>

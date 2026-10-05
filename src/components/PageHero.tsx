@@ -2,6 +2,9 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { useContent } from "@/context/ContentContext";
+import { pageHref } from "@/lib/content-types";
 
 interface PageHeroProps {
   title: string;
@@ -10,6 +13,11 @@ interface PageHeroProps {
 }
 
 export default function PageHero({ title, subtitle, backgroundImage }: PageHeroProps) {
+  const pathname = usePathname();
+  const page = useContent().pages.find(page => pageHref(page) === pathname);
+  title = page?.title ?? title;
+  subtitle = page?.subtitle ?? subtitle;
+  backgroundImage = page?.hero ?? backgroundImage;
   return (
     <div
       className="page-hero"
