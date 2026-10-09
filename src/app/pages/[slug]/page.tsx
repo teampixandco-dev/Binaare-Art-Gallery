@@ -5,7 +5,9 @@ import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import PageSections from "@/components/PageSections";
 type Props = { params: Promise<{ slug: string }> };
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  return getPublicContent().pages.map((p) => ({ slug: p.slug }));
+}
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const page = getPublicContent().pages.find(p => !p.builtin && p.slug === slug);

@@ -1,12 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "export",
   distDir: process.env.BINAARE_DIST_DIR || ".next",
   devIndicators: false,
   compress: true,
   poweredByHeader: false,
   reactStrictMode: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
@@ -15,11 +17,12 @@ const nextConfig: NextConfig = {
       },
     ],
     formats: ["image/avif", "image/webp"],
-    minimumCacheTTL: 60 * 60 * 24 * 30,
     dangerouslyAllowSVG: true,
     contentDispositionType: "inline",
   },
   experimental: {
+    workerThreads: false,
+    cpus: 1,
     optimizePackageImports: ["framer-motion", "lucide-react", "gsap"],
   },
   async headers() {

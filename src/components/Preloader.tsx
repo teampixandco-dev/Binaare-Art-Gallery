@@ -20,6 +20,8 @@ export default function Preloader() {
     startedAt.current = performance.now();
 
     let fontsReady = false;
+    let videoReady = false;
+
     if ("fonts" in document) {
       document.fonts.ready
         .then(() => {
@@ -32,18 +34,34 @@ export default function Preloader() {
       fontsReady = true;
     }
 
-    const MIN_DURATION = 850;
+    // Eagerly pre-buffer hero video during preloader before site reveals
+    const videoPreload = document.createElement("video");
+    videoPreload.src = "/hero-video.mp4";
+    videoPreload.preload = "auto";
+    videoPreload.muted = true;
+    videoPreload.defaultMuted = true;
+    const markVideoReady = () => {
+      videoReady = true;
+    };
+    videoPreload.addEventListener("canplay", markVideoReady, { once: true });
+    videoPreload.addEventListener("canplaythrough", markVideoReady, { once: true });
+    videoPreload.addEventListener("error", markVideoReady, { once: true });
+    videoPreload.load();
+
+    const MIN_DURATION = 900;
+    const MAX_DURATION = 2400;
     let raf = 0;
 
     const tick = () => {
       const elapsed = performance.now() - startedAt.current;
       const t = Math.min(1, elapsed / MIN_DURATION);
       const eased = 1 - Math.pow(1 - t, 1.6);
-      const cap = fontsReady ? 100 : 88;
+      const isReady = (fontsReady && videoReady) || elapsed >= MAX_DURATION;
+      const cap = isReady ? 100 : 88;
       const next = Math.min(cap, Math.round(eased * 100));
       setProgress(next);
 
-      if (next >= 100 && fontsReady) {
+      if (next >= 100 && isReady) {
         setDone(true);
         return;
       }
@@ -54,6 +72,9 @@ export default function Preloader() {
 
     return () => {
       cancelAnimationFrame(raf);
+      videoPreload.removeEventListener("canplay", markVideoReady);
+      videoPreload.removeEventListener("canplaythrough", markVideoReady);
+      videoPreload.removeEventListener("error", markVideoReady);
       root.style.overflow = prevOverflow;
     };
   }, []);

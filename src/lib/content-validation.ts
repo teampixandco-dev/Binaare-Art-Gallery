@@ -7,7 +7,7 @@ const slug = z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use
 const title = z.string().trim().min(1).max(200);
 const text = z.string().max(20000);
 const image = z.string().max(2000).refine(src => {
-  if (/^\/media\/[a-f0-9-]+\.webp$/.test(src) || src === "/hero-woman-poster.jpg") return true;
+  if (/^\/media\/[a-f0-9-]+\.webp$/.test(src) || /^\/[a-zA-Z0-9_-]+\.(?:webp|jpg|jpeg|png|mp4)$/.test(src)) return true;
   try { const url = new URL(src); return url.protocol === "https:" && url.hostname === "images.unsplash.com" && !url.username && !url.password; } catch { return false; }
 }, "Choose an uploaded image from the media library.");
 const section = z.object({

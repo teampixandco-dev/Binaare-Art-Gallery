@@ -6,7 +6,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 type Props = { params: Promise<{ slug: string }> };
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  return getPublicContent().posts.map((p) => ({ slug: p.slug }));
+}
 export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
   const post = getPublicContent().posts.find(p => p.slug === slug);

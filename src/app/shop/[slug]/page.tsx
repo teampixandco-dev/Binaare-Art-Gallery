@@ -13,7 +13,9 @@ import {
 
 type Props = { params: Promise<{ slug: string }> };
 
-export const dynamic = "force-dynamic";
+export async function generateStaticParams() {
+  return getPublicContent().products.map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
@@ -57,7 +59,12 @@ export default async function ProductPage({ params }: Props) {
               {formatPriceUSD(product.price)}
             </p>
             <p className="section-text" style={{ marginBottom: "2rem", maxWidth: "36rem" }}>
-              {product.description}
+              {product.description.split('\n').map((line, i, arr) => (
+                <span key={i}>
+                  {line}
+                  {i < arr.length - 1 && <br />}
+                </span>
+              ))}
             </p>
 
             <div style={{ display: "flex", flexWrap: "wrap", gap: "1rem", alignItems: "center" }}>

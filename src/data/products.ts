@@ -11,6 +11,15 @@ export type Product = {
 
 export const PRODUCTS: Product[] = [
   {
+    slug: "the-crimson-queen",
+    title: "The Crimson Queen",
+    medium: "Oil on Canvas",
+    size: "60 × 60 cm",
+    price: 1500,
+    src: "/the-crimson-queen.webp",
+    description: "The Crimson Queen is a celebration of feminine confidence, individuality, passion, and timeless beauty—a queen who does not need a crown, because her presence itself is her royalty.\n\nBold, graceful, and commanding, The Crimson Queen celebrates the timeless elegance of a woman who carries both strength and beauty within her. Like a queen standing confidently in her own presence, the single flower unfolds with magnificent crimson and deep burgundy petals, touched by glowing shades of amber and gold.\n\nThe rich reds and burgundy tones symbolize passion, courage, love, and inner strength, while the golden highlights suggest dignity, warmth, and a quiet sense of royalty. Against the vibrant turquoise-blue background, the flower becomes even more striking—its warm colours appearing almost illuminated, as though it possesses a light of its own.\n\nThe sweeping curves of the petals resemble the flowing folds of an elegant royal gown, giving the bloom a feminine and majestic character. Yet beneath its grandeur lies softness and grace—a reminder that true strength does not need to be loud.",
+  },
+  {
     slug: "whispers-of-stillness",
     title: "Whispers of Stillness",
     medium: "Acrylic on Canvas",
@@ -69,7 +78,7 @@ export const PRODUCTS: Product[] = [
     src: "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=500&h=650&fit=crop",
     description:
       "Collage fragments and painted light intersect—what is remembered versus what is invented. The surface rewards slow viewing from different distances.",
-  },
+  }
 ];
 
 export function getProductBySlug(slug: string): Product | undefined {

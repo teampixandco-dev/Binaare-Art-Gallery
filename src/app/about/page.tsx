@@ -22,7 +22,7 @@ export default function AboutPage() {
 
       <SectionReveal>
         <section className="gallery-section" style={{ paddingTop: "6rem" }}>
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
             <div className="lg:w-1/2">
               <p className="section-label">Our Story</p>
               <h2 className="section-title">Colors of Love</h2>
@@ -49,10 +49,10 @@ export default function AboutPage() {
             </div>
             <div className="lg:w-1/2">
               <Image
-                src={page?.sections.find(s => s.id === "image-0")?.items[0]?.src || "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&h=900&fit=crop"}
+                src={page?.sections.find(s => s.id === "image-0")?.items[0]?.src || "/about-portrait.webp"}
                 alt={page?.sections.find(s => s.id === "image-0")?.items[0]?.title || "Gallery atmosphere"}
-                width={700}
-                height={900}
+                width={800}
+                height={1200}
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
               />
@@ -63,13 +63,13 @@ export default function AboutPage() {
 
       <SectionReveal>
         <section className="gallery-section">
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20">
+          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
             <div className="lg:w-1/2 order-2 lg:order-1">
               <Image
-                src={page?.sections.find(s => s.id === "image-1")?.items[0]?.src || "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=700&h=900&fit=crop"}
+                src={page?.sections.find(s => s.id === "image-1")?.items[0]?.src || "/binari-gamage-painting.webp"}
                 alt={page?.sections.find(s => s.id === "image-1")?.items[0]?.title || "Artistic journey"}
-                width={700}
-                height={900}
+                width={800}
+                height={1200}
                 sizes="(max-width: 1024px) 100vw, 50vw"
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
               />

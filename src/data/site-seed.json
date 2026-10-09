@@ -5,7 +5,7 @@
       "slug": "home",
       "title": "Binaare Art Gallery",
       "subtitle": "Colors of Love",
-      "hero": "/hero-woman-poster.jpg",
+      "hero": "/hero-video.mp4",
       "body": "",
       "builtin": true,
       "published": true,
@@ -19,30 +19,30 @@
           "items": [
             {
               "id": "featured-0",
-              "title": "Whispers of Stillness",
+              "title": "The Crimson Queen",
               "description": "",
-              "category": "Acrylic on Canvas",
-              "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop"
+              "category": "Oil on Canvas",
+              "src": "/the-crimson-queen.webp"
             },
             {
               "id": "featured-1",
               "title": "Emotional Currents",
               "description": "",
               "category": "Mixed Media",
-              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=800&fit=crop"
+              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=900&fit=crop"
             },
             {
               "id": "featured-2",
               "title": "Inner Landscape",
               "description": "",
               "category": "Watercolour",
-              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=800&fit=crop"
+              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=700&fit=crop"
             },
             {
               "id": "featured-3",
               "title": "Presence in Gold",
               "description": "",
-              "category": "Textured Abstraction",
+              "category": "Texture",
               "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop"
             }
           ]
@@ -58,7 +58,7 @@
               "title": "Binari Gamage",
               "description": "",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=750&fit=crop"
+              "src": "/binari-gamage-painting.webp"
             }
           ]
         },
@@ -98,10 +98,10 @@
           "items": [
             {
               "id": "artworks-0",
-              "title": "Whispers of Stillness",
-              "description": "",
-              "category": "Acrylic",
-              "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop"
+              "title": "The Crimson Queen",
+              "description": "Oil on Canvas",
+              "category": "Oil on Canvas",
+              "src": "/the-crimson-queen.webp"
             },
             {
               "id": "artworks-1",
@@ -255,7 +255,7 @@
               "title": "Studio image",
               "description": "",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=700&h=900&fit=crop"
+              "src": "/about-portrait.webp"
             }
           ]
         },
@@ -270,7 +270,7 @@
               "title": "Creative process",
               "description": "",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=700&h=900&fit=crop"
+              "src": "/artist-home.webp"
             }
           ]
         }

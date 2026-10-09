@@ -16,8 +16,8 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const HERO_VIDEO = "/02.mp4";
-const HERO_POSTER = "/hero-woman-poster.jpg";
+const HERO_VIDEO = "/hero-video.mp4";
+const HERO_POSTER = "/artist-home.webp";
 
 const heroStagger: Variants = {
   hidden: {},
@@ -185,19 +185,21 @@ export default function Home() {
                 className="absolute"
                 style={{ top: "-6%", left: "-6%", right: "-6%", bottom: "-6%" }}
               >
-                {page?.hero && page.hero !== HERO_POSTER ? <Image src={page.hero} alt={page.title} fill priority sizes="100vw" className="object-cover" /> : (
-                <video
-                  className="absolute inset-0 h-full w-full object-cover"
-                  src={HERO_VIDEO}
-                  poster={HERO_POSTER}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  preload="metadata"
-                  disablePictureInPicture
-                  suppressHydrationWarning
-                />
+                {page?.hero && page.hero.endsWith(".mp4") ? (
+                  <video
+                    className="absolute inset-0 h-full w-full object-cover"
+                    src={page.hero}
+                    poster={HERO_POSTER}
+                    autoPlay
+                    muted
+                    loop
+                    playsInline
+                    preload="metadata"
+                    disablePictureInPicture
+                    suppressHydrationWarning
+                  />
+                ) : (
+                  <Image src={page?.hero || HERO_POSTER} alt={page?.title || "Hero"} fill priority sizes="100vw" className="object-cover" />
                 )}
               </div>
             </div>
@@ -345,15 +347,15 @@ export default function Home() {
         {/* ═══ ARTIST PREVIEW ═══ */}
         <SectionReveal>
           <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem", background: "var(--bg)" }}>
-            <div className="flex flex-col lg:flex-row gap-12 items-center">
-              <div className="lg:w-5/12">
+            <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start justify-center">
+              <div className="lg:w-4/12">
                 <div style={{ overflow: "hidden", borderRadius: "2px" }}>
                   <Image
                     src={page?.sections.find(s => s.id === "artist")?.items[0]?.src || HERO_POSTER}
                     alt={page?.sections.find(s => s.id === "artist")?.items[0]?.title || "Binari Gamage - Artist"}
-                    width={600}
-                    height={750}
-                    sizes="(max-width: 1024px) 100vw, 42vw"
+                    width={800}
+                    height={1200}
+                    sizes="(max-width: 1024px) 100vw, 33vw"
                     style={{ width: "100%", height: "auto", objectFit: "cover" }}
                   />
                 </div>

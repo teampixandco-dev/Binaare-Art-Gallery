@@ -1129,7 +1129,7 @@ export default function AdminDashboard({
                         className="admin-small"
                         style={{ marginBottom: "18px" }}
                         onClick={() =>
-                          change({ kind: "pages", value: { ...editor.value, hero: "/hero-woman-poster.jpg" } })
+                          change({ kind: "pages", value: { ...editor.value, hero: "/hero-video.mp4" } })
                         }
                       >
                         Use original hero video
