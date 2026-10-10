@@ -1,0 +1,26 @@
+# Disable MultiViews so Apache won't auto-negotiate .txt over .html
+Options -MultiViews
+
+RewriteEngine On
+
+# Prevent direct browser access to Next.js RSC payload (.txt) files.
+# If the browser requests a .txt file (expecting HTML) and a corresponding .html exists,
+# redirect to the extensionless URL.
+RewriteCond %{HTTP_ACCEPT} text/html
+RewriteCond %{HTTP:RSC} !^1$
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteCond %{REQUEST_FILENAME} ^(.*)\.txt$
+RewriteCond %1.html -f
+RewriteRule ^(.*)\.txt$ /$1 [R=301,L]
+
+# If the request is not a real file or directory,
+# and a matching .html file exists, serve it
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME}.html -f
+RewriteRule ^(.*)$ $1.html [L,QSA]
+
+# Fallback to 404 page
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ /404.html [L]
