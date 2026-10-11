@@ -11,20 +11,38 @@ import PageHero from "@/components/PageHero";
 
 
 
+import Link from "next/link";
 import { PRODUCTS } from "@/data/products";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function GalleryPage() {
-  const page = usePageContent("gallery");
-  const dbArtworks = (page?.sections.find(s => s.id === "artworks")?.items || []).map(item => ({ ...item, medium: item.category }));
-  const staticArtworks = PRODUCTS.map(p => ({ id: p.slug, title: p.title, src: p.src, medium: p.medium, description: p.theme || "" }));
-  const artworks = dbArtworks.length > 0 ? dbArtworks : staticArtworks;
-  const filters = ["All", ...new Set(artworks.map(a => a.medium).filter(Boolean))];
+  // Use authentic original artworks by Binari Gamage
+  const artworks = PRODUCTS.map((p) => {
+    let category = "Acrylic on Canvas";
+    const mLower = (p.medium || p.materials || "").toLowerCase();
+    if (mLower.includes("oil")) category = "Oil on Canvas";
+    else if (mLower.includes("mixed-media") || mLower.includes("mix media")) category = "Mixed Media";
+    else if (mLower.includes("texture")) category = "Textured Canvas";
+    else if (mLower.includes("acrylic")) category = "Acrylic on Canvas";
+
+    return {
+      id: p.slug,
+      slug: p.slug,
+      title: p.title,
+      src: p.src,
+      medium: p.materials || p.medium,
+      category,
+      size: p.size || "",
+      description: p.theme || "",
+    };
+  });
+
+  const filters = ["All", ...new Set(artworks.map((a) => a.category).filter(Boolean))];
   const [filter, setFilter] = useState("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
 
-  const filtered = filter === "All" ? artworks : artworks.filter((a) => a.medium === filter);
+  const filtered = filter === "All" ? artworks : artworks.filter((a) => a.category === filter);
 
   return (
     <main style={{ background: "var(--bg)" }}>
@@ -123,6 +141,14 @@ export default function GalleryPage() {
                 <p style={{ fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", opacity: 0.6, marginTop: "0.3rem" }}>
                   {artworks[lightbox].medium}
                 </p>
+                <div className="mt-3">
+                  <Link
+                    href={`/shop/${artworks[lightbox].slug}`}
+                    className="btn-primary inline-block text-xs uppercase tracking-widest px-4 py-2"
+                  >
+                    View in Shop
+                  </Link>
+                </div>
               </div>
             </motion.div>
             <button
@@ -140,7 +166,6 @@ export default function GalleryPage() {
         )}
       </AnimatePresence>
 
-      <PageSections slug="gallery" />
       <Footer />
     </main>
   );

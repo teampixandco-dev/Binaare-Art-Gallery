@@ -254,7 +254,7 @@ export default function Home() {
                   becomes a language of the soul.
                 </motion.p>
                 <motion.div variants={heroItem}>
-                  <Link href="/gallery" className="btn-white btn-arrow">
+                  <Link href="/shop" className="btn-white btn-arrow">
                     Explore Gallery <ArrowRight className="w-4 h-4 btn-arrow-icon" />
                   </Link>
                 </motion.div>
@@ -450,7 +450,7 @@ export default function Home() {
               commissions, exhibitions, and collaboration opportunities.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/gallery" className="btn-primary">
+              <Link href="/shop" className="btn-primary">
                 Explore Gallery
               </Link>
               <Link href="/contact" className="btn-outline">

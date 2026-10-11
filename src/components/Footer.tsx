@@ -26,7 +26,7 @@ export default function Footer() {
 
         <div className="footer-col">
           <h4>Gallery</h4>
-          <Link href="/gallery">Online Gallery</Link>
+          <Link href="/shop">Online Gallery</Link>
           <Link href="/shop">Shop Artworks</Link>
           <Link href="/exhibitions">Exhibitions</Link>
           <Link href="/blog">Blog</Link>

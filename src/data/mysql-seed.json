@@ -1,399 +1,358 @@
 {
-  "content": {
-    "revision": 3,
-    "products": [],
-    "pages": [
-      {
-        "id": "home",
-        "slug": "home",
-        "title": "Binaare Art Gallery",
-        "subtitle": "Colors of Love",
-        "hero": "/hero-video.mp4",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": [
-          {
-            "id": "featured",
-            "title": "Featured artworks",
-            "kind": "grid",
-            "builtin": true,
-            "items": [
-              {
-                "id": "featured-0",
-                "title": "Whispers of Stillness",
-                "description": "",
-                "category": "Acrylic on Canvas",
-                "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop"
-              },
-              {
-                "id": "featured-1",
-                "title": "Emotional Currents",
-                "description": "",
-                "category": "Mixed Media",
-                "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=800&fit=crop"
-              },
-              {
-                "id": "featured-2",
-                "title": "Inner Landscape",
-                "description": "",
-                "category": "Watercolour",
-                "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=800&fit=crop"
-              },
-              {
-                "id": "featured-3",
-                "title": "Presence in Gold",
-                "description": "",
-                "category": "Textured Abstraction",
-                "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop"
-              }
-            ]
-          },
-          {
-            "id": "artist",
-            "title": "Artist portrait",
-            "kind": "single",
-            "builtin": true,
-            "items": [
-              {
-                "id": "artist-0",
-                "title": "Binari Gamage",
-                "description": "",
-                "category": "",
-                "src": "/binari-gamage-painting.webp"
-              }
-            ]
-          },
-          {
-            "id": "quote",
-            "title": "Quote background",
-            "kind": "single",
-            "builtin": true,
-            "items": [
-              {
-                "id": "quote-0",
-                "title": "Colors of Love",
-                "description": "",
-                "category": "",
-                "src": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "gallery",
-        "slug": "gallery",
-        "title": "Gallery",
-        "subtitle": "Explore the Online Gallery",
-        "hero": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=1920&h=800&fit=crop",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": [
-          {
-            "id": "artworks",
-            "title": "Gallery artworks",
-            "kind": "grid",
-            "builtin": true,
-            "items": [
-              {
-                "id": "artworks-0",
-                "title": "Whispers of Stillness",
-                "description": "",
-                "category": "Acrylic",
-                "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=800&fit=crop"
-              },
-              {
-                "id": "artworks-1",
-                "title": "Emotional Currents",
-                "description": "",
-                "category": "Mixed Media",
-                "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=900&fit=crop"
-              },
-              {
-                "id": "artworks-2",
-                "title": "Inner Landscape",
-                "description": "",
-                "category": "Watercolour",
-                "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=700&fit=crop"
-              },
-              {
-                "id": "artworks-3",
-                "title": "Presence in Gold",
-                "description": "",
-                "category": "Texture",
-                "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop"
-              },
-              {
-                "id": "artworks-4",
-                "title": "Reflections of Peace",
-                "description": "",
-                "category": "Acrylic",
-                "src": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600&h=850&fit=crop"
-              },
-              {
-                "id": "artworks-5",
-                "title": "Memory and Light",
-                "description": "",
-                "category": "Mixed Media",
-                "src": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=750&fit=crop"
-              },
-              {
-                "id": "artworks-6",
-                "title": "The Quiet Unfolding",
-                "description": "",
-                "category": "Watercolour",
-                "src": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=900&fit=crop"
-              },
-              {
-                "id": "artworks-7",
-                "title": "Layers of Emotion",
-                "description": "",
-                "category": "Texture",
-                "src": "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?w=600&h=700&fit=crop"
-              },
-              {
-                "id": "artworks-8",
-                "title": "Vulnerability in Blue",
-                "description": "",
-                "category": "Acrylic",
-                "src": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=800&fit=crop"
-              },
-              {
-                "id": "artworks-9",
-                "title": "Connection",
-                "description": "",
-                "category": "Mixed Media",
-                "src": "https://images.unsplash.com/photo-1482160549825-59d1b23cb208?w=600&h=850&fit=crop"
-              },
-              {
-                "id": "artworks-10",
-                "title": "Passage of Time",
-                "description": "",
-                "category": "Watercolour",
-                "src": "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=600&h=750&fit=crop"
-              },
-              {
-                "id": "artworks-11",
-                "title": "Balance",
-                "description": "",
-                "category": "Texture",
-                "src": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=900&fit=crop"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "shop",
-        "slug": "shop",
-        "title": "Shop",
-        "subtitle": "Original Artworks by Binari Gamage",
-        "hero": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1920&h=800&fit=crop",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": [
-          {
-            "id": "collections",
-            "title": "Shop collections",
-            "kind": "grid",
-            "builtin": true,
-            "items": [
-              {
-                "id": "collections-0",
-                "title": "Acrylic Paintings",
-                "description": "Bold expressions of emotion through vibrant acrylic layers",
-                "category": "",
-                "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=750&fit=crop"
-              },
-              {
-                "id": "collections-1",
-                "title": "Watercolour",
-                "description": "Fluid compositions capturing light, memory, and feeling",
-                "category": "",
-                "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=750&fit=crop"
-              },
-              {
-                "id": "collections-2",
-                "title": "Textured Abstraction",
-                "description": "Tactile surfaces where texture carries meaning",
-                "category": "",
-                "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=750&fit=crop"
-              },
-              {
-                "id": "collections-3",
-                "title": "Mixed Media",
-                "description": "Layered works blending materials and techniques",
-                "category": "",
-                "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=750&fit=crop"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "about",
-        "slug": "about",
-        "title": "About Us",
-        "subtitle": "The Philosophy Behind the Gallery",
-        "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": [
-          {
-            "id": "image-0",
-            "title": "Studio image",
-            "kind": "single",
-            "builtin": true,
-            "items": [
-              {
-                "id": "image-0-0",
-                "title": "Studio image",
-                "description": "",
-                "category": "",
-                "src": "/about-portrait.webp"
-              }
-            ]
-          },
-          {
-            "id": "image-1",
-            "title": "Creative process",
-            "kind": "single",
-            "builtin": true,
-            "items": [
-              {
-                "id": "image-1-0",
-                "title": "Creative process",
-                "description": "",
-                "category": "",
-                "src": "/artistic-voice.webp"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "artist",
-        "slug": "artist",
-        "title": "The Artist",
-        "subtitle": "Binari Gamage",
-        "hero": "/artworks/a-new-dawn.webp",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": [
-          {
-            "id": "image-0",
-            "title": "Artist portrait",
-            "kind": "single",
-            "builtin": true,
-            "items": [
-              {
-                "id": "image-0-0",
-                "title": "Binari Gamage",
-                "description": "",
-                "category": "",
-                "src": "/binari-gamage-painting.webp"
-              }
-            ]
-          }
-        ]
-      },
-      {
-        "id": "exhibitions",
-        "slug": "exhibitions",
-        "title": "Exhibitions",
-        "subtitle": "Where Colors of Love Comes to Life",
-        "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": []
-      },
-      {
-        "id": "blog",
-        "slug": "blog",
-        "title": "Blog",
-        "subtitle": "A journal of art, emotion, and creative reflections",
-        "hero": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=800&fit=crop",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": []
-      },
-      {
-        "id": "contact",
-        "slug": "contact",
-        "title": "Contact Us",
-        "subtitle": "We Would Love to Hear from You",
-        "hero": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1920&h=800&fit=crop",
-        "body": "",
-        "builtin": true,
-        "published": true,
-        "showInNav": false,
-        "sections": []
-      }
-    ],
-    "posts": [
-      {
-        "id": "post-0",
-        "slug": "featured-story",
-        "title": "Featured Story",
-        "excerpt": "A highlighted article that captures the current focus of the artist, a new collection, or an important reflection from the studio.",
-        "body": "A highlighted article that captures the current focus of the artist, a new collection, or an important reflection from the studio.",
-        "cover": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=400&fit=crop",
-        "images": [],
-        "published": true,
-        "date": "2026-09-26"
-      },
-      {
-        "id": "post-1",
-        "slug": "art-process",
-        "title": "Art & Process",
-        "excerpt": "Insights into Binari Gamage's creative process, exploring how acrylic texture, watercolour, and mixed media works come to life.",
-        "body": "Insights into Binari Gamage's creative process, exploring how acrylic texture, watercolour, and mixed media works come to life.",
-        "cover": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=400&fit=crop",
-        "images": [],
-        "published": true,
-        "date": "2026-09-26"
-      },
-      {
-        "id": "post-2",
-        "slug": "behind-the-canvas",
-        "title": "Behind the Canvas",
-        "excerpt": "Stories that reveal the inspiration, emotions, and moments behind selected artworks and collections.",
-        "body": "Stories that reveal the inspiration, emotions, and moments behind selected artworks and collections.",
-        "cover": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600&h=400&fit=crop",
-        "images": [],
-        "published": true,
-        "date": "2026-09-26"
-      }
-    ],
-    "media": [
-      {
-        "id": "8d47a0b5-240c-45f2-8a49-bc4735cdf205",
-        "src": "/media/8d47a0b5-240c-45f2-8a49-bc4735cdf205.webp",
-        "name": "profile.jpg",
-        "width": 917,
-        "height": 919,
-        "createdAt": "2026-09-26T11:45:57.554Z"
-      }
-    ]
-  },
-  "admins": [
+  "pages": [
     {
-      "username": "admin",
-      "password_hash": "8ee85d73ea8c15e6d868239498c80e8a:faa90762cc2d6498db84e446d1e8282e8305476ee784276c27e2f827c01f360ab296a1b9631bd63753a45905fb9bcff702410cbf0bc6c13701a1b6a9380b55aa"
+      "id": "home",
+      "slug": "home",
+      "title": "Binaare Art Gallery",
+      "subtitle": "Colors of Love",
+      "hero": "/hero-video.mp4",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": [
+        {
+          "id": "featured",
+          "title": "Featured artworks",
+          "kind": "grid",
+          "builtin": true,
+          "items": [
+            {
+              "id": "featured-0",
+              "title": "The Crimson Queen",
+              "description": "",
+              "category": "Oil on Canvas",
+              "src": "/the-crimson-queen.webp"
+            },
+            {
+              "id": "featured-1",
+              "title": "Emotional Currents",
+              "description": "",
+              "category": "Mixed Media",
+              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=900&fit=crop"
+            },
+            {
+              "id": "featured-2",
+              "title": "Inner Landscape",
+              "description": "",
+              "category": "Watercolour",
+              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=700&fit=crop"
+            },
+            {
+              "id": "featured-3",
+              "title": "Presence in Gold",
+              "description": "",
+              "category": "Texture",
+              "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop"
+            }
+          ]
+        },
+        {
+          "id": "artist",
+          "title": "Artist portrait",
+          "kind": "single",
+          "builtin": true,
+          "items": [
+            {
+              "id": "artist-0",
+              "title": "Binari Gamage",
+              "description": "",
+              "category": "",
+              "src": "/binari-gamage-painting.webp"
+            }
+          ]
+        },
+        {
+          "id": "quote",
+          "title": "Quote background",
+          "kind": "single",
+          "builtin": true,
+          "items": [
+            {
+              "id": "quote-0",
+              "title": "Colors of Love",
+              "description": "",
+              "category": "",
+              "src": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "gallery",
+      "slug": "gallery",
+      "title": "Gallery",
+      "subtitle": "Explore the Online Gallery",
+      "hero": "/artworks/reflections-of-a-golden-city.webp",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": [
+        {
+          "id": "artworks",
+          "title": "Gallery artworks",
+          "kind": "grid",
+          "builtin": true,
+          "items": [
+            {
+              "id": "artworks-0",
+              "title": "The Crimson Queen",
+              "description": "Contemporary Floral Acrylic Painting on Canvas",
+              "category": "Acrylic on Canvas",
+              "src": "/artworks/the-crimson-queen.webp"
+            },
+            {
+              "id": "artworks-1",
+              "title": "Together We Bloom",
+              "description": "Original Floral Garden Oil Painting on Canvas",
+              "category": "Oil on Canvas",
+              "src": "/artworks/together-we-bloom.webp"
+            },
+            {
+              "id": "artworks-2",
+              "title": "Beauty in Simplicity",
+              "description": "Original Textured Abstract Mix Media Landscape Painting on Canvas",
+              "category": "Textured Canvas",
+              "src": "/artworks/beauty-in-simplicity.webp"
+            },
+            {
+              "id": "artworks-3",
+              "title": "Fields of Quiet Gold",
+              "description": "Original Textured Mix Media Abstract Painting on Canvas",
+              "category": "Textured Canvas",
+              "src": "/artworks/fields-of-quiet-gold.webp"
+            },
+            {
+              "id": "artworks-4",
+              "title": "Blooming from Broken Pieces",
+              "description": "Original Textured Mixed-Media Floral Painting on Canvas",
+              "category": "Mixed Media",
+              "src": "/artworks/blooming-from-broken-pieces.webp"
+            },
+            {
+              "id": "artworks-5",
+              "title": "Reflections of a Golden City",
+              "description": "Original Textured Abstract Cityscape Painting on Canvas",
+              "category": "Mixed Media",
+              "src": "/artworks/reflections-of-a-golden-city.webp"
+            },
+            {
+              "id": "artworks-6",
+              "title": "A New Dawn",
+              "description": "Original Textured Abstract Landscape Painting on Canvas",
+              "category": "Textured Canvas",
+              "src": "/artworks/a-new-dawn.webp"
+            },
+            {
+              "id": "artworks-7",
+              "title": "Whispers of Serenity",
+              "description": "Original Textured Floral Painting on Canvas",
+              "category": "Textured Canvas",
+              "src": "/artworks/whispers-of-serenity.webp"
+            },
+            {
+              "id": "artworks-8",
+              "title": "Still She Shines",
+              "description": "Original Textured Abstract Floral Acrylic Painting on Canvas",
+              "category": "Acrylic on Canvas",
+              "src": "/artworks/still-she-shines.webp"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shop",
+      "slug": "shop",
+      "title": "Shop",
+      "subtitle": "Original Artworks by Binari Gamage",
+      "hero": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1920&h=800&fit=crop",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": [
+        {
+          "id": "collections",
+          "title": "Shop collections",
+          "kind": "grid",
+          "builtin": true,
+          "items": [
+            {
+              "id": "collections-0",
+              "title": "Acrylic Paintings",
+              "description": "Bold expressions of emotion through vibrant acrylic layers",
+              "category": "",
+              "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=750&fit=crop"
+            },
+            {
+              "id": "collections-1",
+              "title": "Watercolour",
+              "description": "Fluid compositions capturing light, memory, and feeling",
+              "category": "",
+              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=750&fit=crop"
+            },
+            {
+              "id": "collections-2",
+              "title": "Textured Abstraction",
+              "description": "Tactile surfaces where texture carries meaning",
+              "category": "",
+              "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=750&fit=crop"
+            },
+            {
+              "id": "collections-3",
+              "title": "Mixed Media",
+              "description": "Layered works blending materials and techniques",
+              "category": "",
+              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=750&fit=crop"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "about",
+      "slug": "about",
+      "title": "About Us",
+      "subtitle": "The Philosophy Behind the Gallery",
+      "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": [
+        {
+          "id": "image-0",
+          "title": "Studio image",
+          "kind": "single",
+          "builtin": true,
+          "items": [
+            {
+              "id": "image-0-0",
+              "title": "Studio image",
+              "description": "",
+              "category": "",
+              "src": "/about-portrait.webp"
+            }
+          ]
+        },
+        {
+          "id": "image-1",
+          "title": "Creative process",
+          "kind": "single",
+          "builtin": true,
+          "items": [
+            {
+              "id": "image-1-0",
+              "title": "Creative process",
+              "description": "",
+              "category": "",
+              "src": "/artist-home.webp"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "artist",
+      "slug": "artist",
+      "title": "The Artist",
+      "subtitle": "Binari Gamage",
+      "hero": "/artworks/a-new-dawn.webp",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": [
+        {
+          "id": "image-0",
+          "title": "Artist portrait",
+          "kind": "single",
+          "builtin": true,
+          "items": [
+            {
+              "id": "image-0-0",
+              "title": "Binari Gamage",
+              "description": "",
+              "category": "",
+              "src": "/binari-gamage-painting.webp"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "exhibitions",
+      "slug": "exhibitions",
+      "title": "Exhibitions",
+      "subtitle": "Where Colors of Love Comes to Life",
+      "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": []
+    },
+    {
+      "id": "blog",
+      "slug": "blog",
+      "title": "Blog",
+      "subtitle": "A journal of art, emotion, and creative reflections",
+      "hero": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=800&fit=crop",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": []
+    },
+    {
+      "id": "contact",
+      "slug": "contact",
+      "title": "Contact Us",
+      "subtitle": "We Would Love to Hear from You",
+      "hero": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1920&h=800&fit=crop",
+      "body": "",
+      "builtin": true,
+      "published": true,
+      "showInNav": false,
+      "sections": []
+    }
+  ],
+  "posts": [
+    {
+      "id": "post-0",
+      "slug": "featured-story",
+      "title": "Featured Story",
+      "excerpt": "A highlighted article that captures the current focus of the artist, a new collection, or an important reflection from the studio.",
+      "body": "A highlighted article that captures the current focus of the artist, a new collection, or an important reflection from the studio.",
+      "cover": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=400&fit=crop",
+      "images": [],
+      "published": true,
+      "date": "2026-09-26"
+    },
+    {
+      "id": "post-1",
+      "slug": "art-process",
+      "title": "Art & Process",
+      "excerpt": "Insights into Binari Gamage's creative process, exploring how acrylic texture, watercolour, and mixed media works come to life.",
+      "body": "Insights into Binari Gamage's creative process, exploring how acrylic texture, watercolour, and mixed media works come to life.",
+      "cover": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=400&fit=crop",
+      "images": [],
+      "published": true,
+      "date": "2026-09-26"
+    },
+    {
+      "id": "post-2",
+      "slug": "behind-the-canvas",
+      "title": "Behind the Canvas",
+      "excerpt": "Stories that reveal the inspiration, emotions, and moments behind selected artworks and collections.",
+      "body": "Stories that reveal the inspiration, emotions, and moments behind selected artworks and collections.",
+      "cover": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600&h=400&fit=crop",
+      "images": [],
+      "published": true,
+      "date": "2026-09-26"
     }
   ]
 }
