@@ -4,7 +4,11 @@ import { getDatabase } from "./database.mjs";
 import type { PublicContent, SiteContent } from "./content-types";
 
 export class ContentError extends Error {
-  constructor(message: string, public status = 400) { super(message); }
+  public status: number;
+  constructor(message: string, status = 400) {
+    super(message);
+    this.status = status;
+  }
 }
 export function getContent(): SiteContent {
   const db = getDatabase();
@@ -25,7 +29,7 @@ export function getContent(): SiteContent {
       changed = true;
     } else {
       const existing = productMap.get(p.slug)!;
-      if (existing.medium !== p.medium || existing.materials !== p.materials) {
+      if (existing.medium !== p.medium || existing.materials !== p.materials || existing.description !== p.description) {
         Object.assign(existing, p);
         changed = true;
       }

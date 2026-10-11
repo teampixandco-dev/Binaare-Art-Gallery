@@ -18,7 +18,8 @@ export default function CartPage() {
       <PageHero
         title="Cart"
         subtitle={itemCount ? `${itemCount} ${itemCount === 1 ? "item" : "items"}` : "Review your selection"}
-        backgroundImage="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1920&h=800&fit=crop"
+        tag="Your Selection"
+        backgroundImage="/artworks/petals-of-tender-strength.webp"
       />
 
       <section className="gallery-section" style={{ paddingTop: "3rem", paddingBottom: "6rem" }}>

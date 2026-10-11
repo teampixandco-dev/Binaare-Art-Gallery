@@ -14,7 +14,8 @@ export default function ExhibitionsPage() {
       <PageHero
         title="Exhibitions"
         subtitle="Where Colors of Love Comes to Life"
-        backgroundImage="https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop"
+        tag="Curated Spaces"
+        backgroundImage="/artworks/rhythm-of-the-city.webp"
       />
 
       {/* Intro */}

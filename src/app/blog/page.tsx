@@ -11,7 +11,12 @@ export default function BlogPage() {
   const posts = [...useContent().posts].sort((a, b) => b.date.localeCompare(a.date));
   return <main style={{ background: "var(--bg)" }}>
     <Navbar />
-    <PageHero title="Blog" subtitle="A journal of art, emotion, and creative reflections" backgroundImage="https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=800&fit=crop" />
+    <PageHero
+      title="Journal"
+      subtitle="A journal of art, emotion, and creative reflections"
+      tag="Studio Journal"
+      backgroundImage="/artworks/blooming-in-grace.webp"
+    />
     <section className="gallery-section">
       <p className="section-label">From the studio</p>
       <h2 className="section-title">Art, Emotion &amp; Creative Reflections</h2>

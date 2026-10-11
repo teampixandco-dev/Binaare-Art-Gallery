@@ -14,7 +14,8 @@ export default function ContactPage() {
       <PageHero
         title="Contact Us"
         subtitle="We Would Love to Hear from You"
-        backgroundImage="https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1920&h=800&fit=crop"
+        tag="Inquiries & Commissions"
+        backgroundImage="/artworks/whispers-of-serenity.webp"
       />
 
       <SectionReveal>

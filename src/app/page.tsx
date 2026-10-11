@@ -101,20 +101,7 @@ export default function Home() {
         ease: "none",
       });
 
-      // 3. About preview scroll-linked fade & scale as Featured Collection overlaps
-      gsap.to("#about-content", {
-        scrollTrigger: {
-          trigger: "#section-about",
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-        opacity: 0,
-        scale: 0.96,
-        y: -60,
-        ease: "none",
-      });
-
+      // 3. Refresh ScrollTrigger
       requestAnimationFrame(() => ScrollTrigger.refresh());
     });
 
@@ -280,29 +267,29 @@ export default function Home() {
       {/* ═══ ABOUT PREVIEW ═══ */}
       <section
         id="section-about"
-        className="about-section sticky top-0 min-h-screen w-full flex items-center justify-center z-[2]"
-        style={{ paddingTop: "6rem", paddingBottom: "6rem", background: "var(--bg)" }}
+        className="about-section relative w-full z-[2]"
+        style={{ paddingTop: "3rem", paddingBottom: "3rem", background: "var(--bg)" }}
       >
         <div
           id="about-content"
           className="about-content w-full gallery-section"
-          style={{ paddingTop: 0, paddingBottom: 0, willChange: "transform, opacity" }}
+          style={{ paddingTop: 0, paddingBottom: 0 }}
         >
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
+          <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
             <div className="lg:w-1/2">
               <p className="section-label">The Gallery</p>
               <h2 className="section-title">Where Art Is Felt</h2>
               <div className="section-divider" />
             </div>
             <div className="lg:w-1/2">
-              <p className="section-text" style={{ marginBottom: "1.5rem" }}>
+              <p className="section-text" style={{ marginBottom: "1.25rem" }}>
                 Binaare Art Gallery is a contemplative creative space where emotion finds form
                 and colour becomes a language of the soul. Rooted in the philosophy of Colors of
                 Love, the gallery presents works that explore the quiet depth of human feeling
                 through acrylic paintings, expressive landscapes, textured abstraction,
                 watercolour compositions, and layered mixed media.
               </p>
-              <Link href="/about" className="btn-outline btn-arrow">
+              <Link href="/about" className="btn-outline btn-arrow rounded-xs">
                 Learn More <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
               </Link>
             </div>
@@ -310,14 +297,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ FEATURED COLLECTION (Parallax Gallery) ═══ */}
+      {/* ═══ FEATURED COLLECTION ═══ */}
       <section
         id="section-featured-collection"
         className="featured-section relative z-[3] w-full"
-        style={{ background: "var(--bg-alt)", padding: "6rem 0" }}
+        style={{ background: "var(--bg-alt)", paddingTop: "3.5rem", paddingBottom: "3.5rem" }}
       >
         <div className="gallery-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
-          <div className="text-center" style={{ marginBottom: "4rem" }}>
+          <div className="text-center" style={{ marginBottom: "2.5rem" }}>
             <p className="section-label">Featured Collection</p>
             <h2 className="section-title">Selected Works</h2>
           </div>
@@ -326,41 +313,56 @@ export default function Home() {
             {featuredWorks.map((work, i) => (
               <motion.div
                 key={work.id}
-                className="group flex flex-col h-full bg-white p-4 md:p-5 shadow-sm border border-[#E7E0D7]/50"
-                style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
-                initial={{ y: 50, opacity: 0 }}
+                className="group flex flex-col h-full bg-white p-4 sm:p-5 rounded-xs border border-[#EBE5DA] shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                initial={{ y: 40, opacity: 0 }}
                 whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.7, delay: i * 0.1, ease }}
+                transition={{ duration: 0.6, delay: i * 0.1, ease }}
               >
-                <div className="relative overflow-hidden w-full aspect-[4/5] mb-5" style={{ background: "var(--bg-alt)" }}>
-                  <Link href={`/shop/${work.slug}`} className="absolute inset-0 z-10">
+                {/* Artwork display box with extra-small radius and object-contain */}
+                <div className="relative w-full aspect-[4/4.5] bg-[#FAF8F5] p-3 rounded-xs flex items-center justify-center mb-3.5">
+                  <Link href={`/shop/${work.slug}`} className="relative w-full h-full flex items-center justify-center">
                     <Image
                       src={work.src}
                       alt={work.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                      className="object-contain transition-transform duration-500 group-hover:scale-105"
                     />
                   </Link>
                 </div>
-                
-                <div className="flex-1 flex flex-col justify-start text-center">
-                  <h3 className="font-serif text-[1.1rem] md:text-[1.15rem] mb-2 leading-snug" style={{ color: "var(--fg)" }}>
-                    <Link href={`/shop/${work.slug}`} className="transition-colors hover:text-[color:var(--accent)]">
+
+                {/* Card Info */}
+                <div className="flex-1 flex flex-col items-center text-center">
+                  {/* Centered gold divider line */}
+                  <div className="w-8 h-[1px] bg-[#B78646] mx-auto my-2" />
+
+                  <h3 className="font-serif text-[1.08rem] sm:text-[1.12rem] font-normal leading-snug px-1 text-[#24211F] line-clamp-2">
+                    <Link href={`/shop/${work.slug}`} className="transition-colors hover:text-[#8C704F]">
                       {work.title}
                     </Link>
                   </h3>
-                  <p className="text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.15em] leading-relaxed" style={{ color: "var(--fg-muted)" }}>
+                  <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#77716B] leading-relaxed mt-1.5 mb-4 line-clamp-2">
                     {work.medium}
                   </p>
+
+                  {/* Centered circular outline arrow button */}
+                  <div className="mt-auto flex justify-center pb-1">
+                    <Link
+                      href={`/shop/${work.slug}`}
+                      className="w-9 h-9 rounded-full border border-[#B78646]/70 flex items-center justify-center text-[#B78646] hover:bg-[#8C704F] hover:text-white hover:border-[#8C704F] transition-all"
+                      aria-label={`View ${work.title}`}
+                    >
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <div className="text-center" style={{ marginTop: "3rem" }}>
-            <Link href="/shop" className="btn-primary btn-arrow">
+          <div className="text-center" style={{ marginTop: "2.5rem" }}>
+            <Link href="/shop" className="btn-primary btn-arrow rounded-xs">
               View Shop <ArrowRight className="w-4 h-4 btn-arrow-icon" />
             </Link>
           </div>
@@ -371,17 +373,18 @@ export default function Home() {
       <div className="relative z-[3] w-full" style={{ background: "var(--bg)" }}>
         {/* ═══ ARTIST PREVIEW ═══ */}
         <SectionReveal>
-          <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem", background: "var(--bg)" }}>
+          <section className="gallery-section" style={{ paddingTop: "4rem", paddingBottom: "4rem", background: "var(--bg)" }}>
             <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start justify-center">
               <div className="lg:w-4/12">
                 <div style={{ overflow: "hidden", borderRadius: "2px" }}>
                   <Image
-                    src={page?.sections.find(s => s.id === "artist")?.items[0]?.src || HERO_POSTER}
-                    alt={page?.sections.find(s => s.id === "artist")?.items[0]?.title || "Binari Gamage - Artist"}
+                    src="/binari-gamage-painting.webp"
+                    alt="Binari Gamage - Artist"
                     width={800}
                     height={1200}
                     sizes="(max-width: 1024px) 100vw, 33vw"
                     style={{ width: "100%", height: "auto", objectFit: "cover" }}
+                    priority
                   />
                 </div>
               </div>
@@ -400,7 +403,7 @@ export default function Home() {
                   art becomes a personal language — one that speaks of transformation, presence,
                   and the quiet unfolding of self.
                 </p>
-                <Link href="/artist" className="btn-outline btn-arrow">
+                <Link href="/artist" className="btn-outline btn-arrow rounded-xs">
                   Read Full Story <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
                 </Link>
               </div>
@@ -413,8 +416,8 @@ export default function Home() {
           id="section-10-1219"
           className="relative flex items-center justify-center text-center overflow-hidden"
           style={{
-            minHeight: "60vh",
-            backgroundImage: `url(${page?.sections.find(s => s.id === "quote")?.items[0]?.src || HERO_POSTER})`,
+            minHeight: "55vh",
+            backgroundImage: "url(/artworks/whispers-of-serenity.webp)",
             backgroundSize: "cover",
             backgroundPosition: "50% 100%",
           }}

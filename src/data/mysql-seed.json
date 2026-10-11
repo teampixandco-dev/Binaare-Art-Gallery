@@ -284,7 +284,7 @@
         "slug": "artist",
         "title": "The Artist",
         "subtitle": "Binari Gamage",
-        "hero": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1920&h=800&fit=crop",
+        "hero": "/artworks/a-new-dawn.webp",
         "body": "",
         "builtin": true,
         "published": true,
@@ -301,7 +301,7 @@
                 "title": "Binari Gamage",
                 "description": "",
                 "category": "",
-                "src": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=800&fit=crop"
+                "src": "/binari-gamage-painting.webp"
               }
             ]
           }

@@ -1,10 +1,11 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import {
   Search,
+  X,
   LayoutGrid,
   List,
   Heart,
@@ -16,7 +17,9 @@ import {
   Sparkles,
   ChevronLeft,
   ChevronRight,
-  ArrowRight
+  ArrowUpRight,
+  ChevronDown,
+  Check
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -24,7 +27,7 @@ import { useContent } from "@/context/ContentContext";
 import { useCart } from "@/context/CartContext";
 import { PRODUCTS as STATIC_PRODUCTS, Product } from "@/data/products";
 
-// Subtitle generator to match: "Oil on Canvas • Floral" / "Acrylic on Canvas • Abstract"
+// Subtitle generator: "Oil on Canvas • Floral" / "Acrylic on Canvas • Abstract"
 function getArtworkSubtitle(product: Product): string {
   let medium = "Acrylic on Canvas";
   const mLower = (product.medium || product.materials || "").toLowerCase();
@@ -45,6 +48,12 @@ function getArtworkSubtitle(product: Product): string {
   return `${medium} • ${cat}`;
 }
 
+const SORT_OPTIONS = [
+  { value: "featured", label: "Featured" },
+  { value: "title-asc", label: "Title: A – Z" },
+  { value: "title-desc", label: "Title: Z – A" },
+];
+
 const ITEMS_PER_PAGE = 12;
 
 export default function ShopPage() {
@@ -57,7 +66,21 @@ export default function ShopPage() {
   const { addItem } = useCart();
   const [activeCategory, setActiveCategory] = useState("All");
   const [searchQuery, setSearchQuery] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [sortBy, setSortBy] = useState("featured");
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (sortRef.current && !sortRef.current.contains(event.target as Node)) {
+        setIsSortOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
   const [layout, setLayout] = useState<"grid" | "list">("grid");
   const [currentPage, setCurrentPage] = useState(1);
   const [favorites, setFavorites] = useState<string[]>(() => {
@@ -91,7 +114,7 @@ export default function ShopPage() {
     }, 2000);
   };
 
-  // Category Pills (Oil Painting, Water color, Mixed Media, Texture, Acrylic, along with All)
+  // Category Pills: All, Oil Painting, Water color, Mixed Media, Texture, Acrylic
   const categories = [
     { label: "All", icon: <Sparkles size={13} /> },
     { label: "Oil Painting", icon: <Palette size={13} /> },
@@ -169,55 +192,43 @@ export default function ShopPage() {
     return filteredAndSortedProducts.slice(start, start + ITEMS_PER_PAGE);
   }, [filteredAndSortedProducts, currentPage]);
 
-  const scrollToGrid = () => {
-    const el = document.getElementById("products-grid-section");
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-  };
-
   return (
-    <main style={{ background: "#FAF8F5", color: "#24211F" }} className="min-h-screen flex flex-col">
+    <div className="min-h-screen bg-[#FAF8F5] text-[#24211F] flex flex-col font-sans">
       <Navbar />
 
-      {/* Hero Banner (Matching Reference Image) */}
-      <section className="max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-4 pb-2">
-        <div className="relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[300px] sm:min-h-[360px] md:min-h-[380px] flex items-center justify-center text-center p-6 sm:p-12 shadow-sm border border-[#E7E0D7]">
-          {/* Floral Art Background with Dark Vignette Overlay */}
-          <Image
-            src="/artworks/together-we-bloom.webp"
-            alt="Original Artworks by Binari Gamage"
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/70" />
+      {/* Reduced Height Full-Width Hero Banner (No Curves, One-Line Title) */}
+      <section className="relative w-full overflow-hidden min-h-[220px] sm:min-h-[250px] md:min-h-[270px] flex items-center justify-center text-center px-4 py-8 sm:py-10">
+        <Image
+          src="/artworks/together-we-bloom.webp"
+          alt="Original Artworks by Binari Gamage"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/75" />
 
-          {/* Hero Content */}
-          <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
-            <span className="text-[0.68rem] uppercase tracking-[0.24em] font-semibold text-[#D6BC94] mb-3 block">
-              Original Artworks
-            </span>
-            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-white leading-[1.18] mb-3">
-              Art for a More Beautiful Everyday
-            </h1>
-            <p className="text-white/80 text-xs sm:text-sm font-light leading-relaxed mb-6 max-w-lg">
-              Timeless paintings for a more beautiful world.
-            </p>
-            <button
-              onClick={scrollToGrid}
-              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white text-[0.7rem] uppercase tracking-[0.16em] font-semibold transition-all duration-300 shadow-md cursor-pointer hover:scale-105"
-            >
-              Shop Collection <ArrowRight size={14} />
-            </button>
-          </div>
+        {/* Hero Content */}
+        <div className="relative z-10 max-w-5xl mx-auto flex flex-col items-center">
+          <span className="text-[0.65rem] uppercase tracking-[0.26em] font-semibold text-[#D6BC94] mb-2 block">
+            Original Artworks
+          </span>
+          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-normal text-white leading-tight mb-2 whitespace-nowrap">
+            Art for a More Beautiful Everyday
+          </h1>
+          <p className="text-white/85 text-xs sm:text-sm font-light leading-relaxed max-w-xl">
+            Timeless paintings celebrating resilience, friendship, and the quiet richness of life.
+          </p>
         </div>
       </section>
 
-      {/* Categories Toolbar & Search Area (Integrated into Search Section as requested) */}
-      <section id="products-grid-section" className="max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-8 pb-4">
+      {/* Categories Toolbar & Interactive Expandable Search */}
+      <section id="products-grid-section" className="max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-6 pb-4">
         
-        {/* Top: Pill Category Buttons */}
-        <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-[#E7E0D7]/70">
+        {/* Top Toolbar Row */}
+        <div className="flex items-center justify-between gap-3 flex-wrap pb-4 border-b border-[#E7E0D7]/70">
+          
+          {/* Left: Category Pills (Extra Small Radius, Old Project Golden-Brown #8C704F) */}
           <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-1 shrink-0 max-w-full">
             {categories.map((cat) => {
               const isSelected = activeCategory === cat.label;
@@ -229,9 +240,9 @@ export default function ShopPage() {
                     setActiveCategory(cat.label);
                     setCurrentPage(1);
                   }}
-                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xs text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? "bg-[#B78646] text-white shadow-xs"
+                      ? "bg-[#8C704F] text-white shadow-xs font-semibold"
                       : "bg-white text-[#555] border border-[#E7E0D7] hover:bg-[#F5F2EB] hover:text-[#24211F]"
                   }`}
                 >
@@ -242,86 +253,145 @@ export default function ShopPage() {
             })}
           </div>
 
-          {/* Right Controls: Sort & Layout */}
-          <div className="flex items-center gap-3 shrink-0 ml-auto">
-            <span className="text-[0.68rem] uppercase tracking-wider text-[#77716B] font-medium hidden sm:inline-block">
+          {/* Right Controls: Expandable Search, Sort & Layout Switcher */}
+          <div className="flex items-center gap-2.5 shrink-0 ml-auto">
+            
+            {/* Expandable Search Button */}
+            {isSearchOpen ? (
+              <div className="relative flex items-center transition-all duration-300">
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Search title, medium..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-44 sm:w-60 bg-white border border-[#E7E0D7] rounded-xs py-1.5 pl-3 pr-8 text-xs text-[#24211F] outline-none focus:border-[#8C704F] transition-all shadow-xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsSearchOpen(false);
+                    setSearchQuery("");
+                  }}
+                  aria-label="Close search"
+                  className="absolute right-2 text-[#77716B] hover:text-[#24211F] p-0.5 cursor-pointer"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setIsSearchOpen(true)}
+                aria-label="Search artworks"
+                title="Search"
+                className="h-8 px-2.5 bg-white border border-[#E7E0D7] hover:border-[#8C704F] text-[#555] hover:text-[#24211F] rounded-xs transition-colors cursor-pointer flex items-center justify-center gap-1 text-xs"
+              >
+                <Search size={14} />
+                <span className="hidden sm:inline text-[0.7rem] uppercase tracking-wider font-medium">Search</span>
+              </button>
+            )}
+
+            <span className="text-[0.68rem] uppercase tracking-wider text-[#77716B] font-medium hidden md:inline-block">
               {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? "Artwork" : "Artworks"}
             </span>
 
-            {/* Sort Dropdown */}
-            <select
-              value={sortBy}
-              onChange={(e) => {
-                setSortBy(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="bg-white border border-[#E7E0D7] text-[#24211F] rounded-full py-1.5 px-3.5 text-xs outline-none cursor-pointer hover:border-[#B78646] transition-colors"
-            >
-              <option value="featured">Sort by: Featured</option>
-              <option value="title-asc">Title: A – Z</option>
-              <option value="title-desc">Title: Z – A</option>
-            </select>
+            {/* Shadcn-Style Sort Dropdown */}
+            <div className="relative" ref={sortRef}>
+              <button
+                type="button"
+                onClick={() => setIsSortOpen((prev) => !prev)}
+                aria-haspopup="listbox"
+                aria-expanded={isSortOpen}
+                className="h-8 px-2.5 sm:px-3 bg-white border border-[#E7E0D7] hover:border-[#8C704F] text-[#24211F] rounded-xs text-xs flex items-center gap-1.5 cursor-pointer transition-colors shadow-xs"
+              >
+                <span className="text-[#77716B] text-[0.68rem] uppercase tracking-wider font-medium">Sort:</span>
+                <span className="font-medium">
+                  {SORT_OPTIONS.find((opt) => opt.value === sortBy)?.label || "Featured"}
+                </span>
+                <ChevronDown size={13} className={`text-[#77716B] transition-transform duration-200 ${isSortOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {isSortOpen && (
+                <div
+                  role="listbox"
+                  className="absolute right-0 top-full mt-1.5 w-44 bg-white border border-[#E7E0D7] rounded-xs shadow-lg py-1 z-50 animate-in fade-in zoom-in-95 duration-150"
+                >
+                  {SORT_OPTIONS.map((opt) => {
+                    const isSelected = sortBy === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        role="option"
+                        aria-selected={isSelected}
+                        onClick={() => {
+                          setSortBy(opt.value);
+                          setCurrentPage(1);
+                          setIsSortOpen(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 text-xs flex items-center justify-between transition-colors cursor-pointer ${
+                          isSelected
+                            ? "bg-[#FAF8F5] text-[#8C704F] font-semibold"
+                            : "text-[#24211F] hover:bg-[#FAF8F5] hover:text-[#8C704F]"
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check size={13} className="text-[#8C704F]" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
 
             {/* View Switcher */}
-            <div className="flex items-center gap-1 bg-white border border-[#E7E0D7] rounded-full p-1">
+            <div className="flex items-center gap-1 bg-white border border-[#E7E0D7] rounded-xs p-0.5">
               <button
                 type="button"
                 onClick={() => setLayout("grid")}
                 aria-label="Grid view"
-                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                  layout === "grid" ? "bg-[#B78646] text-white" : "text-[#77716B] hover:text-[#24211F]"
+                className={`p-1.5 rounded-xs transition-colors cursor-pointer ${
+                  layout === "grid" ? "bg-[#8C704F] text-white" : "text-[#77716B] hover:text-[#24211F]"
                 }`}
               >
-                <LayoutGrid size={15} />
+                <LayoutGrid size={14} />
               </button>
               <button
                 type="button"
                 onClick={() => setLayout("list")}
                 aria-label="List view"
-                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
-                  layout === "list" ? "bg-[#B78646] text-white" : "text-[#77716B] hover:text-[#24211F]"
+                className={`p-1.5 rounded-xs transition-colors cursor-pointer ${
+                  layout === "list" ? "bg-[#8C704F] text-white" : "text-[#77716B] hover:text-[#24211F]"
                 }`}
               >
-                <List size={15} />
+                <List size={14} />
               </button>
             </div>
           </div>
         </div>
 
-        {/* Search Bar Row */}
-        <div className="pt-4 flex items-center justify-between gap-4">
-          <div className="relative w-full max-w-md">
-            <input
-              type="text"
-              placeholder="Search by title, medium, theme..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full bg-white border border-[#E7E0D7] rounded-full py-2 pl-4 pr-10 text-xs text-[#24211F] placeholder:text-[#9C948B] outline-none hover:border-[#B78646] focus:border-[#B78646] transition-colors"
-            />
-            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9C948B] pointer-events-none" size={14} />
-          </div>
-
-          {searchQuery && (
+        {/* Active Search Badge (if search query is active and input closed) */}
+        {searchQuery && !isSearchOpen && (
+          <div className="pt-3 flex items-center gap-2">
+            <span className="text-xs text-[#77716B]">Filtering by: &ldquo;{searchQuery}&rdquo;</span>
             <button
-              onClick={() => {
-                setSearchQuery("");
-                setCurrentPage(1);
-              }}
-              className="text-xs text-[#740D18] hover:underline cursor-pointer"
+              onClick={() => setSearchQuery("")}
+              className="text-xs text-[#8C704F] font-semibold hover:underline cursor-pointer"
             >
-              Clear search
+              Clear
             </button>
-          )}
-        </div>
+          </div>
+        )}
       </section>
 
       {/* Product Display Section */}
-      <section className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-4 pb-20">
+      <section className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-2 pb-20">
         {filteredAndSortedProducts.length === 0 ? (
-          <div className="text-center py-24 bg-white rounded-2xl border border-[#E7E0D7] p-8 max-w-xl mx-auto shadow-sm">
+          <div className="text-center py-20 bg-white rounded-xs border border-[#E7E0D7] p-8 max-w-xl mx-auto shadow-xs">
             <p className="font-serif italic text-2xl mb-3 text-[#24211F]">No artworks found</p>
             <p className="text-xs text-[#77716B] mb-6 font-light">
               No artworks match your selected criteria.
@@ -332,14 +402,14 @@ export default function ShopPage() {
                 setSearchQuery("");
                 setSortBy("featured");
               }}
-              className="px-6 py-2.5 rounded-full bg-[#B78646] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#9E7134] transition-colors cursor-pointer"
+              className="px-6 py-2.5 rounded-xs bg-[#8C704F] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#785E3E] transition-colors cursor-pointer"
             >
               Reset Filters
             </button>
           </div>
         ) : (
           <>
-            {/* GRID VIEW (Modern elevated rounded card buttons matching reference SS) */}
+            {/* GRID VIEW */}
             {layout === "grid" ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-300">
                 {paginatedProducts.map((item) => {
@@ -349,11 +419,11 @@ export default function ShopPage() {
                   return (
                     <article
                       key={item.slug}
-                      className="bg-white rounded-2xl p-4 border border-[#F0EBE1] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group"
+                      className="bg-white rounded-xs p-3.5 border border-[#EBE5DA] shadow-xs hover:shadow-md transition-all duration-300 flex flex-col justify-between group"
                     >
                       {/* Image Area with Heart in Top Right Corner */}
                       <div>
-                        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#FAF8F5] mb-3.5">
+                        <div className="relative aspect-[4/3] rounded-[2px] overflow-hidden bg-[#FAF8F5] mb-3">
                           <Link href={`/shop/${item.slug}`} className="relative w-full h-full block">
                             <Image
                               src={item.src}
@@ -364,7 +434,7 @@ export default function ShopPage() {
                             />
                           </Link>
 
-                          {/* Small Favorite Heart Button */}
+                          {/* Favorite Heart Button */}
                           <button
                             type="button"
                             onClick={(e) => {
@@ -373,41 +443,50 @@ export default function ShopPage() {
                               toggleFavorite(item.slug);
                             }}
                             aria-label={`Favorite ${item.title}`}
-                            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
+                            className="absolute top-2 right-2 w-7 h-7 rounded-xs bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
                           >
                             <Heart
-                              size={14}
-                              className={isFav ? "fill-[#B78646] text-[#B78646]" : "text-[#77716B]"}
+                              size={13}
+                              className={isFav ? "fill-[#8C704F] text-[#8C704F]" : "text-[#77716B]"}
                             />
                           </button>
                         </div>
 
                         {/* Title */}
-                        <h3 className="font-serif font-medium text-[1.05rem] leading-snug text-[#24211F] line-clamp-1 mb-1 transition-colors group-hover:text-[#B78646]">
+                        <h3 className="font-serif font-medium text-[1.02rem] leading-snug text-[#24211F] line-clamp-1 mb-1 transition-colors group-hover:text-[#8C704F]">
                           <Link href={`/shop/${item.slug}`}>{item.title}</Link>
                         </h3>
 
-                        {/* Subtitle / Medium */}
-                        <p className="text-xs text-[#77716B] mb-4 truncate">
-                          {getArtworkSubtitle(item)}
+                        {/* Dimensions / Subtitle */}
+                        <p className="text-[0.68rem] uppercase tracking-[0.14em] text-[#77716B] mb-3 truncate font-medium">
+                          {item.width && item.height ? `${item.width.replace(' inches', '″')} × ${item.height.replace(' inches', '″')}` : getArtworkSubtitle(item)}
                         </p>
                       </div>
 
-                      {/* Pill-shaped Add to Cart Button (Using Old Golden Color #B78646) */}
-                      <button
-                        type="button"
-                        onClick={() => handleAddToCart(item.slug)}
-                        className="w-full py-2.5 px-4 rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white text-[0.7rem] uppercase tracking-[0.14em] font-semibold transition-all duration-200 text-center shadow-xs whitespace-nowrap cursor-pointer mt-auto"
-                      >
-                        {isAdded ? "Added to Cart ✓" : "Add to Cart"}
-                      </button>
+                      {/* Button Row Matching Old Project Screenshot: [ ADD TO CART ] [ VIEW ↗ ] */}
+                      <div className="grid grid-cols-[1fr_auto] gap-2 pt-1 mt-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCart(item.slug)}
+                          className="h-9 min-h-[36px] px-3 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                        >
+                          {isAdded ? "Added ✓" : "Add to Cart"}
+                        </button>
+
+                        <Link
+                          href={`/shop/${item.slug}`}
+                          className="h-9 min-h-[36px] px-3 bg-white border border-[#D5CEC2] hover:border-[#8C704F] text-[#24211F] hover:text-[#8C704F] text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors inline-flex items-center justify-center gap-1 rounded-xs whitespace-nowrap"
+                        >
+                          View <ArrowUpRight size={13} />
+                        </Link>
+                      </div>
                     </article>
                   );
                 })}
               </div>
             ) : (
-              /* LIST VIEW (Smooth transition, zero lag) */
-              <div className="flex flex-col gap-5 max-w-4xl mx-auto transition-opacity duration-300">
+              /* LIST VIEW */
+              <div className="flex flex-col gap-4 max-w-4xl mx-auto transition-opacity duration-300">
                 {paginatedProducts.map((item) => {
                   const isFav = favorites.includes(item.slug);
                   const isAdded = addedSlugs[item.slug];
@@ -415,10 +494,10 @@ export default function ShopPage() {
                   return (
                     <article
                       key={item.slug}
-                      className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0EBE1] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row gap-5 items-stretch transition-all duration-300 group"
+                      className="bg-white rounded-xs p-4 border border-[#EBE5DA] shadow-xs hover:shadow-md flex flex-col sm:flex-row gap-5 items-stretch transition-all duration-300 group"
                     >
                       {/* Left Image Area */}
-                      <div className="relative w-full sm:w-56 aspect-[4/3] rounded-xl overflow-hidden bg-[#FAF8F5] shrink-0">
+                      <div className="relative w-full sm:w-56 aspect-[4/3] rounded-[2px] overflow-hidden bg-[#FAF8F5] shrink-0">
                         <Link href={`/shop/${item.slug}`} className="relative w-full h-full block">
                           <Image
                             src={item.src}
@@ -437,43 +516,43 @@ export default function ShopPage() {
                             toggleFavorite(item.slug);
                           }}
                           aria-label={`Favorite ${item.title}`}
-                          className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
+                          className="absolute top-2 right-2 w-7 h-7 rounded-xs bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
                         >
                           <Heart
-                            size={14}
-                            className={isFav ? "fill-[#B78646] text-[#B78646]" : "text-[#77716B]"}
+                            size={13}
+                            className={isFav ? "fill-[#8C704F] text-[#8C704F]" : "text-[#77716B]"}
                           />
                         </button>
                       </div>
 
                       {/* Right Details */}
-                      <div className="flex-1 flex flex-col justify-between py-1">
+                      <div className="flex-1 flex flex-col justify-between py-0.5">
                         <div>
-                          <h3 className="font-serif text-[1.2rem] font-medium leading-snug text-[#24211F] mb-1 transition-colors group-hover:text-[#B78646]">
+                          <h3 className="font-serif text-[1.18rem] font-medium leading-snug text-[#24211F] mb-1 transition-colors group-hover:text-[#8C704F]">
                             <Link href={`/shop/${item.slug}`}>{item.title}</Link>
                           </h3>
-                          <p className="text-xs text-[#77716B] mb-2 font-medium">
+                          <p className="text-[0.7rem] uppercase tracking-[0.14em] text-[#77716B] mb-2 font-medium">
                             {getArtworkSubtitle(item)} · {item.width && item.height ? `${item.width} × ${item.height}` : item.size}
                           </p>
                           <p className="text-xs text-[#77716B] leading-relaxed line-clamp-2 mb-4 font-light">
-                            {item.description}
+                            {item.description.replace(/\*\*/g, "").replace(/\*/g, "")}
                           </p>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handleAddToCart(item.slug)}
-                            className="py-2.5 px-6 rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white text-[0.7rem] uppercase tracking-[0.14em] font-semibold transition-all duration-200 text-center shadow-xs whitespace-nowrap cursor-pointer"
+                            className="h-9 min-h-[36px] px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
                           >
                             {isAdded ? "Added to Cart ✓" : "Add to Cart"}
                           </button>
 
                           <Link
                             href={`/shop/${item.slug}`}
-                            className="py-2.5 px-5 rounded-full border border-[#E7E0D7] text-[#24211F] hover:border-[#B78646] text-[0.7rem] uppercase tracking-[0.14em] font-semibold transition-colors whitespace-nowrap"
+                            className="h-9 min-h-[36px] px-4 bg-white border border-[#D5CEC2] hover:border-[#8C704F] text-[#24211F] hover:text-[#8C704F] text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors inline-flex items-center justify-center gap-1 rounded-xs whitespace-nowrap"
                           >
-                            View
+                            View <ArrowUpRight size={13} />
                           </Link>
                         </div>
                       </div>
@@ -483,7 +562,7 @@ export default function ShopPage() {
               </div>
             )}
 
-            {/* Pagination (Matching Reference Image < 1 2 >) */}
+            {/* Pagination (< 1 2 >) */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-12 pt-6 border-t border-[#E7E0D7]/70">
                 <button
@@ -491,7 +570,7 @@ export default function ShopPage() {
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
                   aria-label="Previous page"
-                  className="w-8 h-8 rounded-full border border-[#E7E0D7] bg-white flex items-center justify-center text-xs text-[#24211F] hover:border-[#B78646] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-xs border border-[#E7E0D7] bg-white flex items-center justify-center text-xs text-[#24211F] hover:border-[#8C704F] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
                   <ChevronLeft size={14} />
                 </button>
@@ -500,14 +579,11 @@ export default function ShopPage() {
                   <button
                     key={page}
                     type="button"
-                    onClick={() => {
-                      setCurrentPage(page);
-                      scrollToGrid();
-                    }}
-                    className={`w-8 h-8 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                    onClick={() => setCurrentPage(page)}
+                    className={`w-8 h-8 rounded-xs text-xs font-semibold transition-colors cursor-pointer ${
                       currentPage === page
-                        ? "bg-[#B78646] text-white shadow-xs"
-                        : "bg-white border border-[#E7E0D7] text-[#555] hover:border-[#B78646] hover:text-[#24211F]"
+                        ? "bg-[#8C704F] text-white shadow-xs"
+                        : "bg-white border border-[#E7E0D7] text-[#555] hover:border-[#8C704F] hover:text-[#24211F]"
                     }`}
                   >
                     {page}
@@ -519,17 +595,16 @@ export default function ShopPage() {
                   onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
                   aria-label="Next page"
-                  className="w-8 h-8 rounded-full border border-[#E7E0D7] bg-white flex items-center justify-center text-xs text-[#24211F] hover:border-[#B78646] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                  className="w-8 h-8 rounded-xs border border-[#E7E0D7] bg-white flex items-center justify-center text-xs text-[#24211F] hover:border-[#8C704F] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
                 >
                   <ChevronRight size={14} />
                 </button>
               </div>
             )}
 
-            {/* Newsletter Promotional Banner (Matching Reference Image bottom section) */}
-            <div className="rounded-2xl border border-[#E7E0D7] bg-white p-6 sm:p-8 mt-16 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
-              {/* Left Room Preview Image */}
-              <div className="relative w-full md:w-36 h-28 rounded-xl overflow-hidden shrink-0 bg-[#FAF8F5]">
+            {/* Newsletter Promotional Banner */}
+            <div className="rounded-xs border border-[#E7E0D7] bg-white p-6 sm:p-8 mt-14 shadow-xs flex flex-col md:flex-row items-center justify-between gap-6">
+              <div className="relative w-full md:w-36 h-28 rounded-[2px] overflow-hidden shrink-0 bg-[#FAF8F5]">
                 <Image
                   src="/artworks/wings-of-golden-courage.webp"
                   alt="Art in interior space"
@@ -539,9 +614,8 @@ export default function ShopPage() {
                 />
               </div>
 
-              {/* Middle Text */}
               <div className="flex-1 text-center md:text-left">
-                <span className="text-[0.65rem] uppercase tracking-[0.2em] font-semibold text-[#B78646] mb-1 block">
+                <span className="text-[0.65rem] uppercase tracking-[0.2em] font-semibold text-[#8C704F] mb-1 block">
                   Stay in the loop
                 </span>
                 <h3 className="font-serif text-xl sm:text-2xl text-[#24211F] font-normal mb-1.5">
@@ -552,7 +626,6 @@ export default function ShopPage() {
                 </p>
               </div>
 
-              {/* Right Subscribe Form */}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -564,7 +637,7 @@ export default function ShopPage() {
                 className="flex items-center gap-2 w-full md:w-auto"
               >
                 {subscribed ? (
-                  <span className="text-xs font-semibold text-[#B78646] px-4 py-2 bg-[#FAF8F5] rounded-full border border-[#B78646]">
+                  <span className="text-xs font-semibold text-[#8C704F] px-4 py-2 bg-[#FAF8F5] rounded-xs border border-[#8C704F]">
                     Thank you for subscribing!
                   </span>
                 ) : (
@@ -575,11 +648,11 @@ export default function ShopPage() {
                       placeholder="Your email address"
                       value={emailInput}
                       onChange={(e) => setEmailInput(e.target.value)}
-                      className="bg-[#FAF8F5] border border-[#E7E0D7] rounded-full py-2.5 px-4 text-xs text-[#24211F] outline-none focus:border-[#B78646] w-full sm:w-60"
+                      className="bg-[#FAF8F5] border border-[#E7E0D7] rounded-xs py-2 px-3 text-xs text-[#24211F] outline-none focus:border-[#8C704F] w-full sm:w-60"
                     />
                     <button
                       type="submit"
-                      className="rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white px-6 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 cursor-pointer shadow-xs"
+                      className="py-2 px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-xs font-semibold uppercase tracking-wider rounded-xs transition-colors whitespace-nowrap cursor-pointer"
                     >
                       Subscribe
                     </button>
@@ -592,6 +665,6 @@ export default function ShopPage() {
       </section>
 
       <Footer />
-    </main>
+    </div>
   );
 }

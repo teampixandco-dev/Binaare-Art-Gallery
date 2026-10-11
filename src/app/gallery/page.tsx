@@ -11,11 +11,15 @@ import PageHero from "@/components/PageHero";
 
 
 
+import { PRODUCTS } from "@/data/products";
+
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function GalleryPage() {
   const page = usePageContent("gallery");
-  const artworks = (page?.sections.find(s => s.id === "artworks")?.items || []).map(item => ({ ...item, medium: item.category }));
+  const dbArtworks = (page?.sections.find(s => s.id === "artworks")?.items || []).map(item => ({ ...item, medium: item.category }));
+  const staticArtworks = PRODUCTS.map(p => ({ id: p.slug, title: p.title, src: p.src, medium: p.medium, description: p.theme || "" }));
+  const artworks = dbArtworks.length > 0 ? dbArtworks : staticArtworks;
   const filters = ["All", ...new Set(artworks.map(a => a.medium).filter(Boolean))];
   const [filter, setFilter] = useState("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
@@ -27,8 +31,9 @@ export default function GalleryPage() {
       <Navbar />
       <PageHero
         title="Gallery"
-        subtitle="Explore the Online Gallery"
-        backgroundImage="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=1920&h=800&fit=crop"
+        subtitle="Explore the Complete Collection of Original Paintings"
+        tag="Original Collection"
+        backgroundImage="/artworks/reflections-of-a-golden-city.webp"
       />
 
       <section className="gallery-section">

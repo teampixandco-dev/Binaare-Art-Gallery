@@ -16,8 +16,9 @@ export default function AboutPage() {
       <Navbar />
       <PageHero
         title="About Us"
-        subtitle="The Philosophy Behind the Gallery"
-        backgroundImage="https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop"
+        subtitle="Where Art Is Felt • Colors of Love"
+        tag="Our Philosophy"
+        backgroundImage="/artworks/path-of-natures-embrace.webp"
       />
 
       <SectionReveal>

@@ -33,7 +33,8 @@ export default function CheckoutPage() {
       <PageHero
         title="Checkout"
         subtitle="Shipping details & order summary"
-        backgroundImage="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=1920&h=800&fit=crop"
+        tag="Secure Acquisition"
+        backgroundImage="/artworks/beauty-in-simplicity.webp"
       />
 
       <section className="gallery-section" style={{ paddingTop: "3rem", paddingBottom: "6rem" }}>
