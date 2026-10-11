@@ -65,19 +65,75 @@ export default function ProductDetailView({ product }: Props) {
   const [added, setAdded] = useState(false);
   const [activeViewIndex, setActiveViewIndex] = useState(0);
 
-  // Split description paragraphs for "About This Painting"
-  // Splits on any newline break (\n or \n\n) so all distinct paragraphs from the PDF render with proper paragraph breaks
-  const paragraphs = (product.description || "")
+  // Helper to normalize strings for comparison (removes formatting, punctuation, whitespace differences)
+  const normalizeText = (str: string) =>
+    str
+      .replace(/[*_~`]/g, "")
+      .replace(/[“”"']/g, "")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+
+  // Clean artist message text
+  const cleanArtistMessage = (product.artistMessage || "")
+    .replace(/^[“"']+|[”"']+$/g, "")
+    .trim();
+
+  // Clean closing quote text
+  let cleanClosingQuote = (product.closingQuote || "")
+    .replace(/^[“"']+|[”"']+$/g, "")
+    .replace(/\*\*/g, "")
+    .trim();
+
+  // Raw split description paragraphs for "About This Painting"
+  const rawParagraphs = (product.description || "")
     .split(/\r?\n+/)
     .map((p) => p.trim())
-    .filter((p) => {
-      if (!p) return false;
-      // Filter out trailing PDF catalog headers / artifacts
-      if (/^\*?\*?\d+\.\s*(Original|Acrylic)/i.test(p)) return false;
-      if (/^Acrylic$/i.test(p)) return false;
-      if (/^\*Original work by/i.test(p)) return false;
-      return true;
-    });
+    .filter(Boolean);
+
+  // If closing quote is not explicitly present, extract from the last paragraph if it is a quote
+  if (!cleanClosingQuote && rawParagraphs.length > 0) {
+    const candidate = rawParagraphs[rawParagraphs.length - 1];
+    const stripped = candidate.replace(/[*_]/g, "").trim();
+    if (stripped.startsWith("“") || stripped.startsWith('"')) {
+      cleanClosingQuote = stripped.replace(/^[“"']+|[”"']+$/g, "").trim();
+    }
+  }
+
+  const normQuote = normalizeText(cleanClosingQuote);
+  const normArtist = normalizeText(cleanArtistMessage);
+
+  // Filter paragraphs so neither closing quote nor artist message is duplicated as a regular paragraph
+  const paragraphs = rawParagraphs.filter((p) => {
+    // Filter out trailing PDF catalog headers / artifacts
+    if (/^\*?\*?\d+[\.\)]\s*(Original|Acrylic|Floral|Oil|Textured|Mix|Abstract|Tranquil|Expressive|Contemporary)/i.test(p)) return false;
+    if (/^(\*|\*)?\d+\s*$/i.test(p)) return false;
+    if (/^Acrylic$/i.test(p)) return false;
+    if (/^\*?Original work by/i.test(p)) return false;
+
+    const normP = normalizeText(p);
+    if (!normP) return false;
+
+    // Filter out if this paragraph is identical or contained in closing quote (or vice versa)
+    if (normQuote && (normP === normQuote || normP.includes(normQuote) || normQuote.includes(normP))) {
+      return false;
+    }
+
+    // Filter out if this paragraph is the artist message
+    if (normArtist && (normP === normArtist || normP.includes(normArtist) || normArtist.includes(normP))) {
+      return false;
+    }
+
+    // Filter out if paragraph is a standalone quote and closingQuote exists
+    if (cleanClosingQuote && /^(\*\*|\*)?[“"'].+[”"'](\*\*|\*)?$/.test(p)) {
+      return false;
+    }
+
+    return true;
+  });
+
+  // Only show closing quote if it does not duplicate the artist message
+  const showClosingQuote = Boolean(cleanClosingQuote && normQuote !== normArtist);
 
   // Format dimensions (inches + cm)
   const formatDimensions = () => {
@@ -93,17 +149,6 @@ export default function ProductDetailView({ product }: Props) {
     }
     return product.size || "Original Dimensions";
   };
-
-  // Clean artist message text
-  const cleanArtistMessage = (product.artistMessage || "")
-    .replace(/^[“"']+|[”"']+$/g, "")
-    .trim();
-
-  // Clean closing quote text
-  const cleanClosingQuote = (product.closingQuote || "")
-    .replace(/^[“"']+|[”"']+$/g, "")
-    .replace(/\*\*/g, "")
-    .trim();
 
   // Prepare 4 interactive views (full view, focal detail, impasto texture, frame & corner)
   const hasMultipleImages = Array.isArray(product.images) && product.images.length > 1;
@@ -362,7 +407,7 @@ export default function ProductDetailView({ product }: Props) {
             </div>
 
             {/* Closing Quote from Artist / PDF */}
-            {cleanClosingQuote && (
+            {showClosingQuote && (
               <div className="bg-[#F8F4EC] border-l-4 border-[#8C704F] p-5 rounded-r-xs mb-8 shadow-xs">
                 <p className="font-serif italic text-[0.96rem] sm:text-[1.02rem] leading-[1.8] text-[#3E3832]">
                   &ldquo;{cleanClosingQuote}&rdquo;
