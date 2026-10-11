@@ -11,34 +11,19 @@ export class ContentError extends Error {
   }
 }
 export function getContent(): SiteContent {
-  const db = getDatabase();
   const initial: SiteContent = {
     revision: 1,
-    products: PRODUCTS.map(p => ({ ...p, id: p.slug, images: [p.src], published: true })),
-    pages: seed.pages as SiteContent["pages"], posts: seed.posts, media: [],
+    products: PRODUCTS.map((p) => ({
+      ...p,
+      id: p.slug,
+      images: Array.isArray(p.images) && p.images.length ? p.images : [p.src],
+      published: true,
+    })),
+    pages: seed.pages as SiteContent["pages"],
+    posts: seed.posts as SiteContent["posts"],
+    media: [],
   };
-  db.prepare("INSERT OR IGNORE INTO content (id, document) VALUES (1, ?)").run(JSON.stringify(initial));
-  const row = db.prepare("SELECT document FROM content WHERE id = 1").get() as { document: string };
-  const content = JSON.parse(row.document) as SiteContent;
-
-  let changed = false;
-  const productMap = new Map(content.products.map(p => [p.slug, p]));
-  for (const p of PRODUCTS) {
-    if (!productMap.has(p.slug)) {
-      content.products.push({ ...p, id: p.slug, images: [p.src], published: true });
-      changed = true;
-    } else {
-      const existing = productMap.get(p.slug)!;
-      if (existing.medium !== p.medium || existing.materials !== p.materials || existing.description !== p.description) {
-        Object.assign(existing, p);
-        changed = true;
-      }
-    }
-  }
-  if (changed) {
-    db.prepare("UPDATE content SET document = ? WHERE id = 1").run(JSON.stringify(content));
-  }
-  return content;
+  return initial;
 }
 export function getPublicContent(): PublicContent {
   const content = getContent();
