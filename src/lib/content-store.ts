@@ -15,7 +15,26 @@ export function getContent(): SiteContent {
   };
   db.prepare("INSERT OR IGNORE INTO content (id, document) VALUES (1, ?)").run(JSON.stringify(initial));
   const row = db.prepare("SELECT document FROM content WHERE id = 1").get() as { document: string };
-  return JSON.parse(row.document);
+  const content = JSON.parse(row.document) as SiteContent;
+
+  let changed = false;
+  const productMap = new Map(content.products.map(p => [p.slug, p]));
+  for (const p of PRODUCTS) {
+    if (!productMap.has(p.slug)) {
+      content.products.push({ ...p, id: p.slug, images: [p.src], published: true });
+      changed = true;
+    } else {
+      const existing = productMap.get(p.slug)!;
+      if (existing.medium !== p.medium || existing.materials !== p.materials) {
+        Object.assign(existing, p);
+        changed = true;
+      }
+    }
+  }
+  if (changed) {
+    db.prepare("UPDATE content SET document = ? WHERE id = 1").run(JSON.stringify(content));
+  }
+  return content;
 }
 export function getPublicContent(): PublicContent {
   const content = getContent();

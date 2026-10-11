@@ -17,7 +17,7 @@ export default function AddToCartButton({ slug, className, showIcon = false }: P
   return (
     <button
       type="button"
-      className={className ?? "btn-primary"}
+      className={`${className ?? "btn-primary"} whitespace-nowrap`}
       onClick={() => {
         addItem(slug, 1);
         setAdded(true);

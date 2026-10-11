@@ -3,238 +3,592 @@
 import React, { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
-import { Search, LayoutGrid, List, Heart, LayoutDashboard } from "lucide-react";
+import {
+  Search,
+  LayoutGrid,
+  List,
+  Heart,
+  Palette,
+  Droplets,
+  Layers,
+  Box,
+  Brush,
+  Sparkles,
+  ChevronLeft,
+  ChevronRight,
+  ArrowRight
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PageHero from "@/components/PageHero";
-import AddToCartButton from "@/components/AddToCartButton";
-import { formatPriceUSD } from "@/data/products";
 import { useContent } from "@/context/ContentContext";
+import { useCart } from "@/context/CartContext";
+import { PRODUCTS as STATIC_PRODUCTS, Product } from "@/data/products";
 
-const ease = [0.22, 1, 0.36, 1] as const;
+// Subtitle generator to match: "Oil on Canvas • Floral" / "Acrylic on Canvas • Abstract"
+function getArtworkSubtitle(product: Product): string {
+  let medium = "Acrylic on Canvas";
+  const mLower = (product.medium || product.materials || "").toLowerCase();
+  if (mLower.includes("oil")) medium = "Oil on Canvas";
+  else if (mLower.includes("water")) medium = "Watercolor";
+  else if (mLower.includes("mixed media") || mLower.includes("mix media")) medium = "Mixed Media";
+  else if (mLower.includes("acrylic")) medium = "Acrylic on Canvas";
+  else if (mLower.includes("texture")) medium = "Textured Canvas";
+
+  let cat = "Original Art";
+  const sLower = (product.style + " " + product.title + " " + product.theme).toLowerCase();
+  if (sLower.includes("floral") || sLower.includes("flower") || sLower.includes("bloom")) cat = "Floral";
+  else if (sLower.includes("landscape") || sLower.includes("cityscape") || sLower.includes("nature")) cat = "Landscape";
+  else if (sLower.includes("portrait") || sLower.includes("figurative") || sLower.includes("queen") || sLower.includes("woman")) cat = "Figurative";
+  else if (sLower.includes("still life")) cat = "Still Life";
+  else if (sLower.includes("abstract") || sLower.includes("texture")) cat = "Abstract";
+
+  return `${medium} • ${cat}`;
+}
+
+const ITEMS_PER_PAGE = 12;
 
 export default function ShopPage() {
-  const { products: PRODUCTS } = useContent();
-  const [activeFilter, setActiveFilter] = useState("All");
-  const [searchQuery, setSearchQuery] = useState("");
-  const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const { products: contentProducts } = useContent();
+  const PRODUCTS =
+    contentProducts && contentProducts.length >= STATIC_PRODUCTS.length
+      ? contentProducts
+      : STATIC_PRODUCTS;
 
-  const filters = [
-    { label: "All", icon: <LayoutDashboard size={24} style={{ color: "var(--accent)" }} /> },
-    { label: "Oil Painting", image: "/artworks/together-we-bloom.webp" },
-    { label: "Water color", image: "/artworks/reflections-of-a-golden-city.webp" },
-    { label: "Mixed Media", image: "/artworks/beauty-in-simplicity.webp" },
-    { label: "Texture", image: "/artworks/fields-of-quiet-gold.webp" },
-    { label: "Acrylic", image: "/artworks/beauty-beyond-colour.webp" }
+  const { addItem } = useCart();
+  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState("featured");
+  const [layout, setLayout] = useState<"grid" | "list">("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      const stored = localStorage.getItem("binaare-favorites");
+      return stored ? JSON.parse(stored) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [addedSlugs, setAddedSlugs] = useState<Record<string, boolean>>({});
+  const [subscribed, setSubscribed] = useState(false);
+  const [emailInput, setEmailInput] = useState("");
+
+  const toggleFavorite = (slug: string) => {
+    setFavorites((prev) => {
+      const next = prev.includes(slug) ? prev.filter((s) => s !== slug) : [...prev, slug];
+      try {
+        localStorage.setItem("binaare-favorites", JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  };
+
+  const handleAddToCart = (slug: string) => {
+    addItem(slug, 1);
+    setAddedSlugs((prev) => ({ ...prev, [slug]: true }));
+    window.setTimeout(() => {
+      setAddedSlugs((prev) => ({ ...prev, [slug]: false }));
+    }, 2000);
+  };
+
+  // Category Pills (Oil Painting, Water color, Mixed Media, Texture, Acrylic, along with All)
+  const categories = [
+    { label: "All", icon: <Sparkles size={13} /> },
+    { label: "Oil Painting", icon: <Palette size={13} /> },
+    { label: "Water color", icon: <Droplets size={13} /> },
+    { label: "Mixed Media", icon: <Layers size={13} /> },
+    { label: "Texture", icon: <Box size={13} /> },
+    { label: "Acrylic", icon: <Brush size={13} /> },
   ];
 
-  const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter(p => {
-      let matchesFilter = true;
-      if (activeFilter !== "All") {
-        const matchStr = `${p.medium} ${p.style} ${p.materials} ${p.theme}`.toLowerCase();
-        const filterLower = activeFilter.toLowerCase();
-        matchesFilter = matchStr.includes(filterLower) || (filterLower === 'water color' && matchStr.includes('watercolor'));
+  // Filtering & Sorting
+  const filteredAndSortedProducts = useMemo(() => {
+    let result = PRODUCTS.filter((p) => {
+      let matchesCat = true;
+      if (activeCategory !== "All") {
+        const s = (
+          p.title +
+          " " +
+          p.medium +
+          " " +
+          p.materials +
+          " " +
+          p.style +
+          " " +
+          p.theme +
+          " " +
+          p.description
+        ).toLowerCase();
+
+        if (activeCategory === "Oil Painting") {
+          matchesCat = s.includes("oil");
+        } else if (activeCategory === "Water color") {
+          matchesCat =
+            s.includes("water color") ||
+            s.includes("watercolor") ||
+            s.includes("watercolour") ||
+            s.includes("aquarelle");
+        } else if (activeCategory === "Mixed Media") {
+          matchesCat =
+            s.includes("mixed media") ||
+            s.includes("mix media") ||
+            s.includes("mixed-media");
+        } else if (activeCategory === "Texture") {
+          matchesCat = s.includes("texture") || s.includes("textured");
+        } else if (activeCategory === "Acrylic") {
+          matchesCat = s.includes("acrylic");
+        }
       }
-      
+
       let matchesSearch = true;
       if (searchQuery.trim()) {
-        const searchStr = `${p.title} ${p.medium} ${p.theme}`.toLowerCase();
+        const searchStr = `${p.title} ${p.medium} ${p.theme} ${p.colours}`.toLowerCase();
         matchesSearch = searchStr.includes(searchQuery.toLowerCase());
       }
 
-      return matchesFilter && matchesSearch;
+      return matchesCat && matchesSearch;
     });
-  }, [PRODUCTS, activeFilter, searchQuery]);
+
+    if (sortBy === "price-asc") {
+      result = [...result].sort((a, b) => a.price - b.price);
+    } else if (sortBy === "price-desc") {
+      result = [...result].sort((a, b) => b.price - a.price);
+    } else if (sortBy === "title-asc") {
+      result = [...result].sort((a, b) => a.title.localeCompare(b.title));
+    } else if (sortBy === "title-desc") {
+      result = [...result].sort((a, b) => b.title.localeCompare(a.title));
+    }
+
+    return result;
+  }, [PRODUCTS, activeCategory, searchQuery, sortBy]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredAndSortedProducts.length / ITEMS_PER_PAGE);
+  const paginatedProducts = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return filteredAndSortedProducts.slice(start, start + ITEMS_PER_PAGE);
+  }, [filteredAndSortedProducts, currentPage]);
+
+  const scrollToGrid = () => {
+    const el = document.getElementById("products-grid-section");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
-    <main style={{ background: "var(--bg)" }} className="min-h-screen flex flex-col">
+    <main style={{ background: "#FAF8F5", color: "#24211F" }} className="min-h-screen flex flex-col">
       <Navbar />
 
-      <PageHero
-        title="Shop"
-        subtitle="Original Artworks by Binari Gamage"
-        backgroundImage="https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1920&h=800&fit=crop"
-      />
+      {/* Hero Banner (Matching Reference Image) */}
+      <section className="max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-4 pb-2">
+        <div className="relative rounded-2xl md:rounded-3xl overflow-hidden min-h-[300px] sm:min-h-[360px] md:min-h-[380px] flex items-center justify-center text-center p-6 sm:p-12 shadow-sm border border-[#E7E0D7]">
+          {/* Floral Art Background with Dark Vignette Overlay */}
+          <Image
+            src="/artworks/together-we-bloom.webp"
+            alt="Original Artworks by Binari Gamage"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-black/70" />
 
-      {/* Filters (Circles) */}
-      <section className="py-12 border-b border-[#E7E0D7]" style={{ background: "var(--bg-alt)" }}>
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          <div className="flex overflow-x-auto hide-scrollbar gap-6 md:gap-8 md:justify-center px-4 pb-4 items-start">
-            {filters.map((filter) => (
-              <button
-                key={filter.label}
-                onClick={() => setActiveFilter(filter.label)}
-                className="flex flex-col items-center gap-4 min-w-[70px] group outline-none shrink-0"
-              >
-                <div 
-                  className="w-[70px] h-[70px] rounded-full flex items-center justify-center overflow-hidden transition-all duration-300 border-[3px]"
-                  style={{ borderColor: activeFilter === filter.label ? "var(--accent)" : "transparent" }}
-                >
-                  {filter.icon ? (
-                    <div className="w-[64px] h-[64px] bg-white border border-[#E7E0D7] rounded-full flex items-center justify-center shadow-sm">
-                      {filter.icon}
-                    </div>
-                  ) : (
-                    <div className="relative w-[64px] h-[64px] rounded-full overflow-hidden shadow-sm">
-                      <Image 
-                        src={filter.image!} 
-                        alt={filter.label} 
-                        fill 
-                        className="object-cover transition-transform duration-500 group-hover:scale-110" 
-                      />
-                    </div>
-                  )}
-                </div>
-                <span 
-                  className="text-[0.55rem] md:text-[0.6rem] uppercase tracking-widest font-medium transition-colors"
-                  style={{ color: activeFilter === filter.label ? "var(--accent)" : "var(--fg-muted)" }}
-                >
-                  {filter.label}
-                </span>
-              </button>
-            ))}
+          {/* Hero Content */}
+          <div className="relative z-10 max-w-2xl mx-auto flex flex-col items-center">
+            <span className="text-[0.68rem] uppercase tracking-[0.24em] font-semibold text-[#D6BC94] mb-3 block">
+              Original Artworks
+            </span>
+            <h1 className="font-serif text-3xl sm:text-4xl md:text-5xl font-normal text-white leading-[1.18] mb-3">
+              Art for a More Beautiful Everyday
+            </h1>
+            <p className="text-white/80 text-xs sm:text-sm font-light leading-relaxed mb-6 max-w-lg">
+              Timeless paintings for a more beautiful world.
+            </p>
+            <button
+              onClick={scrollToGrid}
+              className="inline-flex items-center gap-2 px-7 py-3 rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white text-[0.7rem] uppercase tracking-[0.16em] font-semibold transition-all duration-300 shadow-md cursor-pointer hover:scale-105"
+            >
+              Shop Collection <ArrowRight size={14} />
+            </button>
           </div>
         </div>
       </section>
 
-      {/* Toolbar */}
-      <section className="py-6 sticky top-[70px] z-30 shadow-sm" style={{ background: "var(--bg-alt)" }}>
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4">
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <span className="text-[0.65rem] uppercase tracking-widest font-medium hidden md:block" style={{ color: "var(--fg-muted)" }}>Sort By</span>
-            <select className="bg-transparent border-none py-2 pr-8 text-[0.7rem] uppercase tracking-widest font-medium outline-none cursor-pointer appearance-none bg-[url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20width%3D%2210%22%20height%3D%226%22%20viewBox%3D%220%200%2010%206%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Cpath%20d%3D%22M1%201L5%205L9%201%22%20stroke%3D%22%2324211F%22%20stroke-width%3D%221.5%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%2F%3E%3C%2Fsvg%3E')] bg-no-repeat bg-[right_center]" style={{ color: "var(--fg)" }}>
-              <option value="newest">Newest First</option>
-              <option value="price-asc">Price: Low to High</option>
-              <option value="price-desc">Price: High to Low</option>
+      {/* Categories Toolbar & Search Area (Integrated into Search Section as requested) */}
+      <section id="products-grid-section" className="max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-8 pb-4">
+        
+        {/* Top: Pill Category Buttons */}
+        <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-[#E7E0D7]/70">
+          <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar py-1 shrink-0 max-w-full">
+            {categories.map((cat) => {
+              const isSelected = activeCategory === cat.label;
+              return (
+                <button
+                  key={cat.label}
+                  type="button"
+                  onClick={() => {
+                    setActiveCategory(cat.label);
+                    setCurrentPage(1);
+                  }}
+                  className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                    isSelected
+                      ? "bg-[#B78646] text-white shadow-xs"
+                      : "bg-white text-[#555] border border-[#E7E0D7] hover:bg-[#F5F2EB] hover:text-[#24211F]"
+                  }`}
+                >
+                  {cat.icon}
+                  <span>{cat.label}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Right Controls: Sort & Layout */}
+          <div className="flex items-center gap-3 shrink-0 ml-auto">
+            <span className="text-[0.68rem] uppercase tracking-wider text-[#77716B] font-medium hidden sm:inline-block">
+              {filteredAndSortedProducts.length} {filteredAndSortedProducts.length === 1 ? "Artwork" : "Artworks"}
+            </span>
+
+            {/* Sort Dropdown */}
+            <select
+              value={sortBy}
+              onChange={(e) => {
+                setSortBy(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="bg-white border border-[#E7E0D7] text-[#24211F] rounded-full py-1.5 px-3.5 text-xs outline-none cursor-pointer hover:border-[#B78646] transition-colors"
+            >
+              <option value="featured">Sort by: Featured</option>
+              <option value="title-asc">Title: A – Z</option>
+              <option value="title-desc">Title: Z – A</option>
             </select>
-          </div>
 
-          <div className="flex-1 w-full md:max-w-md relative">
-            <input 
-              type="text" 
-              placeholder="Search artworks..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full border border-transparent rounded-full py-2.5 pl-5 pr-12 text-sm outline-none transition-colors"
-              style={{ background: "var(--bg-alt)", color: "var(--fg)", border: "1px solid var(--border)" }}
-            />
-            <Search className="absolute right-4 top-1/2 -translate-y-1/2" size={16} style={{ color: "var(--fg-muted)" }} />
-          </div>
-
-          <div className="flex items-center gap-4 w-full md:w-auto justify-between md:justify-end">
-            <span className="text-[0.65rem] uppercase tracking-widest font-medium" style={{ color: "var(--fg-muted)" }}>{filteredProducts.length} Artworks</span>
-            <div className="flex items-center gap-1 border p-1 rounded-md" style={{ borderColor: "var(--border)" }}>
-              <button 
-                onClick={() => setLayout("grid")} 
-                className="p-1.5 transition-colors rounded-sm"
-                style={{ color: layout === "grid" ? "var(--accent)" : "var(--fg-muted)", background: layout === "grid" ? "var(--bg)" : "transparent" }}
+            {/* View Switcher */}
+            <div className="flex items-center gap-1 bg-white border border-[#E7E0D7] rounded-full p-1">
+              <button
+                type="button"
+                onClick={() => setLayout("grid")}
+                aria-label="Grid view"
+                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                  layout === "grid" ? "bg-[#B78646] text-white" : "text-[#77716B] hover:text-[#24211F]"
+                }`}
               >
-                <LayoutGrid size={16} />
+                <LayoutGrid size={15} />
               </button>
-              <button 
-                onClick={() => setLayout("list")} 
-                className="p-1.5 transition-colors rounded-sm"
-                style={{ color: layout === "list" ? "var(--accent)" : "var(--fg-muted)", background: layout === "list" ? "var(--bg)" : "transparent" }}
+              <button
+                type="button"
+                onClick={() => setLayout("list")}
+                aria-label="List view"
+                className={`p-1.5 rounded-full transition-colors cursor-pointer ${
+                  layout === "list" ? "bg-[#B78646] text-white" : "text-[#77716B] hover:text-[#24211F]"
+                }`}
               >
-                <List size={16} />
+                <List size={15} />
               </button>
             </div>
           </div>
         </div>
+
+        {/* Search Bar Row */}
+        <div className="pt-4 flex items-center justify-between gap-4">
+          <div className="relative w-full max-w-md">
+            <input
+              type="text"
+              placeholder="Search by title, medium, theme..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setCurrentPage(1);
+              }}
+              className="w-full bg-white border border-[#E7E0D7] rounded-full py-2 pl-4 pr-10 text-xs text-[#24211F] placeholder:text-[#9C948B] outline-none hover:border-[#B78646] focus:border-[#B78646] transition-colors"
+            />
+            <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#9C948B] pointer-events-none" size={14} />
+          </div>
+
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className="text-xs text-[#740D18] hover:underline cursor-pointer"
+            >
+              Clear search
+            </button>
+          )}
+        </div>
       </section>
 
-      {/* Grid */}
-      <section className="flex-1 pt-12 pb-24" style={{ background: "var(--bg-alt)" }}>
-        <div className="max-w-[1400px] mx-auto px-6 md:px-12">
-          {filteredProducts.length === 0 ? (
-            <div className="text-center py-24">
-              <p className="font-serif italic text-xl mb-6" style={{ color: "var(--fg-muted)" }}>No artworks currently match your selection.</p>
-              <button onClick={() => {setActiveFilter("All"); setSearchQuery("");}} className="text-[0.7rem] uppercase tracking-widest font-medium transition-colors border-b pb-1" style={{ color: "var(--accent)", borderBottomColor: "var(--accent)" }}>
-                Clear Filters
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className={`grid gap-x-8 gap-y-14 ${layout === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4' : 'grid-cols-1 max-w-4xl mx-auto'}`}>
-                <AnimatePresence mode="popLayout">
-                  {filteredProducts.map((item, i) => (
-                    <motion.article
+      {/* Product Display Section */}
+      <section className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-8 pt-4 pb-20">
+        {filteredAndSortedProducts.length === 0 ? (
+          <div className="text-center py-24 bg-white rounded-2xl border border-[#E7E0D7] p-8 max-w-xl mx-auto shadow-sm">
+            <p className="font-serif italic text-2xl mb-3 text-[#24211F]">No artworks found</p>
+            <p className="text-xs text-[#77716B] mb-6 font-light">
+              No artworks match your selected criteria.
+            </p>
+            <button
+              onClick={() => {
+                setActiveCategory("All");
+                setSearchQuery("");
+                setSortBy("featured");
+              }}
+              className="px-6 py-2.5 rounded-full bg-[#B78646] text-white text-xs font-semibold uppercase tracking-wider hover:bg-[#9E7134] transition-colors cursor-pointer"
+            >
+              Reset Filters
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* GRID VIEW (Modern elevated rounded card buttons matching reference SS) */}
+            {layout === "grid" ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-opacity duration-300">
+                {paginatedProducts.map((item) => {
+                  const isFav = favorites.includes(item.slug);
+                  const isAdded = addedSlugs[item.slug];
+
+                  return (
+                    <article
                       key={item.slug}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.5, delay: (i % 4) * 0.1, ease }}
-                      className={`group flex ${layout === 'grid' ? 'flex-col h-full' : 'flex-row gap-8 items-center bg-white p-6 shadow-sm border border-[#E7E0D7]/50'}`}
-                      style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+                      className="bg-white rounded-2xl p-4 border border-[#F0EBE1] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] transition-all duration-300 hover:-translate-y-1 flex flex-col justify-between group"
                     >
-                      <div className={`relative overflow-hidden ${layout === 'grid' ? 'w-full aspect-[4/5] mb-5' : 'w-48 h-64 shrink-0'}`} style={{ background: "var(--bg-alt)" }}>
-                        <Link href={`/shop/${item.slug}`} className="absolute inset-0 z-10">
+                      {/* Image Area with Heart in Top Right Corner */}
+                      <div>
+                        <div className="relative aspect-[4/3] rounded-xl overflow-hidden bg-[#FAF8F5] mb-3.5">
+                          <Link href={`/shop/${item.slug}`} className="relative w-full h-full block">
+                            <Image
+                              src={item.src}
+                              alt={item.title}
+                              fill
+                              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, (max-width: 1536px) 33vw, 25vw"
+                              className="object-cover transition-transform duration-500 ease-out group-hover:scale-105"
+                            />
+                          </Link>
+
+                          {/* Small Favorite Heart Button */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(item.slug);
+                            }}
+                            aria-label={`Favorite ${item.title}`}
+                            className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
+                          >
+                            <Heart
+                              size={14}
+                              className={isFav ? "fill-[#B78646] text-[#B78646]" : "text-[#77716B]"}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Title */}
+                        <h3 className="font-serif font-medium text-[1.05rem] leading-snug text-[#24211F] line-clamp-1 mb-1 transition-colors group-hover:text-[#B78646]">
+                          <Link href={`/shop/${item.slug}`}>{item.title}</Link>
+                        </h3>
+
+                        {/* Subtitle / Medium */}
+                        <p className="text-xs text-[#77716B] mb-4 truncate">
+                          {getArtworkSubtitle(item)}
+                        </p>
+                      </div>
+
+                      {/* Pill-shaped Add to Cart Button (Using Old Golden Color #B78646) */}
+                      <button
+                        type="button"
+                        onClick={() => handleAddToCart(item.slug)}
+                        className="w-full py-2.5 px-4 rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white text-[0.7rem] uppercase tracking-[0.14em] font-semibold transition-all duration-200 text-center shadow-xs whitespace-nowrap cursor-pointer mt-auto"
+                      >
+                        {isAdded ? "Added to Cart ✓" : "Add to Cart"}
+                      </button>
+                    </article>
+                  );
+                })}
+              </div>
+            ) : (
+              /* LIST VIEW (Smooth transition, zero lag) */
+              <div className="flex flex-col gap-5 max-w-4xl mx-auto transition-opacity duration-300">
+                {paginatedProducts.map((item) => {
+                  const isFav = favorites.includes(item.slug);
+                  const isAdded = addedSlugs[item.slug];
+
+                  return (
+                    <article
+                      key={item.slug}
+                      className="bg-white rounded-2xl p-4 sm:p-5 border border-[#F0EBE1] shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:shadow-[0_12px_32px_rgba(0,0,0,0.12)] flex flex-col sm:flex-row gap-5 items-stretch transition-all duration-300 group"
+                    >
+                      {/* Left Image Area */}
+                      <div className="relative w-full sm:w-56 aspect-[4/3] rounded-xl overflow-hidden bg-[#FAF8F5] shrink-0">
+                        <Link href={`/shop/${item.slug}`} className="relative w-full h-full block">
                           <Image
                             src={item.src}
                             alt={item.title}
                             fill
-                            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                            className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            sizes="(max-width: 640px) 100vw, 240px"
+                            className="object-cover transition-transform duration-500 group-hover:scale-105"
                           />
                         </Link>
-                        <button className="absolute top-4 right-4 z-20 w-8 h-8 bg-white/90 backdrop-blur-md rounded-full flex items-center justify-center transition-all shadow-sm" style={{ color: "var(--fg-muted)" }}>
-                          <Heart size={15} strokeWidth={1.5} />
+
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            toggleFavorite(item.slug);
+                          }}
+                          aria-label={`Favorite ${item.title}`}
+                          className="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
+                        >
+                          <Heart
+                            size={14}
+                            className={isFav ? "fill-[#B78646] text-[#B78646]" : "text-[#77716B]"}
+                          />
                         </button>
                       </div>
-                      
-                      <div className={`flex-1 flex flex-col justify-between ${layout === 'grid' ? 'h-full p-4 pt-0' : ''}`}>
-                        <div className={`${layout === 'grid' ? 'mb-6' : 'mb-4'}`}>
-                          <h3 className="font-serif text-[1.1rem] md:text-[1.15rem] mb-1 leading-snug" style={{ color: "var(--fg)" }}>
-                            <Link href={`/shop/${item.slug}`} className="transition-colors hover:text-[color:var(--accent)]">{item.title}</Link>
+
+                      {/* Right Details */}
+                      <div className="flex-1 flex flex-col justify-between py-1">
+                        <div>
+                          <h3 className="font-serif text-[1.2rem] font-medium leading-snug text-[#24211F] mb-1 transition-colors group-hover:text-[#B78646]">
+                            <Link href={`/shop/${item.slug}`}>{item.title}</Link>
                           </h3>
-                          <p className="text-[0.6rem] uppercase tracking-[0.15em] mb-2" style={{ color: "var(--fg-muted)" }}>{item.width} × {item.height}</p>
-                          <p className="font-medium text-[1.05rem] mt-3" style={{ color: "var(--accent)" }}>{formatPriceUSD(item.price)}</p>
+                          <p className="text-xs text-[#77716B] mb-2 font-medium">
+                            {getArtworkSubtitle(item)} · {item.width && item.height ? `${item.width} × ${item.height}` : item.size}
+                          </p>
+                          <p className="text-xs text-[#77716B] leading-relaxed line-clamp-2 mb-4 font-light">
+                            {item.description}
+                          </p>
                         </div>
-                        
-                        <div className={`flex items-center gap-2 ${layout === 'grid' ? 'mt-auto' : ''}`}>
-                          <AddToCartButton slug={item.slug} showIcon={true} className="flex-[3] btn-primary flex justify-center items-center py-3 text-[0.6rem] uppercase tracking-[0.15em] font-medium" />
-                          <Link href={`/shop/${item.slug}`} className="flex-[2] btn-outline flex justify-center items-center py-3 text-[0.6rem] uppercase tracking-[0.15em] font-medium text-center">
+
+                        <div className="flex items-center gap-3">
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(item.slug)}
+                            className="py-2.5 px-6 rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white text-[0.7rem] uppercase tracking-[0.14em] font-semibold transition-all duration-200 text-center shadow-xs whitespace-nowrap cursor-pointer"
+                          >
+                            {isAdded ? "Added to Cart ✓" : "Add to Cart"}
+                          </button>
+
+                          <Link
+                            href={`/shop/${item.slug}`}
+                            className="py-2.5 px-5 rounded-full border border-[#E7E0D7] text-[#24211F] hover:border-[#B78646] text-[0.7rem] uppercase tracking-[0.14em] font-semibold transition-colors whitespace-nowrap"
+                          >
                             View
                           </Link>
                         </div>
                       </div>
-                    </motion.article>
-                  ))}
-                </AnimatePresence>
+                    </article>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Pagination (Matching Reference Image < 1 2 >) */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-12 pt-6 border-t border-[#E7E0D7]/70">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  aria-label="Previous page"
+                  className="w-8 h-8 rounded-full border border-[#E7E0D7] bg-white flex items-center justify-center text-xs text-[#24211F] hover:border-[#B78646] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                  <button
+                    key={page}
+                    type="button"
+                    onClick={() => {
+                      setCurrentPage(page);
+                      scrollToGrid();
+                    }}
+                    className={`w-8 h-8 rounded-full text-xs font-semibold transition-colors cursor-pointer ${
+                      currentPage === page
+                        ? "bg-[#B78646] text-white shadow-xs"
+                        : "bg-white border border-[#E7E0D7] text-[#555] hover:border-[#B78646] hover:text-[#24211F]"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  aria-label="Next page"
+                  className="w-8 h-8 rounded-full border border-[#E7E0D7] bg-white flex items-center justify-center text-xs text-[#24211F] hover:border-[#B78646] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer"
+                >
+                  <ChevronRight size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Newsletter Promotional Banner (Matching Reference Image bottom section) */}
+            <div className="rounded-2xl border border-[#E7E0D7] bg-white p-6 sm:p-8 mt-16 shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+              {/* Left Room Preview Image */}
+              <div className="relative w-full md:w-36 h-28 rounded-xl overflow-hidden shrink-0 bg-[#FAF8F5]">
+                <Image
+                  src="/artworks/wings-of-golden-courage.webp"
+                  alt="Art in interior space"
+                  fill
+                  sizes="160px"
+                  className="object-cover"
+                />
               </div>
 
-              {/* Promo Banner appended to the end of the products */}
-              <motion.div 
-                key="promo-banner"
-                initial={{ opacity: 0, y: 30 }} 
-                whileInView={{ opacity: 1, y: 0 }} 
-                viewport={{ once: true, margin: "-50px" }}
-                transition={{ duration: 0.8, ease }}
-                className="mt-20 w-full relative overflow-hidden flex items-center min-h-[350px] md:min-h-[400px] border shadow-sm"
-                style={{ background: "var(--bg)", borderColor: "var(--border)" }}
+              {/* Middle Text */}
+              <div className="flex-1 text-center md:text-left">
+                <span className="text-[0.65rem] uppercase tracking-[0.2em] font-semibold text-[#B78646] mb-1 block">
+                  Stay in the loop
+                </span>
+                <h3 className="font-serif text-xl sm:text-2xl text-[#24211F] font-normal mb-1.5">
+                  Art Inspires a Kinder, Brighter World
+                </h3>
+                <p className="text-xs text-[#77716B] font-light leading-relaxed max-w-lg">
+                  Be the first to know about new artworks, featured stories, and exclusive gallery events.
+                </p>
+              </div>
+
+              {/* Right Subscribe Form */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (emailInput.trim()) {
+                    setSubscribed(true);
+                    setEmailInput("");
+                  }
+                }}
+                className="flex items-center gap-2 w-full md:w-auto"
               >
-                <div className="absolute right-0 top-0 bottom-0 w-1/2 md:w-[60%] opacity-90 mix-blend-multiply">
-                  <Image src="/artworks/wings-of-golden-courage.webp" alt="Texture" fill className="object-cover object-right" />
-                </div>
-                <div className="absolute right-0 top-0 bottom-0 w-[80%] md:w-[65%] z-10" style={{ background: "linear-gradient(to right, var(--bg) 15%, transparent 100%)" }}></div>
-                
-                <div className="relative z-20 p-10 md:p-16 lg:p-24 w-full md:w-[65%]">
-                  <h3 className="font-serif text-3xl md:text-5xl mb-6 leading-tight" style={{ color: "var(--fg)" }}>Every Space<br/>Deserves a Story</h3>
-                  <div className="w-12 h-[2px] mb-8" style={{ background: "var(--accent)" }}></div>
-                  <p className="text-[0.85rem] md:text-[0.95rem] mb-10 leading-relaxed max-w-lg" style={{ color: "var(--fg-muted)" }}>
-                    Explore original artworks that bring emotion, elegance, and meaning into your space. Let every brushstroke speak to you and transform your environment into a living reflection of your journey.
-                  </p>
-                  <Link href="/gallery" className="inline-block btn-primary text-[0.65rem] md:text-[0.7rem] uppercase tracking-[0.2em] px-8 py-4 font-medium transition-colors">
-                    Explore Gallery &rarr;
-                  </Link>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </div>
+                {subscribed ? (
+                  <span className="text-xs font-semibold text-[#B78646] px-4 py-2 bg-[#FAF8F5] rounded-full border border-[#B78646]">
+                    Thank you for subscribing!
+                  </span>
+                ) : (
+                  <>
+                    <input
+                      type="email"
+                      required
+                      placeholder="Your email address"
+                      value={emailInput}
+                      onChange={(e) => setEmailInput(e.target.value)}
+                      className="bg-[#FAF8F5] border border-[#E7E0D7] rounded-full py-2.5 px-4 text-xs text-[#24211F] outline-none focus:border-[#B78646] w-full sm:w-60"
+                    />
+                    <button
+                      type="submit"
+                      className="rounded-full bg-[#B78646] hover:bg-[#9E7134] text-white px-6 py-2.5 text-xs font-semibold uppercase tracking-wider transition-colors shrink-0 cursor-pointer shadow-xs"
+                    >
+                      Subscribe
+                    </button>
+                  </>
+                )}
+              </form>
+            </div>
+          </>
+        )}
       </section>
 
       <Footer />
