@@ -8,6 +8,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageSections from "@/components/PageSections";
 import { usePageContent } from "@/context/ContentContext";
+import { PRODUCTS } from "@/data/products";
 import SectionReveal from "@/components/SectionReveal";
 import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -40,7 +41,24 @@ const heroItem: Variants = {
 
 export default function Home() {
   const page = usePageContent("home");
-  const featuredWorks = (page?.sections.find(s => s.id === "featured")?.items || []).map(item => ({ ...item, medium: item.category }));
+  
+  const featuredSlugs = [
+    "a-new-dawn",
+    "together-we-bloom",
+    "beauty-in-simplicity",
+    "petals-of-tender-strength"
+  ];
+  
+  const featuredWorks = featuredSlugs
+    .map(slug => PRODUCTS.find(p => p.slug === slug))
+    .filter(Boolean)
+    .map(p => ({
+      id: p!.slug,
+      src: p!.src,
+      title: p!.title,
+      medium: p!.medium,
+      slug: p!.slug,
+    }));
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -308,35 +326,42 @@ export default function Home() {
             {featuredWorks.map((work, i) => (
               <motion.div
                 key={work.id}
-                className="artwork-card"
-                initial={{ y: 50 }}
-                whileInView={{ y: 0 }}
+                className="group flex flex-col h-full bg-white p-4 md:p-5 shadow-sm border border-[#E7E0D7]/50"
+                style={{ background: "var(--bg)", border: "1px solid var(--border)" }}
+                initial={{ y: 50, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.9, delay: i * 0.12, ease }}
+                transition={{ duration: 0.7, delay: i * 0.1, ease }}
               >
-                <div style={{ overflow: "hidden" }}>
-                  <Image
-                    src={work.src}
-                    alt={work.title}
-                    width={600}
-                    height={800}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="artwork-card-img"
-                    style={{ width: "100%", height: "auto" }}
-                  />
+                <div className="relative overflow-hidden w-full aspect-[4/5] mb-5" style={{ background: "var(--bg-alt)" }}>
+                  <Link href={`/shop/${work.slug}`} className="absolute inset-0 z-10">
+                    <Image
+                      src={work.src}
+                      alt={work.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  </Link>
                 </div>
-                <div className="artwork-card-info">
-                  <h3 className="artwork-card-title">{work.title}</h3>
-                  <p className="artwork-card-medium">{work.medium}</p>
-                  {work.description && <p className="section-text mt-2">{work.description}</p>}
+                
+                <div className="flex-1 flex flex-col justify-start text-center">
+                  <h3 className="font-serif text-[1.1rem] md:text-[1.15rem] mb-2 leading-snug" style={{ color: "var(--fg)" }}>
+                    <Link href={`/shop/${work.slug}`} className="transition-colors hover:text-[color:var(--accent)]">
+                      {work.title}
+                    </Link>
+                  </h3>
+                  <p className="text-[0.6rem] md:text-[0.65rem] uppercase tracking-[0.15em] leading-relaxed" style={{ color: "var(--fg-muted)" }}>
+                    {work.medium}
+                  </p>
                 </div>
               </motion.div>
             ))}
           </div>
 
           <div className="text-center" style={{ marginTop: "3rem" }}>
-            <Link href="/gallery" className="btn-primary btn-arrow">
-              View Full Gallery <ArrowRight className="w-4 h-4 btn-arrow-icon" />
+            <Link href="/shop" className="btn-primary btn-arrow">
+              View Shop <ArrowRight className="w-4 h-4 btn-arrow-icon" />
             </Link>
           </div>
         </div>
