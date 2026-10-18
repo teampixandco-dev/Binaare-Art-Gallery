@@ -17,6 +17,9 @@
   RewriteCond %{DOCUMENT_ROOT}/.next/static/$1 -f
   RewriteRule ^_next/static/(.*)$ .next/static/$1 [L]
 
+  RewriteCond %{REQUEST_URI} ^/_next/static/ [NC]
+  RewriteRule ^ - [R=404,L]
+
   # 4. Direct disk delivery for uploaded gallery media (Zero Node.js CPU/Memory!)
   RewriteCond %{DOCUMENT_ROOT}/public/media/$1 -f
   RewriteRule ^media/(.*)$ public/media/$1 [L]
