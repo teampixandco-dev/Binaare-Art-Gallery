@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
@@ -17,7 +17,10 @@ import {
   Truck,
   ShieldCheck,
   Check,
-  Award
+  Award,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from "lucide-react";
 
 type Props = {
@@ -53,6 +56,52 @@ function FormattedText({ text }: { text: string }) {
 export default function ProductDetailView({ product }: Props) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
+
+  // Collect all unique photography attached to this artwork
+  const galleryImages = useMemo(() => {
+    const list = [product.src, ...(product.images || [])]
+      .map((s) => (s || "").trim())
+      .filter(Boolean);
+    return Array.from(new Set(list));
+  }, [product.src, product.images]);
+
+  const hasMultipleImages = galleryImages.length > 1;
+  const [activeImageIndex, setActiveImageIndex] = useState(0);
+  const [prevSlug, setPrevSlug] = useState(product.slug);
+  const [isZoomOpen, setIsZoomOpen] = useState(false);
+
+  // Reset active image index when product changes
+  if (product.slug !== prevSlug) {
+    setPrevSlug(product.slug);
+    setActiveImageIndex(0);
+  }
+
+  const currentImage = galleryImages[activeImageIndex] || product.src || "";
+
+  const handlePrevImage = () => {
+    if (galleryImages.length <= 1) return;
+    setActiveImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+  };
+
+  const handleNextImage = () => {
+    if (galleryImages.length <= 1) return;
+    setActiveImageIndex((prev) => (prev + 1) % galleryImages.length);
+  };
+
+  // Keyboard navigation for images
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsZoomOpen(false);
+      } else if (e.key === "ArrowLeft") {
+        setActiveImageIndex((prev) => (prev - 1 + galleryImages.length) % galleryImages.length);
+      } else if (e.key === "ArrowRight") {
+        setActiveImageIndex((prev) => (prev + 1) % galleryImages.length);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [galleryImages.length]);
 
   // Helper to normalize strings for comparison (removes formatting, punctuation, whitespace differences)
   const normalizeText = (str: string) =>
@@ -164,21 +213,113 @@ export default function ProductDetailView({ product }: Props) {
           {/* ======================================================== */}
           {/* LEFT COLUMN: Fixed / Sticky Artwork & Interactive Views  */}
           {/* ======================================================== */}
-          <div className="w-full lg:w-[48%] xl:w-[46%] lg:sticky lg:top-[90px] self-start flex flex-col gap-5">
+          <div className="w-full lg:w-[48%] xl:w-[46%] lg:sticky lg:top-[90px] self-start flex flex-col gap-4">
             
-            {/* Clean Artwork Presentation (No outer frame, resized given artwork image only) */}
-            <div className="relative w-full aspect-square bg-white p-4 sm:p-8 flex items-center justify-center border border-[#EBE5DA] rounded-xs shadow-xs overflow-hidden">
-              <div className="relative w-full h-full flex items-center justify-center">
+            {/* Presentation Viewport */}
+            <div className="relative w-full aspect-square bg-white p-4 sm:p-8 flex items-center justify-center border border-[#EBE5DA] rounded-xs shadow-xs overflow-hidden group">
+              <div
+                className="relative w-full h-full flex items-center justify-center cursor-zoom-in"
+                onClick={() => setIsZoomOpen(true)}
+              >
                 <Image
-                  src={product.src}
-                  alt={product.title}
+                  src={currentImage}
+                  alt={`${product.title}${hasMultipleImages ? ` - View ${activeImageIndex + 1}` : ""}`}
                   fill
                   priority
                   sizes="(max-width: 1024px) 100vw, 48vw"
-                  className="object-contain"
+                  className="object-contain transition-opacity duration-300"
                 />
               </div>
+
+              {/* Zoom Button */}
+              <button
+                type="button"
+                onClick={() => setIsZoomOpen(true)}
+                aria-label="Enlarge artwork view"
+                className="absolute top-3 right-3 p-2 bg-white/90 hover:bg-white text-[#24211F] rounded-xs shadow-xs border border-[#EBE5DA] transition-transform hover:scale-110 z-10 cursor-pointer"
+                title="View Full Resolution"
+              >
+                <Maximize2 size={15} />
+              </button>
+
+              {/* If Multiple Images: Show Prev / Next Overlay Arrows & View Counter */}
+              {hasMultipleImages && (
+                <>
+                  <div className="absolute top-3 left-3 px-2 py-0.5 rounded-[2px] bg-black/60 text-white text-[0.65rem] tracking-[0.14em] uppercase font-medium backdrop-blur-xs z-10 pointer-events-none">
+                    {activeImageIndex + 1} / {galleryImages.length}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handlePrevImage();
+                    }}
+                    aria-label="Previous artwork view"
+                    className="absolute left-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-[#24211F] shadow-md border border-[#EBE5DA] flex items-center justify-center transition-all opacity-80 group-hover:opacity-100 hover:scale-105 z-10 cursor-pointer"
+                  >
+                    <ChevronLeft size={18} />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleNextImage();
+                    }}
+                    aria-label="Next artwork view"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-white/95 hover:bg-white text-[#24211F] shadow-md border border-[#EBE5DA] flex items-center justify-center transition-all opacity-80 group-hover:opacity-100 hover:scale-105 z-10 cursor-pointer"
+                  >
+                    <ChevronRight size={18} />
+                  </button>
+                </>
+              )}
             </div>
+
+            {/* If Multiple Images: Detailed Gallery Thumbnails Strip */}
+            {hasMultipleImages && (
+              <div className="w-full">
+                <div className="flex items-center justify-between mb-2 px-1">
+                  <span className="text-[0.66rem] uppercase tracking-[0.2em] font-semibold text-[#8C704F]">
+                    Artwork Views ({galleryImages.length})
+                  </span>
+                  <span className="text-[0.68rem] text-[#77716B]">
+                    Click to inspect detailed angles
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
+                  {galleryImages.map((imgSrc, idx) => {
+                    const isActive = idx === activeImageIndex;
+                    return (
+                      <button
+                        key={`${imgSrc}-${idx}`}
+                        type="button"
+                        onClick={() => setActiveImageIndex(idx)}
+                        aria-label={`View image ${idx + 1}`}
+                        className={`relative w-20 h-20 shrink-0 bg-white border rounded-xs overflow-hidden transition-all duration-200 cursor-pointer ${
+                          isActive
+                            ? "border-[#8C704F] ring-2 ring-[#8C704F]/60 shadow-sm scale-102"
+                            : "border-[#EBE5DA] hover:border-[#8C704F]/50 opacity-75 hover:opacity-100"
+                        }`}
+                      >
+                        <Image
+                          src={imgSrc}
+                          alt={`${product.title} thumbnail ${idx + 1}`}
+                          fill
+                          sizes="80px"
+                          className="object-cover"
+                        />
+                        {idx === 0 && (
+                          <span className="absolute bottom-0 inset-x-0 bg-black/60 text-white text-[0.52rem] uppercase tracking-wider text-center py-0.5 font-medium">
+                            Cover
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Subtle Gallery Badges */}
             <div className="flex items-center justify-center gap-5 pt-1 text-[#77716B] text-[0.7rem] tracking-[0.14em] uppercase">
@@ -207,25 +348,63 @@ export default function ProductDetailView({ product }: Props) {
                 {product.title}
               </h1>
 
-              <div className="w-12 h-[2px] bg-[#8C704F] mb-6"></div>
+              <div className="w-12 h-[2px] bg-[#8C704F] mb-5"></div>
 
-              {/* Action Buttons: Extra Small Radius & Old Project Color #8C704F (Price Hidden) */}
+              {/* Price: Shown if added and > 0, otherwise Price Upon Request */}
+              {product.price && product.price > 0 ? (
+                <div className="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-3 mb-6">
+                  <div className="flex items-baseline gap-2">
+                    <span className="font-serif text-3xl sm:text-4xl text-[#24211F] font-normal">
+                      ${product.price.toLocaleString()}
+                    </span>
+                    <span className="text-[0.7rem] uppercase tracking-[0.2em] text-[#8C704F] font-semibold">
+                      USD
+                    </span>
+                  </div>
+                  <span className="text-[0.72rem] tracking-wider text-[#77716B]">
+                    Includes Certificate of Authenticity &amp; Insured Shipping
+                  </span>
+                </div>
+              ) : (
+                <div className="bg-[#FAF6F0] border border-[#EBE3D5] rounded-xs p-3.5 mb-6">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Sparkles size={13} className="text-[#8C704F]" />
+                    <span className="text-[0.7rem] uppercase tracking-[0.2em] text-[#8C704F] font-semibold">
+                      Price Upon Request
+                    </span>
+                  </div>
+                  <p className="text-xs text-[#77716B] leading-relaxed">
+                    This authentic original painting is available for private acquisition. Contact the gallery curator for exclusive collector pricing, framing options, and worldwide delivery arrangements.
+                  </p>
+                </div>
+              )}
+
+              {/* Action Buttons: Add to Cart / Inquire to Acquire & View Cart */}
               <div className="grid grid-cols-[1.6fr_1fr] sm:grid-cols-[1.75fr_1fr] gap-3 mb-8 pt-1">
-                <button
-                  type="button"
-                  onClick={handleAddToCart}
-                  className="h-11 min-h-[44px] w-full px-5 inline-flex items-center justify-center text-[0.72rem] sm:text-[0.74rem] uppercase tracking-[0.18em] font-semibold bg-[#8C704F] hover:bg-[#785E3E] text-white transition-colors whitespace-nowrap cursor-pointer shadow-xs rounded-xs"
-                >
-                  {added ? (
-                    <>
-                      <Check size={16} className="mr-2 inline-block text-white" /> Added to Cart
-                    </>
-                  ) : (
-                    <>
-                      Add to Cart <ArrowRight size={15} className="ml-2 inline-block" />
-                    </>
-                  )}
-                </button>
+                {product.price && product.price > 0 ? (
+                  <button
+                    type="button"
+                    onClick={handleAddToCart}
+                    className="h-11 min-h-[44px] w-full px-5 inline-flex items-center justify-center text-[0.72rem] sm:text-[0.74rem] uppercase tracking-[0.18em] font-semibold bg-[#8C704F] hover:bg-[#785E3E] text-white transition-colors whitespace-nowrap cursor-pointer shadow-xs rounded-xs"
+                  >
+                    {added ? (
+                      <>
+                        <Check size={16} className="mr-2 inline-block text-white" /> Added to Cart
+                      </>
+                    ) : (
+                      <>
+                        Add to Cart <ArrowRight size={15} className="ml-2 inline-block" />
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <Link
+                    href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(product.title)}`}
+                    className="h-11 min-h-[44px] w-full px-5 inline-flex items-center justify-center text-[0.72rem] sm:text-[0.74rem] uppercase tracking-[0.18em] font-semibold bg-[#8C704F] hover:bg-[#785E3E] text-white transition-colors whitespace-nowrap cursor-pointer shadow-xs rounded-xs"
+                  >
+                    Inquire to Acquire <ArrowRight size={15} className="ml-2 inline-block" />
+                  </Link>
+                )}
 
                 <Link
                   href="/cart"
@@ -427,6 +606,68 @@ export default function ProductDetailView({ product }: Props) {
           </div>
         </div>
       </div>
+      {/* High-Resolution Fullscreen Zoom Lightbox Modal */}
+      {isZoomOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 bg-black/92 backdrop-blur-sm flex items-center justify-center p-4 sm:p-8 animate-in fade-in duration-200"
+          onClick={() => setIsZoomOpen(false)}
+        >
+          <button
+            type="button"
+            onClick={() => setIsZoomOpen(false)}
+            aria-label="Close full size view"
+            className="absolute top-5 right-5 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors cursor-pointer z-20"
+          >
+            <X size={22} />
+          </button>
+
+          <div
+            className="relative max-w-5xl max-h-[88vh] w-full h-full flex items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Image
+              src={currentImage}
+              alt={product.title}
+              fill
+              className="object-contain"
+              sizes="100vw"
+              priority
+            />
+
+            {hasMultipleImages && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handlePrevImage();
+                  }}
+                  aria-label="Previous image"
+                  className="absolute left-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors cursor-pointer z-20"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNextImage();
+                  }}
+                  aria-label="Next image"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/60 hover:bg-black/90 text-white transition-colors cursor-pointer z-20"
+                >
+                  <ChevronRight size={24} />
+                </button>
+                <div className="absolute bottom-4 left-1/2 -translate-x-1/2 px-3 py-1 rounded bg-black/70 text-white text-xs tracking-widest uppercase z-20">
+                  {activeImageIndex + 1} of {galleryImages.length}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

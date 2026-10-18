@@ -3,8 +3,8 @@ export type Product = {
   title: string;
   medium: string;
   size: string;
-  /** Price in USD for display and checkout */
-  price: number;
+  /** Price in USD for display and checkout (Optional) */
+  price?: number;
   src: string;
   images: string[];
   description: string;

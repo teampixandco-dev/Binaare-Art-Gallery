@@ -61,7 +61,7 @@ export async function GET(_request: Request, context: Context) {
         escapeCsv(p.title),
         escapeCsv(p.slug),
         escapeCsv(p.category || ""),
-        escapeCsv(p.price),
+        escapeCsv(p.price || 0),
         escapeCsv(p.medium),
         escapeCsv(p.size),
         escapeCsv(p.width || ""),
@@ -159,7 +159,11 @@ export async function POST(request: Request, context: Context) {
           if (page.sections.some(s => s.builtin && !old?.sections.some(o => o.builtin && o.id === s.id))) throw new ContentError("New sections must be custom sections.");
           content.pages = content.pages.some(p => p.id === page.id) ? content.pages.map(p => p.id === page.id ? page : p) : [...content.pages, page];
         } else if (resource === "products") {
-          const product = productSchema.parse(entry); product.src = product.images[0];
+          const product = productSchema.parse(entry);
+          if (!product.images || product.images.length === 0) {
+            product.images = product.src ? [product.src] : [];
+          }
+          product.src = product.images[0] || product.src || "";
           content.products = content.products.some(p => p.id === product.id) ? content.products.map(p => p.id === product.id ? product : p) : [...content.products, product];
         } else {
           const post = postSchema.parse(entry);

@@ -23,6 +23,7 @@ import {
   Video,
   Shield,
   User,
+  Star,
 } from "lucide-react";
 import type { BlogPost, MediaAsset, PageSection, ShopProduct, SiteContent, SitePage } from "@/lib/content-types";
 import { pageHref } from "@/lib/content-types";
@@ -166,11 +167,9 @@ export default function AdminDashboard({
     else dialog.current?.close();
   }, [picker]);
 
-  useEffect(() => {
-    if (role !== "admin" && tab === "pages") {
-      setTab("products");
-    }
-  }, [role, tab]);
+  if (role !== "admin" && tab === "pages") {
+    setTab("products");
+  }
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
@@ -247,9 +246,11 @@ export default function AdminDashboard({
       if (!ed.value.size.trim()) {
         errors.size = "Artwork dimensions are required (e.g. 50 × 70 cm).";
       }
-      const priceNum = Number(ed.value.price);
-      if (isNaN(priceNum) || priceNum < 0) {
-        errors.price = "Price must be a valid number of 0 or greater.";
+      if (ed.value.price !== undefined && ed.value.price !== null && String(ed.value.price).trim() !== "") {
+        const priceNum = Number(ed.value.price);
+        if (isNaN(priceNum) || priceNum < 0) {
+          errors.price = "Price must be a valid number of 0 or greater, or leave blank.";
+        }
       }
     } else if (ed.kind === "posts") {
       if (!ed.value.date.trim()) {
@@ -470,7 +471,12 @@ export default function AdminDashboard({
         )}
         <div className="admin-thumbnails">
           {values.map((src, index) => (
-            <div key={`${src}-${index}`}>
+            <div key={`${src}-${index}`} className="admin-thumb-wrapper">
+              {index === 0 && (
+                <span className="admin-thumb-cover-tag" title="Primary cover photo shown in catalog">
+                  Cover
+                </span>
+              )}
               <button
                 type="button"
                 className="admin-thumb"
@@ -485,6 +491,20 @@ export default function AdminDashboard({
                 <img src={src} alt={`${label} ${index + 1}`} />
               </button>
               <div className="admin-thumb-actions">
+                {index > 0 && (
+                  <button
+                    type="button"
+                    aria-label={`Make image ${index + 1} the primary cover photo`}
+                    onClick={() => {
+                      const item = values[index];
+                      const rest = values.filter((_, i) => i !== index);
+                      select([item, ...rest]);
+                    }}
+                    title="Set as Primary Cover Photo"
+                  >
+                    <Star size={13} />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label={`Move image ${index + 1} earlier`}
@@ -1211,33 +1231,76 @@ export default function AdminDashboard({
                     <div className="admin-spec-group">
                       <div className="admin-spec-header">
                         <h4>Artwork Photography &amp; Images</h4>
-                        <span className="admin-field-badge">Shop Images</span>
+                        <span
+                          className="admin-field-badge"
+                          style={{
+                            background:
+                              (editor.value.images || []).length > 1
+                                ? "rgba(140, 112, 79, 0.15)"
+                                : "rgba(0, 0, 0, 0.05)",
+                            color:
+                              (editor.value.images || []).length > 1
+                                ? "#8c704f"
+                                : "#57534e",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {(editor.value.images || []).length > 1
+                            ? `Detailed Gallery Mode (${(editor.value.images || []).length} images)`
+                            : (editor.value.images || []).length === 1 || editor.value.src
+                            ? "Single Image Mode (1 image)"
+                            : "No Images"}
+                        </span>
                       </div>
+
+                      <div
+                        style={{
+                          background: "#faf8f5",
+                          border: "1px solid #ebd7b5",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          marginBottom: "16px",
+                          fontSize: "12.5px",
+                          lineHeight: 1.5,
+                          color: "#6b5d4d",
+                        }}
+                      >
+                        <strong>Artwork Display Rule:</strong>
+                        <ul style={{ margin: "4px 0 0", paddingLeft: "18px", listStyleType: "disc" }}>
+                          <li><strong>1 image:</strong> Product page displays a clean, focused single artwork view without thumbnail bars.</li>
+                          <li><strong>2+ images:</strong> Product page automatically displays the interactive detailed view with thumbnail gallery strip, arrows, and zoom inspection.</li>
+                        </ul>
+                      </div>
+
                       {imageField(
                         "Primary Cover Image",
                         editor.value.src,
                         src => {
-                          const existingImages = editor.value.images || [];
-                          const nextImages = existingImages.includes(src)
-                            ? existingImages
-                            : [src, ...existingImages];
+                          const existingImages = (editor.value.images || []).filter(s => s !== src);
+                          const nextImages = [src, ...existingImages];
                           change({ kind: "products", value: { ...editor.value, src, images: nextImages } });
                         },
-                        "Main photograph shown in the shop catalog, cart, and detail banner."
+                        "Main photograph shown in the shop catalog, cart, and default artwork view."
                       )}
                       {imageList(
-                        "Artwork Gallery Photography",
-                        editor.value.images || [],
-                        images =>
+                        "Artwork Gallery Photography & Detailed Views",
+                        editor.value.images && editor.value.images.length > 0
+                          ? editor.value.images
+                          : editor.value.src
+                          ? [editor.value.src]
+                          : [],
+                        images => {
+                          const primarySrc = images[0] || "";
                           change({
                             kind: "products",
                             value: {
                               ...editor.value,
                               images,
-                              src: images[0] || editor.value.src || "",
+                              src: primarySrc,
                             },
-                          }),
-                        "Full photography set shown in the interactive zoom gallery on the artwork detail page."
+                          });
+                        },
+                        "Add additional angled views, texture close-ups, room mockups, or framed photography. The first image is always the primary cover photo."
                       )}
                     </div>
 
@@ -1256,18 +1319,23 @@ export default function AdminDashboard({
                         />
                         <Field
                           label="Price (USD)"
-                          badge="Listing Price"
-                          explanation="Purchase price in US Dollars for display and cart checkout."
-                          required
+                          badge="Optional"
+                          explanation="Artwork listing price in USD. Optional — leave empty or 0 to display 'Price Upon Request' and inquiry contact instead."
                           type="number"
                           error={fieldErrors.price}
-                          value={String(editor.value.price)}
-                          onChange={price =>
-                            change(
-                              { kind: "products", value: { ...editor.value, price: Number(price) } },
-                              "price"
-                            )
+                          value={
+                            editor.value.price === undefined || editor.value.price === 0
+                              ? ""
+                              : String(editor.value.price)
                           }
+                          onChange={price => {
+                            const trimmed = price.trim();
+                            const num = trimmed === "" ? 0 : Number(trimmed);
+                            change(
+                              { kind: "products", value: { ...editor.value, price: isNaN(num) ? 0 : num } },
+                              "price"
+                            );
+                          }}
                         />
                       </div>
                     </div>

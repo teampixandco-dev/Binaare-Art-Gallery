@@ -26,10 +26,13 @@ export const productSchema = z.object({
   title,
   medium: title,
   size: title,
-  price: z.number().finite().min(0).max(100000000),
+  price: z.union([z.number().finite().min(0).max(100000000), z.literal(""), z.null(), z.undefined()])
+    .transform(v => (v === "" || v === null || v === undefined || isNaN(Number(v))) ? 0 : Number(v))
+    .optional()
+    .default(0),
   description: text,
   src: image,
-  images: z.array(image).min(1).max(20),
+  images: z.array(image).max(30).optional().default([]),
   published: z.boolean(),
   category: z.string().max(200).optional().default(""),
   materials: z.string().max(1000).optional().default(""),
@@ -49,7 +52,7 @@ export const postSchema = z.object({ id, slug, title, excerpt: z.string().trim()
 export const saveSchema = z.object({ revision: z.number().int().positive(), resource: z.enum(["products", "pages", "posts"]), value: z.unknown() });
 export const deleteSchema = z.object({ revision: z.number().int().positive(), resource: z.enum(["products", "pages", "posts", "media"]), id });
 export function referencedImages(content: SiteContent): string[] {
-  return [...content.products.flatMap(p => [p.src, ...p.images]), ...content.posts.flatMap(p => [p.cover, ...p.images]), ...content.pages.flatMap(p => [p.hero, ...p.sections.flatMap(s => s.items.map(i => i.src))])];
+  return [...content.products.flatMap(p => [p.src, ...(p.images || [])]), ...content.posts.flatMap(p => [p.cover, ...(p.images || [])]), ...content.pages.flatMap(p => [p.hero, ...p.sections.flatMap(s => s.items.map(i => i.src))])].filter(Boolean);
 }
 export function validateContent(content: SiteContent) {
   for (const entries of [content.products, content.pages, content.posts]) {

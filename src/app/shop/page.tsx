@@ -183,9 +183,9 @@ export default function ShopPage() {
     });
 
     if (sortBy === "price-asc") {
-      result = [...result].sort((a, b) => a.price - b.price);
+      result = [...result].sort((a, b) => (a.price || 0) - (b.price || 0));
     } else if (sortBy === "price-desc") {
-      result = [...result].sort((a, b) => b.price - a.price);
+      result = [...result].sort((a, b) => (b.price || 0) - (a.price || 0));
     } else if (sortBy === "title-asc") {
       result = [...result].sort((a, b) => a.title.localeCompare(b.title));
     } else if (sortBy === "title-desc") {
@@ -444,6 +444,13 @@ export default function ShopPage() {
                             />
                           </Link>
 
+                          {/* Multiple Images Indicator Badge */}
+                          {item.images && item.images.length > 1 && (
+                            <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-[2px] bg-black/60 text-white text-[0.6rem] font-medium tracking-wider backdrop-blur-xs flex items-center gap-1 z-10 pointer-events-none">
+                              <Layers size={10} /> {item.images.length} views
+                            </span>
+                          )}
+
                           {/* Favorite Heart Button */}
                           <button
                             type="button"
@@ -462,10 +469,17 @@ export default function ShopPage() {
                           </button>
                         </div>
 
-                        {/* Title */}
-                        <h3 className="font-serif font-medium text-[1.02rem] leading-snug text-[#24211F] line-clamp-1 mb-1 transition-colors group-hover:text-[#8C704F]">
-                          <Link href={`/shop/${item.slug}`}>{item.title}</Link>
-                        </h3>
+                        {/* Title & Optional Price Row */}
+                        <div className="flex items-baseline justify-between gap-2 mb-1">
+                          <h3 className="font-serif font-medium text-[1.02rem] leading-snug text-[#24211F] line-clamp-1 transition-colors group-hover:text-[#8C704F]">
+                            <Link href={`/shop/${item.slug}`}>{item.title}</Link>
+                          </h3>
+                          {item.price && item.price > 0 ? (
+                            <span className="text-[0.88rem] font-medium text-[#8C704F] whitespace-nowrap">
+                              ${item.price.toLocaleString()}
+                            </span>
+                          ) : null}
+                        </div>
 
                         {/* Dimensions / Subtitle */}
                         <p className="text-[0.68rem] uppercase tracking-[0.14em] text-[#77716B] mb-3 truncate font-medium">
@@ -518,32 +532,46 @@ export default function ShopPage() {
                           />
                         </Link>
 
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            toggleFavorite(item.slug);
-                          }}
-                          aria-label={`Favorite ${item.title}`}
-                          className="absolute top-2 right-2 w-7 h-7 rounded-xs bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
-                        >
-                          <Heart
-                            size={13}
-                            className={isFav ? "fill-[#8C704F] text-[#8C704F]" : "text-[#77716B]"}
-                          />
-                        </button>
-                      </div>
+                          {/* Multiple Images Indicator Badge */}
+                          {item.images && item.images.length > 1 && (
+                            <span className="absolute bottom-2 left-2 px-1.5 py-0.5 rounded-[2px] bg-black/60 text-white text-[0.6rem] font-medium tracking-wider backdrop-blur-xs flex items-center gap-1 z-10 pointer-events-none">
+                              <Layers size={10} /> {item.images.length} views
+                            </span>
+                          )}
 
-                      {/* Right Details */}
-                      <div className="flex-1 flex flex-col justify-between py-0.5">
-                        <div>
-                          <h3 className="font-serif text-[1.18rem] font-medium leading-snug text-[#24211F] mb-1 transition-colors group-hover:text-[#8C704F]">
-                            <Link href={`/shop/${item.slug}`}>{item.title}</Link>
-                          </h3>
-                          <p className="text-[0.7rem] uppercase tracking-[0.14em] text-[#77716B] mb-2 font-medium">
-                            {getArtworkSubtitle(item)} · {item.width && item.height ? `${item.width} × ${item.height}` : item.size}
-                          </p>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              toggleFavorite(item.slug);
+                            }}
+                            aria-label={`Favorite ${item.title}`}
+                            className="absolute top-2 right-2 w-7 h-7 rounded-xs bg-white/90 hover:bg-white text-[#24211F] shadow-xs flex items-center justify-center transition-transform hover:scale-110 z-10 cursor-pointer"
+                          >
+                            <Heart
+                              size={13}
+                              className={isFav ? "fill-[#8C704F] text-[#8C704F]" : "text-[#77716B]"}
+                            />
+                          </button>
+                        </div>
+
+                        {/* Right Details */}
+                        <div className="flex-1 flex flex-col justify-between py-0.5">
+                          <div>
+                            <div className="flex items-baseline justify-between gap-3 mb-1">
+                              <h3 className="font-serif text-[1.18rem] font-medium leading-snug text-[#24211F] transition-colors group-hover:text-[#8C704F]">
+                                <Link href={`/shop/${item.slug}`}>{item.title}</Link>
+                              </h3>
+                              {item.price && item.price > 0 && (
+                                <span className="text-base font-semibold text-[#8C704F] whitespace-nowrap">
+                                  ${item.price.toLocaleString()}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[0.7rem] uppercase tracking-[0.14em] text-[#77716B] mb-2 font-medium">
+                              {getArtworkSubtitle(item)} · {item.width && item.height ? `${item.width} × ${item.height}` : item.size}
+                            </p>
                           <p className="text-xs text-[#77716B] leading-relaxed line-clamp-2 mb-4 font-light">
                             {item.description.replace(/\*\*/g, "").replace(/\*/g, "")}
                           </p>

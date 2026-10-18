@@ -163,7 +163,7 @@ export default function CheckoutPage() {
                     <span style={{ paddingRight: "0.5rem" }}>
                       {product.title} × {line.quantity}
                     </span>
-                    <span>{formatPriceUSD(product.price * line.quantity)}</span>
+                    <span>{formatPriceUSD((product.price || 0) * line.quantity)}</span>
                   </li>
                 ))}
               </ul>
