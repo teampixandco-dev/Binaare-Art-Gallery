@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Lock, User, ArrowLeft, Sparkles, AlertCircle, Shield, Palette } from "lucide-react";
+import { Eye, EyeOff, Lock, User, ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
+import Image from "next/image";
 
 export default function LoginForm() {
   const [busy, setBusy] = useState(false);
@@ -11,6 +12,53 @@ export default function LoginForm() {
 
   return (
     <main className="admin-root admin-login">
+      {/* Dynamic blurred original artworks composition background */}
+      <div className="admin-login-art-backdrop" aria-hidden="true">
+        <div className="admin-art-tile admin-art-tile-1">
+          <Image
+            src="/artworks/the-crimson-queen.webp"
+            alt=""
+            fill
+            sizes="50vw"
+            priority
+            className="object-cover"
+          />
+        </div>
+        <div className="admin-art-tile admin-art-tile-2">
+          <Image
+            src="/artworks/golden-energy.webp"
+            alt=""
+            fill
+            sizes="50vw"
+            priority
+            className="object-cover"
+          />
+        </div>
+        <div className="admin-art-tile admin-art-tile-3">
+          <Image
+            src="/artworks/love-in-every-color.webp"
+            alt=""
+            fill
+            sizes="50vw"
+            priority
+            className="object-cover"
+          />
+        </div>
+        <div className="admin-art-tile admin-art-tile-4">
+          <Image
+            src="/artworks/petals-of-serenity.webp"
+            alt=""
+            fill
+            sizes="50vw"
+            priority
+            className="object-cover"
+          />
+        </div>
+        {/* Artistic museum lighting and blur overlays */}
+        <div className="admin-art-blur-glass" />
+        <div className="admin-art-vignette" />
+      </div>
+
       {/* Luxury Frosted Glass Login Card */}
       <div className="admin-login-card">
         <div className="admin-login-header">
@@ -117,17 +165,6 @@ export default function LoginForm() {
         </form>
 
         <div className="admin-login-footer">
-          <div className="admin-login-roles-hint">
-            <div className="admin-role-hint-pill">
-              <Shield size={12} />
-              <span><strong>admin</strong> • Full Access</span>
-            </div>
-            <div className="admin-role-hint-pill">
-              <Palette size={12} />
-              <span><strong>binaaree</strong> • Curator</span>
-            </div>
-          </div>
-
           <Link href="/" className="admin-back">
             <ArrowLeft size={13} style={{ display: "inline", verticalAlign: "-2px", marginRight: "4px" }} />
             Return to Gallery

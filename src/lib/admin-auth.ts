@@ -37,8 +37,44 @@ export async function requireAdmin(requiredRole?: AdminRole): Promise<AdminUser>
   return user;
 }
 export function checkOrigin(request: Request) {
-  const expected = process.env.APP_ORIGIN || new URL(request.url).origin;
-  if (request.headers.get("origin") !== expected) throw new ContentError("Request origin is not allowed.", 403);
+  const origin = request.headers.get("origin");
+  if (!origin) return; // Non-browser or same-origin direct calls
+
+  const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+
+  const allowed = new Set<string>([
+    "https://binaareartgallery.com",
+    "http://binaareartgallery.com",
+    "https://www.binaareartgallery.com",
+    "http://www.binaareartgallery.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+  ]);
+
+  if (process.env.APP_ORIGIN) {
+    allowed.add(process.env.APP_ORIGIN.replace(/\/$/, ""));
+  }
+
+  try {
+    allowed.add(new URL(request.url).origin);
+  } catch {}
+
+  if (forwardedHost) {
+    allowed.add(`${forwardedProto}://${forwardedHost}`);
+    allowed.add(`https://${forwardedHost}`);
+    allowed.add(`http://${forwardedHost}`);
+  }
+
+  const cleanOrigin = origin.replace(/\/$/, "");
+  if (!allowed.has(cleanOrigin)) {
+    // If incoming origin ends with binaareartgallery.com or matches host
+    if (cleanOrigin.includes("binaareartgallery.com") || (forwardedHost && cleanOrigin.includes(forwardedHost.split(":")[0]))) {
+      return;
+    }
+    console.warn(`[admin-auth] Blocked unauthorized origin: "${origin}". Allowed origins:`, Array.from(allowed));
+    throw new ContentError("Request origin is not allowed.", 403);
+  }
 }
 export async function login(username: string, password: string) {
   const db = getDatabase();

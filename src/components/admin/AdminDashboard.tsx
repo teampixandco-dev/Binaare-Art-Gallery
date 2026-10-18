@@ -286,7 +286,7 @@ export default function AdminDashboard({
           category: "Oil Painting",
           medium: "",
           size: "",
-          price: 0,
+          price: undefined,
           description: "",
           aboutPainting: "",
           artistMessage: "",
@@ -1324,15 +1324,15 @@ export default function AdminDashboard({
                           type="number"
                           error={fieldErrors.price}
                           value={
-                            editor.value.price === undefined || editor.value.price === 0
+                            editor.value.price === undefined || editor.value.price === null || editor.value.price === 0
                               ? ""
                               : String(editor.value.price)
                           }
                           onChange={price => {
                             const trimmed = price.trim();
-                            const num = trimmed === "" ? 0 : Number(trimmed);
+                            const num = trimmed === "" ? undefined : Number(trimmed);
                             change(
-                              { kind: "products", value: { ...editor.value, price: isNaN(num) ? 0 : num } },
+                              { kind: "products", value: { ...editor.value, price: num === undefined || isNaN(num) ? undefined : num } },
                               "price"
                             );
                           }}
