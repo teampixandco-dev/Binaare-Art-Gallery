@@ -20,6 +20,9 @@ import {
   FileText,
   FileSpreadsheet,
   FolderDown,
+  Video,
+  Shield,
+  User,
 } from "lucide-react";
 import type { BlogPost, MediaAsset, PageSection, ShopProduct, SiteContent, SitePage } from "@/lib/content-types";
 import { pageHref } from "@/lib/content-types";
@@ -136,9 +139,11 @@ function Field({
 export default function AdminDashboard({
   initial,
   username,
+  role = "admin",
 }: {
   initial: SiteContent;
   username: string;
+  role?: "admin" | "editor";
 }) {
   const [content, setContent] = useState(initial);
   const [tab, setTab] = useState<Resource>("products");
@@ -160,6 +165,12 @@ export default function AdminDashboard({
     if (picker) dialog.current?.showModal();
     else dialog.current?.close();
   }, [picker]);
+
+  useEffect(() => {
+    if (role !== "admin" && tab === "pages") {
+      setTab("products");
+    }
+  }, [role, tab]);
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
@@ -715,6 +726,8 @@ export default function AdminDashboard({
       : `/shop/${editor.value.slug}`
     : "";
 
+  const visibleTabs = tabs.filter(t => role === "admin" || t.id !== "pages");
+
   return (
     <main className="admin-root admin-dashboard">
       <aside className="admin-sidebar">
@@ -723,7 +736,7 @@ export default function AdminDashboard({
         </a>
         <p className="admin-nav-caption">Manage your website</p>
         <nav>
-          {tabs.map(({ id, label, icon: Icon }) => (
+          {visibleTabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               disabled={busy}
@@ -743,7 +756,7 @@ export default function AdminDashboard({
               {label}
               <span>
                 {id === "documents"
-                  ? 3
+                  ? (role === "admin" ? 3 : 2)
                   : id === "pages"
                   ? content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length
                   : content[id]?.length || 0}
@@ -752,6 +765,17 @@ export default function AdminDashboard({
           ))}
         </nav>
         <div className="admin-sidebar-bottom">
+          <div className="admin-user-badge">
+            <div className="admin-user-avatar">
+              {role === "admin" ? <Shield size={15} /> : <User size={15} />}
+            </div>
+            <div className="admin-user-meta">
+              <span className="admin-user-name">{username}</span>
+              <span className={`admin-user-pill ${role === "admin" ? "admin-pill-admin" : "admin-pill-editor"}`}>
+                {role === "admin" ? "Site Designer / Admin" : "Art Curator / Shop Editor"}
+              </span>
+            </div>
+          </div>
           <a href="/" target="_blank" rel="noreferrer">
             <ExternalLink size={15} /> View live gallery
           </a>
@@ -767,7 +791,7 @@ export default function AdminDashboard({
               }
             }}
           >
-            <LogOut size={15} /> Sign out ({username})
+            <LogOut size={15} /> Sign out
           </button>
         </div>
       </aside>
@@ -900,26 +924,28 @@ export default function AdminDashboard({
                   >
                     <ExternalLink size={14} /> View in Browser
                   </a>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    className="admin-small"
-                    onClick={async () => {
-                      setBusy(true);
-                      setError("");
-                      setMessage("");
-                      try {
-                        await request("generate-pdf", {});
-                        setMessage("Technical Specification PDF compiled and updated successfully!");
-                      } catch (e) {
-                        report(e);
-                      } finally {
-                        setBusy(false);
-                      }
-                    }}
-                  >
-                    <Sparkles size={14} /> Re-compile PDF
-                  </button>
+                  {role === "admin" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="admin-small"
+                      onClick={async () => {
+                        setBusy(true);
+                        setError("");
+                        setMessage("");
+                        try {
+                          await request("generate-pdf", {});
+                          setMessage("Technical Specification PDF compiled and updated successfully!");
+                        } catch (e) {
+                          report(e);
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      <Sparkles size={14} /> Re-compile PDF
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -969,38 +995,40 @@ export default function AdminDashboard({
                 </div>
               </div>
 
-              {/* Card 3: Site Content & Pages Backup */}
-              <div className="admin-doc-card">
-                <div>
-                  <div className="admin-doc-header">
-                    <div className="admin-doc-icon">
-                      <FolderDown size={24} />
+              {/* Card 3: Site Content & Pages Backup (Admin Only) */}
+              {role === "admin" && (
+                <div className="admin-doc-card">
+                  <div>
+                    <div className="admin-doc-header">
+                      <div className="admin-doc-icon">
+                        <FolderDown size={24} />
+                      </div>
+                      <div className="admin-doc-info">
+                        <h3>Gallery Content &amp; Pages Backup</h3>
+                        <p>
+                          Full system snapshot of all active pages, header image replacements, curated image grids, and studio configurations.
+                        </p>
+                      </div>
                     </div>
-                    <div className="admin-doc-info">
-                      <h3>Gallery Content &amp; Pages Backup</h3>
-                      <p>
-                        Full system snapshot of all active pages, header image replacements, curated image grids, and studio configurations.
-                      </p>
+                    <div className="admin-doc-meta">
+                      <span><strong>Revision:</strong> v{content.revision}</span>
+                      <span>•</span>
+                      <span><strong>Pages:</strong> {content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length} Active</span>
+                      <span>•</span>
+                      <span><strong>Media Assets:</strong> {content.media.length} Uploads</span>
                     </div>
                   </div>
-                  <div className="admin-doc-meta">
-                    <span><strong>Revision:</strong> v{content.revision}</span>
-                    <span>•</span>
-                    <span><strong>Pages:</strong> {content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length} Active</span>
-                    <span>•</span>
-                    <span><strong>Media Assets:</strong> {content.media.length} Uploads</span>
+                  <div className="admin-doc-actions">
+                    <a
+                      href="/api/admin/backup"
+                      download={`binaare-site-backup-${new Date().toISOString().slice(0, 10)}.json`}
+                      className="admin-primary"
+                    >
+                      <Download size={14} /> Download Site Backup (JSON)
+                    </a>
                   </div>
                 </div>
-                <div className="admin-doc-actions">
-                  <a
-                    href="/api/admin/backup"
-                    download={`binaare-site-backup-${new Date().toISOString().slice(0, 10)}.json`}
-                    className="admin-primary"
-                  >
-                    <Download size={14} /> Download Site Backup (JSON)
-                  </a>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         ) : (
@@ -1045,13 +1073,14 @@ export default function AdminDashboard({
                   }
 
                   const value = item as ShopProduct | SitePage | BlogPost;
+                  const isVideoHero = "hero" in value && Boolean(value.hero?.endsWith(".mp4"));
                   const src =
                     "src" in value
                       ? value.src
                       : "hero" in value
-                      ? value.hero?.endsWith(".mp4")
-                        ? "/hero-poster.jpg"
-                        : value.hero
+                      ? isVideoHero
+                        ? "/artworks/together-we-bloom.webp"
+                        : value.hero || "/artworks/together-we-bloom.webp"
                       : value.cover;
 
                   return (
@@ -1061,7 +1090,14 @@ export default function AdminDashboard({
                       disabled={busy}
                       onClick={() => open({ kind: tab as "products" | "pages" | "posts", value } as Editor)}
                     >
-                      <img src={src} alt="" />
+                      <div className="admin-card-media-wrapper">
+                        <img src={src} alt="" />
+                        {isVideoHero && (
+                          <span className="admin-card-video-pill">
+                            <Video size={10} /> Ambient Video
+                          </span>
+                        )}
+                      </div>
                       <div>
                         <span className={`admin-badge ${value.published ? "published" : ""}`}>
                           {value.published ? "Published" : "Draft"}
@@ -1071,7 +1107,7 @@ export default function AdminDashboard({
                           {"medium" in value
                             ? (value.category ? `${value.category} • ` : "") + (value.medium || value.size)
                             : "sections" in value
-                            ? `Header: ${value.hero?.endsWith(".mp4") ? "Ambient Video" : "Custom Photo"} • ${value.sections.length} sections`
+                            ? `Header: ${isVideoHero ? "Ambient Video" : "Custom Photo"} • ${value.sections.length} sections`
                             : value.date}
                         </p>
                       </div>
@@ -1454,7 +1490,7 @@ export default function AdminDashboard({
                         {editor.value.hero?.endsWith(".mp4") ? (
                           <video src={editor.value.hero} autoPlay muted loop playsInline />
                         ) : (
-                          <img src={editor.value.hero || "/hero-poster.jpg"} alt={editor.value.title} />
+                          <img src={editor.value.hero || "/artworks/together-we-bloom.webp"} alt={editor.value.title} />
                         )}
                       </div>
 
@@ -1577,7 +1613,18 @@ export default function AdminDashboard({
           )}
         </div>
       )}
-    </div>
+
+        <footer className="admin-studio-footer">
+          <div className="admin-footer-brand">
+            <span className="admin-footer-title">BINAARE ART GALLERY</span>
+            <span className="admin-footer-dot">•</span>
+            <span className="admin-footer-sub">Fine Art Curator &amp; Management Studio</span>
+          </div>
+          <div className="admin-footer-credits">
+            <span>Designed &amp; Engineered by <strong>PIXANDCO</strong></span>
+          </div>
+        </footer>
+      </div>
 
       <dialog
         ref={dialog}

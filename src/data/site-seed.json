@@ -168,7 +168,7 @@
       "slug": "shop",
       "title": "Shop",
       "subtitle": "Original Artworks by Binari Gamage",
-      "hero": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1920&h=800&fit=crop",
+      "hero": "/artworks/fields-of-quiet-gold.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -185,28 +185,28 @@
               "title": "Acrylic Paintings",
               "description": "Bold expressions of emotion through vibrant acrylic layers",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=750&fit=crop"
+              "src": "/artworks/the-crimson-queen.webp"
             },
             {
               "id": "collections-1",
               "title": "Watercolour",
               "description": "Fluid compositions capturing light, memory, and feeling",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=750&fit=crop"
+              "src": "/artworks/beauty-beyond-colour.webp"
             },
             {
               "id": "collections-2",
               "title": "Textured Abstraction",
               "description": "Tactile surfaces where texture carries meaning",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=750&fit=crop"
+              "src": "/artworks/reflections-of-a-golden-city.webp"
             },
             {
               "id": "collections-3",
               "title": "Mixed Media",
               "description": "Layered works blending materials and techniques",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=750&fit=crop"
+              "src": "/artworks/beauty-in-simplicity.webp"
             }
           ]
         }
@@ -217,7 +217,7 @@
       "slug": "about",
       "title": "About Us",
       "subtitle": "The Philosophy Behind the Gallery",
-      "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
+      "hero": "/artworks/reflections-of-a-golden-city.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -288,7 +288,7 @@
       "slug": "exhibitions",
       "title": "Exhibitions",
       "subtitle": "Where Colors of Love Comes to Life",
-      "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
+      "hero": "/artworks/whispers-of-serenity.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -300,7 +300,7 @@
       "slug": "blog",
       "title": "Blog",
       "subtitle": "A journal of art, emotion, and creative reflections",
-      "hero": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=800&fit=crop",
+      "hero": "/artworks/reflections-of-a-golden-city.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -312,7 +312,7 @@
       "slug": "contact",
       "title": "Contact Us",
       "subtitle": "We Would Love to Hear from You",
-      "hero": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1920&h=800&fit=crop",
+      "hero": "/artworks/together-we-bloom.webp",
       "body": "",
       "builtin": true,
       "published": true,

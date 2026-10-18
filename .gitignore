@@ -60,6 +60,7 @@ next-env.d.ts
 # Local backend data and admin credentials
 /data/
 /.admin-credentials
+/.binaaree-credentials
 /test-results/
 /playwright-report/
 /.next-test/

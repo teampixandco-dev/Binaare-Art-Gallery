@@ -7,14 +7,34 @@ import { ContentError } from "./content-store";
 const COOKIE = "binaare_admin";
 const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
 const dummyPassword = hashPassword(randomBytes(24).toString("hex"));
-export async function currentAdmin(): Promise<string | null> {
+export type AdminRole = "admin" | "editor";
+
+export type AdminUser = {
+  username: string;
+  role: AdminRole;
+};
+
+export async function currentAdmin(): Promise<AdminUser | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
-  const row = getDatabase().prepare("SELECT username FROM sessions WHERE token_hash = ? AND expires > ?").get(tokenHash(token), Date.now()) as { username: string } | undefined;
-  return row?.username || null;
+  const db = getDatabase();
+  const session = db.prepare("SELECT username FROM sessions WHERE token_hash = ? AND expires > ?").get(tokenHash(token), Date.now()) as { username: string } | undefined;
+  if (!session) return null;
+  const admin = db.prepare("SELECT username, role FROM admins WHERE username = ?").get(session.username) as { username: string; role?: string } | undefined;
+  if (!admin) return null;
+  return {
+    username: admin.username,
+    role: admin.role === "editor" ? "editor" : "admin",
+  };
 }
-export async function requireAdmin() {
-  if (!await currentAdmin()) throw new ContentError("Please sign in to continue.", 401);
+
+export async function requireAdmin(requiredRole?: AdminRole): Promise<AdminUser> {
+  const user = await currentAdmin();
+  if (!user) throw new ContentError("Please sign in to continue.", 401);
+  if (requiredRole === "admin" && user.role !== "admin") {
+    throw new ContentError("Access restricted. Only the administrator can modify site design and configurations.", 403);
+  }
+  return user;
 }
 export function checkOrigin(request: Request) {
   const expected = process.env.APP_ORIGIN || new URL(request.url).origin;

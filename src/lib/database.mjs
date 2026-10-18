@@ -29,6 +29,11 @@ export function getDatabase() {
         status TEXT NOT NULL DEFAULT 'unread'
       );
     `);
+    try {
+      database.exec("ALTER TABLE admins ADD COLUMN role TEXT NOT NULL DEFAULT 'admin'");
+    } catch {
+      // Column already exists
+    }
   } catch {
     // Ignore if another thread just created it
   }

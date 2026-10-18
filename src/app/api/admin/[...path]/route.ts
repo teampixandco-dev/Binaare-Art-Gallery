@@ -35,10 +35,14 @@ async function boundedBody(request: Request, limit: number) {
 }
 export async function GET(_request: Request, context: Context) {
   try {
-    await requireAdmin();
+    const user = await requireAdmin();
     const action = (await context.params).path.join("/");
+    if (action === "session") return json({ username: user.username, role: user.role });
     if (action === "content") return json(getContent());
     if (action === "backup") {
+      if (user.role !== "admin") {
+        throw new ContentError("Site backup download is restricted to administrators.", 403);
+      }
       const content = getContent();
       const dateStr = new Date().toISOString().slice(0, 10);
       return new Response(JSON.stringify(content, null, 2), {
@@ -91,9 +95,12 @@ export async function POST(request: Request, context: Context) {
       await login(data.username, data.password);
       return json({ ok: true });
     }
-    await requireAdmin();
+    const user = await requireAdmin();
     if (action === "logout") { await logout(); return json({ ok: true }); }
     if (action === "generate-pdf") {
+      if (user.role !== "admin") {
+        throw new ContentError("Compiling technical documentation is restricted to administrators.", 403);
+      }
       const { exec } = await import("node:child_process");
       const { promisify } = await import("node:util");
       const execAsync = promisify(exec);
@@ -136,6 +143,9 @@ export async function POST(request: Request, context: Context) {
     const body = JSON.parse((await boundedBody(request, 1024 * 1024)).toString());
     if (action === "save") {
       const { revision, resource, value } = saveSchema.parse(body);
+      if (resource === "pages" && user.role !== "admin") {
+        throw new ContentError("Only the administrator can modify page design and headers.", 403);
+      }
       const entry = (resource === "products" ? productSchema : resource === "pages" ? pageSchema : postSchema).parse(value);
       const content = updateContent(revision, content => {
         if (resource === "pages") {
@@ -161,6 +171,9 @@ export async function POST(request: Request, context: Context) {
     }
     if (action === "delete") {
       const { revision, resource, id } = deleteSchema.parse(body);
+      if (resource === "pages" && user.role !== "admin") {
+        throw new ContentError("Only the administrator can delete pages.", 403);
+      }
       let filename: string | undefined;
       const content = updateContent(revision, content => {
         if (!content[resource].some(p => p.id === id)) throw new ContentError("This item no longer exists.", 404);

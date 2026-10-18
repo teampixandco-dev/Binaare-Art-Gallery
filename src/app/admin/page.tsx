@@ -6,6 +6,6 @@ import "./admin.css";
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Gallery Studio | Binaare Admin", robots: { index: false, follow: false } };
 export default async function AdminPage() {
-  const username = await currentAdmin();
-  return username ? <AdminDashboard initial={getContent()} username={username} /> : <LoginForm />;
+  const user = await currentAdmin();
+  return user ? <AdminDashboard initial={getContent()} username={user.username} role={user.role} /> : <LoginForm />;
 }
