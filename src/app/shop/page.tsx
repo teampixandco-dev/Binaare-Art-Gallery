@@ -19,7 +19,8 @@ import {
   ChevronRight,
   ArrowUpRight,
   ChevronDown,
-  Check
+  Check,
+  Mail
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -487,24 +488,24 @@ export default function ShopPage() {
                         </p>
                       </div>
 
-                      {/* Button Row: [ INQUIRE / ADD TO CART ] [ VIEW ↗ ] */}
-                      <div className="grid grid-cols-[1fr_auto] gap-2 pt-1 mt-auto">
-                        {item.price && item.price > 0 ? (
-                          <button
-                            type="button"
-                            onClick={() => handleAddToCart(item.slug)}
-                            className={`h-9 min-h-[36px] px-3 btn-glass-cart text-[0.68rem] tracking-[0.16em] ${isAdded ? "btn-glass-added" : ""}`}
-                          >
-                            {isAdded ? "Added ✓" : "Add to Cart"}
-                          </button>
-                        ) : (
-                          <Link
-                            href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}`}
-                            className="h-9 min-h-[36px] px-3 btn-glass-cart text-[0.68rem] tracking-[0.16em]"
-                          >
-                            Inquire
-                          </Link>
-                        )}
+                      {/* Button Row: [ ADD TO CART ] [ INQUIRE (Icon Button) ] [ VIEW ↗ ] */}
+                      <div className="grid grid-cols-[1fr_auto_auto] gap-1.5 pt-1 mt-auto">
+                        <button
+                          type="button"
+                          onClick={() => handleAddToCart(item.slug)}
+                          className={`h-9 min-h-[36px] px-3 btn-glass-cart text-[0.68rem] tracking-[0.16em] ${isAdded ? "btn-glass-added" : ""}`}
+                        >
+                          {isAdded ? "Added ✓" : "Add to Cart"}
+                        </button>
+
+                        <Link
+                          href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}&subject=${encodeURIComponent(`Inquiry regarding "${item.title}"`)}`}
+                          title={`Inquire about "${item.title}"`}
+                          aria-label={`Inquire about ${item.title}`}
+                          className="h-9 min-h-[36px] w-9 px-0 bg-white/90 hover:bg-[#FAF8F5] border border-[#D5CEC2] hover:border-[#8C704F] text-[#77716B] hover:text-[#8C704F] inline-flex items-center justify-center rounded-xs transition-colors shadow-xs"
+                        >
+                          <Mail size={15} />
+                        </Link>
 
                         <Link
                           href={`/shop/${item.slug}`}
@@ -587,22 +588,22 @@ export default function ShopPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          {item.price && item.price > 0 ? (
-                            <button
-                              type="button"
-                              onClick={() => handleAddToCart(item.slug)}
-                              className={`h-9 min-h-[36px] px-5 btn-glass-cart text-[0.68rem] tracking-[0.16em] ${isAdded ? "btn-glass-added" : ""}`}
-                            >
-                              {isAdded ? "Added to Cart ✓" : "Add to Cart"}
-                            </button>
-                          ) : (
-                            <Link
-                              href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}`}
-                              className="h-9 min-h-[36px] px-5 btn-glass-cart text-[0.68rem] tracking-[0.16em]"
-                            >
-                              Inquire
-                            </Link>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(item.slug)}
+                            className={`h-9 min-h-[36px] px-5 btn-glass-cart text-[0.68rem] tracking-[0.16em] ${isAdded ? "btn-glass-added" : ""}`}
+                          >
+                            {isAdded ? "Added to Cart ✓" : "Add to Cart"}
+                          </button>
+
+                          <Link
+                            href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}&subject=${encodeURIComponent(`Inquiry regarding "${item.title}"`)}`}
+                            title={`Inquire about "${item.title}"`}
+                            aria-label={`Inquire about ${item.title}`}
+                            className="h-9 min-h-[36px] px-3.5 bg-white/90 hover:bg-[#FAF8F5] border border-[#D5CEC2] hover:border-[#8C704F] text-[#77716B] hover:text-[#8C704F] inline-flex items-center justify-center gap-1.5 rounded-xs transition-colors shadow-xs text-[0.68rem] uppercase tracking-[0.14em] font-semibold"
+                          >
+                            <Mail size={14} /> Inquire
+                          </Link>
 
                           <Link
                             href={`/shop/${item.slug}`}

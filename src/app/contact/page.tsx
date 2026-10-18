@@ -71,6 +71,38 @@ export default function ContactPage() {
   const [inquiryReference, setInquiryReference] = useState("");
   const [copiedEmail, setCopiedEmail] = useState(false);
 
+  // Auto-fill inquiry subject and details from URL query params
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const artworkParam = params.get("artwork");
+    const subjectParam = params.get("subject");
+    const enquiryParam = params.get("enquiry");
+
+    if (subjectParam) {
+      setSubject(subjectParam);
+    } else if (artworkParam) {
+      setSubject(`Inquiry regarding "${artworkParam}"`);
+    }
+
+    if (enquiryParam) {
+      const match = ENQUIRY_OPTIONS.find(
+        (opt) => opt.value === enquiryParam || opt.label.toLowerCase() === enquiryParam.toLowerCase()
+      );
+      if (match) {
+        setEnquiryType(match.value);
+      }
+    } else if (artworkParam) {
+      setEnquiryType("Artwork enquiries and purchases");
+    }
+
+    if (artworkParam) {
+      setMessage(
+        `Hello Binari,\n\nI am inquiring about your original artwork "${artworkParam}". Could you please provide details regarding current availability, pricing, and private acquisition arrangements?\n\nThank you.`
+      );
+    }
+  }, []);
+
   function copyEmailToClipboard() {
     navigator.clipboard.writeText("Binari.gamage@binaareartgallery.com");
     setCopiedEmail(true);

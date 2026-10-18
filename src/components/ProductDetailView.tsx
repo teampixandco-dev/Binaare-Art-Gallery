@@ -21,6 +21,7 @@ import {
   ChevronLeft,
   ChevronRight,
   X,
+  Mail,
 } from "lucide-react";
 
 type Props = {
@@ -379,32 +380,32 @@ export default function ProductDetailView({ product }: Props) {
                 </div>
               )}
 
-              {/* Action Buttons: Add to Cart / Inquire to Acquire & View Cart */}
-              <div className="grid grid-cols-[1.6fr_1fr] sm:grid-cols-[1.75fr_1fr] gap-3 mb-8 pt-1">
-                {product.price && product.price > 0 ? (
-                  <button
-                    type="button"
-                    onClick={handleAddToCart}
-                    className={`h-11 min-h-[44px] w-full px-5 btn-glass-cart text-[0.72rem] sm:text-[0.74rem] tracking-[0.18em] ${added ? "btn-glass-added" : ""}`}
-                  >
-                    {added ? (
-                      <>
-                        <Check size={16} className="mr-2 inline-block text-white" /> Added to Cart
-                      </>
-                    ) : (
-                      <>
-                        Add to Cart <ArrowRight size={15} className="ml-2 inline-block" />
-                      </>
-                    )}
-                  </button>
-                ) : (
-                  <Link
-                    href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(product.title)}`}
-                    className="h-11 min-h-[44px] w-full px-5 btn-glass-cart text-[0.72rem] sm:text-[0.74rem] tracking-[0.18em]"
-                  >
-                    Inquire to Acquire <ArrowRight size={15} className="ml-2 inline-block" />
-                  </Link>
-                )}
+              {/* Action Buttons: Add to Cart / Inquire & View Cart */}
+              <div className="grid grid-cols-[1.5fr_auto_1fr] gap-2.5 mb-8 pt-1">
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  className={`h-11 min-h-[44px] w-full px-5 btn-glass-cart text-[0.72rem] sm:text-[0.74rem] tracking-[0.18em] ${added ? "btn-glass-added" : ""}`}
+                >
+                  {added ? (
+                    <>
+                      <Check size={16} className="mr-2 inline-block text-white" /> Added to Cart
+                    </>
+                  ) : (
+                    <>
+                      Add to Cart <ArrowRight size={15} className="ml-2 inline-block" />
+                    </>
+                  )}
+                </button>
+
+                <Link
+                  href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(product.title)}&subject=${encodeURIComponent(`Inquiry regarding "${product.title}"`)}`}
+                  title={`Inquire about "${product.title}"`}
+                  aria-label={`Inquire about ${product.title}`}
+                  className="h-11 min-h-[44px] px-4 bg-white border border-[#D5CEC2] hover:border-[#8C704F] text-[#77716B] hover:text-[#8C704F] inline-flex items-center justify-center gap-2 rounded-xs transition-colors shadow-xs text-[0.72rem] uppercase tracking-[0.14em] font-semibold"
+                >
+                  <Mail size={16} /> <span className="hidden sm:inline">Inquire</span>
+                </Link>
 
                 <Link
                   href="/cart"
