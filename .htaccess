@@ -1,0 +1,28 @@
+# ==============================================================================
+# Hostinger / cPanel Apache Reverse Proxy to Next.js
+# ==============================================================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # Allow SSL certificate renewals (.well-known)
+  RewriteCond %{REQUEST_URI} ^/\.well-known [NC]
+  RewriteRule ^ - [L]
+
+  # Direct static file delivery from /public if file exists
+  RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+  RewriteRule ^(.*)$ /public/$1 [L]
+
+  # Reverse proxy root URL to local Next.js server
+  RewriteRule ^$ http://127.0.0.1:3000/ [P,L]
+
+  # Reverse proxy all other non-file requests to local Next.js server
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule ^(.*)$ http://127.0.0.1:3000/$1 [P,L]
+</IfModule>
+
+# If mod_proxy is not enabled, fallback gracefully
+<IfModule !mod_rewrite.c>
+  DirectoryIndex server.js
+</IfModule>
