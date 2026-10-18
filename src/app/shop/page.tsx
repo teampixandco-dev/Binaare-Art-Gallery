@@ -493,14 +493,14 @@ export default function ShopPage() {
                           <button
                             type="button"
                             onClick={() => handleAddToCart(item.slug)}
-                            className="h-9 min-h-[36px] px-3 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                            className={`h-9 min-h-[36px] px-3 btn-glass-cart text-[0.68rem] tracking-[0.16em] ${isAdded ? "btn-glass-added" : ""}`}
                           >
                             {isAdded ? "Added ✓" : "Add to Cart"}
                           </button>
                         ) : (
                           <Link
                             href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}`}
-                            className="h-9 min-h-[36px] px-3 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                            className="h-9 min-h-[36px] px-3 btn-glass-cart text-[0.68rem] tracking-[0.16em]"
                           >
                             Inquire
                           </Link>
@@ -591,14 +591,14 @@ export default function ShopPage() {
                             <button
                               type="button"
                               onClick={() => handleAddToCart(item.slug)}
-                              className="h-9 min-h-[36px] px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                              className={`h-9 min-h-[36px] px-5 btn-glass-cart text-[0.68rem] tracking-[0.16em] ${isAdded ? "btn-glass-added" : ""}`}
                             >
                               {isAdded ? "Added to Cart ✓" : "Add to Cart"}
                             </button>
                           ) : (
                             <Link
                               href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}`}
-                              className="h-9 min-h-[36px] px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                              className="h-9 min-h-[36px] px-5 btn-glass-cart text-[0.68rem] tracking-[0.16em]"
                             >
                               Inquire
                             </Link>

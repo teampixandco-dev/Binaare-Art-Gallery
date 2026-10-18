@@ -23,13 +23,17 @@ process.on("unhandledRejection", (reason) => {
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare()
+  app.prepare()
   .then(() => {
     console.log("[Next.js Server] App prepared successfully. Binding HTTP listener...");
     const server = createServer((req, res) => {
       const parsedUrl = parse(req.url, true);
       handle(req, res, parsedUrl);
     });
+
+    // Low-memory socket keepalive optimization
+    server.keepAliveTimeout = 5000;
+    server.headersTimeout = 6000;
 
     server.on("error", (err) => {
       console.error("[Next.js Server] Listener error:", err);
@@ -39,6 +43,18 @@ app.prepare()
     server.listen(port, hostname, () => {
       console.log(`[Next.js Server] > Ready on http://${hostname}:${port}`);
     });
+
+    // Automatic runtime low-memory cleanup
+    if (typeof global.gc === "function") {
+      setInterval(() => {
+        try {
+          const mem = process.memoryUsage();
+          if (mem.heapUsed > 120 * 1024 * 1024) {
+            global.gc();
+          }
+        } catch (_) {}
+      }, 30000);
+    }
   })
   .catch((err) => {
     console.error("[Next.js Server] Fatal error during app.prepare():", err);

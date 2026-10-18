@@ -22,7 +22,13 @@ const nextConfig: NextConfig = {
     contentDispositionType: "inline",
   },
   experimental: {
-    optimizePackageImports: ["framer-motion", "lucide-react", "gsap"],
+    optimizePackageImports: [
+      "framer-motion",
+      "lucide-react",
+      "gsap",
+      "clsx",
+      "tailwind-merge"
+    ],
   },
 };
 

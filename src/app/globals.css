@@ -415,6 +415,94 @@ h1, h2, h3, h4 {
   pointer-events: none;
 }
 
+/* ── Glassmorphic Luxury Add to Cart Button ── */
+.btn-glass-cart {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background: linear-gradient(
+    135deg,
+    rgba(140, 112, 79, 0.88) 0%,
+    rgba(168, 137, 101, 0.78) 50%,
+    rgba(125, 98, 67, 0.92) 100%
+  );
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 3px;
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 
+    0 4px 16px -2px rgba(140, 112, 79, 0.38),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.45),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.18);
+  font-size: 0.6875rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  cursor: pointer;
+  overflow: hidden;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.btn-glass-cart::before {
+  content: "";
+  position: absolute;
+  top: 0; left: -100%;
+  width: 100%; height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.25) 50%,
+    transparent 100%
+  );
+  transform: skewX(-20deg);
+  transition: left 0.75s ease;
+  pointer-events: none;
+}
+
+.btn-glass-cart:hover::before {
+  left: 150%;
+}
+
+.btn-glass-cart:hover:not(:disabled) {
+  background: linear-gradient(
+    135deg,
+    rgba(155, 126, 92, 0.95) 0%,
+    rgba(182, 150, 112, 0.88) 50%,
+    rgba(138, 110, 78, 0.96) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.45);
+  box-shadow: 
+    0 6px 24px -2px rgba(140, 112, 79, 0.52),
+    inset 0 1px 2px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 1px 0 rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
+}
+
+.btn-glass-cart:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+  box-shadow: 
+    0 2px 8px -1px rgba(140, 112, 79, 0.4),
+    inset 0 1px 1px 0 rgba(0, 0, 0, 0.25);
+}
+
+.btn-glass-cart.btn-glass-added {
+  background: linear-gradient(
+    135deg,
+    rgba(74, 112, 85, 0.92) 0%,
+    rgba(95, 138, 108, 0.84) 50%,
+    rgba(65, 99, 75, 0.94) 100%
+  );
+  border-color: rgba(255, 255, 255, 0.4);
+  box-shadow: 
+    0 4px 16px -2px rgba(74, 112, 85, 0.42),
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.5);
+}
+
 .btn-outline {
   display: inline-flex; align-items: center; gap: 0.6rem;
   background: transparent;

@@ -17,15 +17,15 @@ export default function AddToCartButton({ slug, className, showIcon = false }: P
   return (
     <button
       type="button"
-      className={`${className ?? "btn-primary"} whitespace-nowrap`}
+      className={`${className ?? "btn-glass-cart py-2.5 px-6"} ${added ? "btn-glass-added" : ""}`}
       onClick={() => {
         addItem(slug, 1);
         setAdded(true);
         window.setTimeout(() => setAdded(false), 2000);
       }}
     >
-      {showIcon && !added && <ShoppingBag size={14} className="mr-1 inline-block" />}
-      {added ? "Added to cart" : "Add to cart"}
+      {showIcon && !added && <ShoppingBag size={14} className="mr-1.5 inline-block" />}
+      {added ? "Added to Cart ✓" : "Add to Cart"}
     </button>
   );
 }

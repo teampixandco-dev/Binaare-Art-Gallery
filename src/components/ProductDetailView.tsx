@@ -385,7 +385,7 @@ export default function ProductDetailView({ product }: Props) {
                   <button
                     type="button"
                     onClick={handleAddToCart}
-                    className="h-11 min-h-[44px] w-full px-5 inline-flex items-center justify-center text-[0.72rem] sm:text-[0.74rem] uppercase tracking-[0.18em] font-semibold bg-[#8C704F] hover:bg-[#785E3E] text-white transition-colors whitespace-nowrap cursor-pointer shadow-xs rounded-xs"
+                    className={`h-11 min-h-[44px] w-full px-5 btn-glass-cart text-[0.72rem] sm:text-[0.74rem] tracking-[0.18em] ${added ? "btn-glass-added" : ""}`}
                   >
                     {added ? (
                       <>
@@ -400,7 +400,7 @@ export default function ProductDetailView({ product }: Props) {
                 ) : (
                   <Link
                     href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(product.title)}`}
-                    className="h-11 min-h-[44px] w-full px-5 inline-flex items-center justify-center text-[0.72rem] sm:text-[0.74rem] uppercase tracking-[0.18em] font-semibold bg-[#8C704F] hover:bg-[#785E3E] text-white transition-colors whitespace-nowrap cursor-pointer shadow-xs rounded-xs"
+                    className="h-11 min-h-[44px] w-full px-5 btn-glass-cart text-[0.72rem] sm:text-[0.74rem] tracking-[0.18em]"
                   >
                     Inquire to Acquire <ArrowRight size={15} className="ml-2 inline-block" />
                   </Link>
