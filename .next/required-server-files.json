@@ -213,6 +213,8 @@
         "framer-motion",
         "lucide-react",
         "gsap",
+        "clsx",
+        "tailwind-merge",
         "date-fns",
         "lodash-es",
         "ramda",

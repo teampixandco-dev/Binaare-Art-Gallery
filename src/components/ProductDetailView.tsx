@@ -4,6 +4,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCart } from "@/context/CartContext";
+import { useContent } from "@/context/ContentContext";
 import { Product } from "@/data/products";
 import {
   ArrowRight,
@@ -54,16 +55,18 @@ function FormattedText({ text }: { text: string }) {
   );
 }
 
-export default function ProductDetailView({ product }: Props) {
+export default function ProductDetailView({ product: initialProduct }: Props) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
+  const content = useContent();
+  const product = content?.products?.find((p) => p.slug === initialProduct.slug) || initialProduct;
 
-  // Collect all unique photography attached to this artwork
+  // Collect all unique photography attached to this artwork (respecting additions & removals)
   const galleryImages = useMemo(() => {
-    const list = [product.src, ...(product.images || [])]
-      .map((s) => (s || "").trim())
-      .filter(Boolean);
-    return Array.from(new Set(list));
+    if (Array.isArray(product.images) && product.images.length > 0) {
+      return Array.from(new Set(product.images.map((s) => (s || "").trim()).filter(Boolean)));
+    }
+    return product.src ? [product.src.trim()] : [];
   }, [product.src, product.images]);
 
   const hasMultipleImages = galleryImages.length > 1;
@@ -77,7 +80,8 @@ export default function ProductDetailView({ product }: Props) {
     setActiveImageIndex(0);
   }
 
-  const currentImage = galleryImages[activeImageIndex] || product.src || "";
+  const safeIndex = galleryImages.length > 0 ? Math.min(activeImageIndex, galleryImages.length - 1) : 0;
+  const currentImage = galleryImages[safeIndex] || product.src || "";
 
   const handlePrevImage = () => {
     if (galleryImages.length <= 1) return;

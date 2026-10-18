@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Lock, User, ArrowLeft, Sparkles, AlertCircle } from "lucide-react";
 import Image from "next/image";
+import { toast, Toaster } from "@/components/ui/sonner";
 
 export default function LoginForm() {
   const [busy, setBusy] = useState(false);
@@ -90,13 +91,28 @@ export default function LoginForm() {
                   password: form.get("password"),
                 }),
               });
-              const data = await response.json();
-              if (!response.ok) {
-                throw new Error(data.error || "Sign-in failed. Please verify your credentials.");
+              const text = await response.text();
+              let data: any = null;
+              try {
+                data = text ? JSON.parse(text) : {};
+              } catch {
+                throw new Error("Unable to connect to authentication service. Please retry in a moment.");
               }
+              if (!response.ok) {
+                throw new Error(data?.error || "Sign-in failed. Please verify your credentials.");
+              }
+              toast.success("Welcome Back", {
+                description: "Signing into Binaare Art Gallery Console...",
+                duration: 2500,
+              });
               window.location.assign("/admin");
             } catch (err) {
-              setError(err instanceof Error ? err.message : "Could not connect to authentication service.");
+              const msg = err instanceof Error ? err.message : "Could not connect to authentication service.";
+              setError(msg);
+              toast.error("Sign-in Failed", {
+                description: msg,
+                duration: 4000,
+              });
               setBusy(false);
             }
           }}
@@ -171,6 +187,7 @@ export default function LoginForm() {
           </Link>
         </div>
       </div>
+      <Toaster />
     </main>
   );
 }
