@@ -13,6 +13,9 @@ export function getDatabase() {
   try {
     database.exec(`
       PRAGMA journal_mode = WAL;
+      PRAGMA synchronous = NORMAL;
+      PRAGMA cache_size = -2000;
+      PRAGMA temp_store = MEMORY;
       PRAGMA busy_timeout = 5000;
       CREATE TABLE IF NOT EXISTS content (id INTEGER PRIMARY KEY CHECK (id = 1), document TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS admins (username TEXT PRIMARY KEY, password_hash TEXT NOT NULL);
