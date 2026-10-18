@@ -24,6 +24,8 @@ import {
   Shield,
   User,
   Star,
+  Check,
+  Loader2,
 } from "lucide-react";
 import type { BlogPost, MediaAsset, PageSection, ShopProduct, SiteContent, SitePage } from "@/lib/content-types";
 import { pageHref } from "@/lib/content-types";
@@ -158,13 +160,28 @@ export default function AdminDashboard({
   const busy = working || !ready;
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [picker, setPicker] = useState<{ select: (src: string) => void } | null>(null);
+  const [picker, setPicker] = useState<{
+    select: (src: string) => void;
+    selectMultiple?: (srcs: string[]) => void;
+    multiple?: boolean;
+    label?: string;
+  } | null>(null);
+  const [pickerError, setPickerError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [selectedLibraryImages, setSelectedLibraryImages] = useState<string[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const uploadInput = useRef<HTMLInputElement>(null);
+  const pickerFileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (picker) dialog.current?.showModal();
-    else dialog.current?.close();
+    if (picker) {
+      setPickerError("");
+      setSelectedLibraryImages([]);
+      dialog.current?.showModal();
+    } else {
+      dialog.current?.close();
+    }
   }, [picker]);
 
   if (role !== "admin" && tab === "pages") {
@@ -394,17 +411,28 @@ export default function AdminDashboard({
     }
   }
 
-  async function upload(file: File) {
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Images must be 10 MB or smaller.");
+  async function upload(files: FileList | File[]) {
+    const fileList = Array.from(files).filter(f => f.size > 0);
+    if (fileList.length === 0) {
+      setPickerError("Please choose at least one image to upload.");
       return;
     }
+
+    for (const f of fileList) {
+      if (f.size > 15 * 1024 * 1024) {
+        setPickerError(`"${f.name}" exceeds the 15 MB limit. Please select smaller images.`);
+        return;
+      }
+    }
+
     setBusy(true);
-    setError("");
-    setMessage("");
+    setPickerError("");
+    setUploadProgress(`Optimizing & uploading ${fileList.length} image${fileList.length > 1 ? "s" : ""}…`);
     try {
       const form = new FormData();
-      form.append("file", file);
+      for (const file of fileList) {
+        form.append("files", file);
+      }
       const response = await fetch("/api/admin/upload", { method: "POST", body: form });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Upload failed.");
@@ -412,17 +440,29 @@ export default function AdminDashboard({
       setEditorRevision(previous =>
         previous === data.content.revision - 1 ? data.content.revision : previous
       );
+
+      const addedAssets = (data.assets || (data.asset ? [data.asset] : [])) as Array<{ src: string }>;
+      const addedSrcs = addedAssets.map(a => a.src);
+
       if (picker) {
-        picker.select(data.asset.src);
+        if (picker.multiple && picker.selectMultiple) {
+          picker.selectMultiple(addedSrcs);
+        } else if (picker.select && addedSrcs[0]) {
+          picker.select(addedSrcs[0]);
+        }
         setPicker(null);
       } else {
-        setMessage("Image uploaded. Choose it in a product, post or page section to display it on the website.");
+        setMessage(`${fileList.length} image${fileList.length > 1 ? "s" : ""} uploaded and optimized.`);
       }
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload failed.";
+      setPickerError(msg);
       report(err);
     } finally {
       setBusy(false);
+      setUploadProgress("");
       if (uploadInput.current) uploadInput.current.value = "";
+      if (pickerFileInput.current) pickerFileInput.current.value = "";
     }
   }
 
@@ -460,9 +500,16 @@ export default function AdminDashboard({
           <button
             type="button"
             className="admin-small"
-            onClick={() => setPicker({ select: src => select([...values, src]) })}
+            onClick={() =>
+              setPicker({
+                select: src => select([...values, src]),
+                selectMultiple: srcs => select([...values, ...srcs]),
+                multiple: true,
+                label: `Add to ${label}`,
+              })
+            }
           >
-            <Plus size={14} /> Add image
+            <Plus size={14} /> Add images
           </button>
         </div>
         {values.length === 0 && (
@@ -857,10 +904,11 @@ export default function AdminDashboard({
         <input
           ref={uploadInput}
           type="file"
+          multiple
           accept="image/jpeg,image/png,image/webp,image/avif"
           hidden
           onChange={e => {
-            if (e.target.files?.[0]) void upload(e.target.files[0]);
+            if (e.target.files?.length) void upload(e.target.files);
           }}
         />
 
@@ -1681,10 +1729,12 @@ export default function AdminDashboard({
           else setPicker(null);
         }}
       >
-        <header className="admin-row">
+        <header className="admin-picker-header">
           <div>
-            <h2>Choose an image</h2>
-            <p className="admin-muted">JPG, PNG, WebP or AVIF. Up to 10 MB.</p>
+            <h2>{picker?.label || (picker?.multiple ? "Select or Upload Images" : "Choose an image")}</h2>
+            <p className="admin-muted">
+              JPG, PNG, WebP or AVIF • Up to 15 MB each • Auto-optimized to high-fidelity WebP
+            </p>
           </div>
           <button
             type="button"
@@ -1692,46 +1742,161 @@ export default function AdminDashboard({
             aria-label="Close image library"
             onClick={() => setPicker(null)}
           >
-            <X size={21} />
+            <X size={20} />
           </button>
         </header>
 
-        {error && (
-          <p className="admin-error" role="alert">
-            {error}
-          </p>
+        {pickerError && (
+          <div className="admin-picker-error" role="alert">
+            <AlertCircle size={16} />
+            <span>{pickerError}</span>
+            <button type="button" onClick={() => setPickerError("")} aria-label="Dismiss error">
+              <X size={14} />
+            </button>
+          </div>
         )}
 
-        <button
-          type="button"
-          className="admin-primary"
-          disabled={busy}
-          onClick={() => uploadInput.current?.click()}
+        {/* Dropzone Upload Area with direct multiple file input */}
+        <div
+          className={`admin-dropzone ${dragActive ? "drag-active" : ""}`}
+          onDragOver={e => {
+            e.preventDefault();
+            setDragActive(true);
+          }}
+          onDragLeave={() => setDragActive(false)}
+          onDrop={e => {
+            e.preventDefault();
+            setDragActive(false);
+            if (e.dataTransfer.files?.length) {
+              void upload(e.dataTransfer.files);
+            }
+          }}
         >
-          <Upload size={16} />
-          {busy ? "Uploading…" : "Upload & use image"}
-        </button>
+          <input
+            ref={pickerFileInput}
+            type="file"
+            multiple
+            accept="image/jpeg,image/png,image/webp,image/avif"
+            hidden
+            onChange={e => {
+              if (e.target.files?.length) {
+                void upload(e.target.files);
+              }
+            }}
+          />
+          <div className="admin-dropzone-icon">
+            <Upload size={24} />
+          </div>
+          <div className="admin-dropzone-text">
+            <strong>Drag &amp; drop artwork images here</strong>
+            <span>or choose multiple files from your computer</span>
+          </div>
+          <button
+            type="button"
+            className="admin-primary admin-dropzone-btn"
+            disabled={busy}
+            onClick={() => pickerFileInput.current?.click()}
+          >
+            <Upload size={15} />
+            {busy ? (uploadProgress || "Optimizing…") : "Browse files"}
+          </button>
+          <span className="admin-dropzone-hint">
+            You can select multiple files at once. All images are automatically compressed, resized, and converted to WebP.
+          </span>
+        </div>
 
-        {!content.media.length && (
-          <p className="admin-empty-inline admin-muted">Your media library is empty. Upload your first image above.</p>
+        {/* Gallery Library Section */}
+        <div className="admin-picker-library-header">
+          <h3>
+            Media Library <span>({content.media.length})</span>
+          </h3>
+          {picker?.multiple && selectedLibraryImages.length > 0 && (
+            <div className="admin-picker-multi-actions">
+              <span>{selectedLibraryImages.length} selected</span>
+              <button
+                type="button"
+                className="admin-primary admin-small"
+                onClick={() => {
+                  if (picker.selectMultiple) {
+                    picker.selectMultiple(selectedLibraryImages);
+                  }
+                  setPicker(null);
+                }}
+              >
+                <Check size={14} /> Add Selected Images ({selectedLibraryImages.length})
+              </button>
+            </div>
+          )}
+        </div>
+
+        {!content.media.length ? (
+          <div className="admin-picker-empty">
+            <Images size={36} className="admin-picker-empty-icon" />
+            <h4>Your media library is empty</h4>
+            <p>Upload your first photographs using the dropzone above to build your gallery.</p>
+          </div>
+        ) : (
+          <div className="admin-picker-grid">
+            {content.media.map(asset => {
+              const isSelected = selectedLibraryImages.includes(asset.src);
+              return (
+                <button
+                  type="button"
+                  disabled={busy}
+                  key={asset.id}
+                  className={`admin-picker-item ${isSelected ? "selected" : ""}`}
+                  onClick={() => {
+                    if (picker?.multiple) {
+                      setSelectedLibraryImages(prev =>
+                        prev.includes(asset.src) ? prev.filter(s => s !== asset.src) : [...prev, asset.src]
+                      );
+                    } else {
+                      picker?.select(asset.src);
+                      setPicker(null);
+                    }
+                  }}
+                >
+                  <div className="admin-picker-img-wrapper">
+                    <img src={asset.src} alt={asset.name} loading="lazy" />
+                    {picker?.multiple && (
+                      <span className={`admin-picker-checkbox ${isSelected ? "checked" : ""}`}>
+                        {isSelected && <Check size={12} />}
+                      </span>
+                    )}
+                  </div>
+                  <span className="admin-picker-name" title={asset.name}>{asset.name}</span>
+                  {asset.width && asset.height && (
+                    <span className="admin-picker-dim">{asset.width} × {asset.height} px</span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
         )}
 
-        <div className="admin-picker-grid">
-          {content.media.map(asset => (
+        {picker?.multiple && selectedLibraryImages.length > 0 && (
+          <footer className="admin-picker-footer">
             <button
               type="button"
-              disabled={busy}
-              key={asset.id}
+              className="admin-small"
+              onClick={() => setSelectedLibraryImages([])}
+            >
+              Clear selection
+            </button>
+            <button
+              type="button"
+              className="admin-primary"
               onClick={() => {
-                picker?.select(asset.src);
+                if (picker.selectMultiple) {
+                  picker.selectMultiple(selectedLibraryImages);
+                }
                 setPicker(null);
               }}
             >
-              <img src={asset.src} alt={asset.name} />
-              <span>{asset.name}</span>
+              <Check size={15} /> Add {selectedLibraryImages.length} Image{selectedLibraryImages.length > 1 ? "s" : ""}
             </button>
-          ))}
-        </div>
+          </footer>
+        )}
       </dialog>
     </main>
   );

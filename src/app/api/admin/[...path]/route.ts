@@ -6,6 +6,7 @@ import { z } from "zod";
 import { checkOrigin, login, logout, requireAdmin } from "@/lib/admin-auth";
 import { getContent, updateContent, ContentError } from "@/lib/content-store";
 import { productSchema, pageSchema, postSchema, saveSchema, deleteSchema, referencedImages, validateContent } from "@/lib/content-validation";
+import type { MediaAsset } from "@/lib/content-types";
 import { uploadDirectory } from "@/lib/database.mjs";
 
 export const runtime = "nodejs";
@@ -119,26 +120,101 @@ export async function POST(request: Request, context: Context) {
       }
     }
     if (action === "upload") {
-      const raw = await boundedBody(request, 11 * 1024 * 1024);
+      const raw = await boundedBody(request, 60 * 1024 * 1024);
       let form: FormData;
-      try { form = await new Response(raw, { headers: { "Content-Type": request.headers.get("content-type") || "" } }).formData(); }
-      catch { throw new ContentError("Choose an image to upload."); }
-      const file = form.get("file");
-      if (!(file instanceof File) || file.size === 0) throw new ContentError("Choose an image to upload.");
-      if (file.size > 10 * 1024 * 1024) throw new ContentError("Images must be 10 MB or smaller.", 413);
-      let result;
       try {
-        const input = sharp(Buffer.from(await file.arrayBuffer()), { limitInputPixels: 40000000 });
-        const metadata = await input.metadata();
-        if (!["jpeg", "png", "webp", "avif", "heif"].includes(metadata.format || "") || (metadata.pages || 1) > 1) throw new Error("Unsupported format");
-        result = await input.rotate().resize({ width: 2400, height: 2400, fit: "inside", withoutEnlargement: true }).webp({ quality: 86 }).toBuffer({ resolveWithObject: true });
-      } catch { throw new ContentError("Upload a valid JPG, PNG, WebP or AVIF image, up to 40 megapixels."); }
+        form = await new Response(raw, {
+          headers: { "Content-Type": request.headers.get("content-type") || "" },
+        }).formData();
+      } catch {
+        throw new ContentError("Choose an image to upload.");
+      }
+
+      const files: File[] = [];
+      const multi = form.getAll("files");
+      const single = form.getAll("file");
+      for (const item of [...multi, ...single]) {
+        if (item instanceof File && item.size > 0) files.push(item);
+      }
+
+      if (files.length === 0) throw new ContentError("Choose at least one image to upload.");
+
+      const newAssets: MediaAsset[] = [];
+
+      for (const file of files) {
+        if (file.size > 15 * 1024 * 1024) {
+          throw new ContentError(`"${file.name}" exceeds the 15 MB limit.`, 413);
+        }
+
+        let result;
+        try {
+          const input = sharp(Buffer.from(await file.arrayBuffer()), { limitInputPixels: 45000000 });
+          const metadata = await input.metadata();
+          if (
+            !["jpeg", "png", "webp", "avif", "heif", "tiff"].includes(metadata.format || "") ||
+            (metadata.pages || 1) > 1
+          ) {
+            throw new Error("Unsupported format");
+          }
+
+          // Auto-orient via EXIF, clamp to max 2000px, compress to optimized WebP
+          result = await input
+            .rotate()
+            .resize({
+              width: 2000,
+              height: 2000,
+              fit: "inside",
+              withoutEnlargement: true,
+            })
+            .webp({
+              quality: 82,
+              effort: 4,
+              smartSubsample: true,
+            })
+            .toBuffer({ resolveWithObject: true });
+        } catch {
+          throw new ContentError(
+            `Unable to process "${file.name}". Please upload a valid JPG, PNG, WebP or AVIF image.`
+          );
+        }
+
+        const id = randomUUID();
+        const filename = `${id}.webp`;
+        const asset: MediaAsset = {
+          id,
+          src: `/media/${filename}`,
+          name: file.name.slice(0, 200),
+          width: result.info.width ?? 0,
+          height: result.info.height ?? 0,
+          createdAt: new Date().toISOString(),
+        };
+
+        await writeFile(path.join(uploadDirectory, filename), result.data, { flag: "wx", mode: 0o600 });
+        newAssets.push(asset);
+      }
+
       getContent();
-      const id = randomUUID(); const filename = `${id}.webp`;
-      const asset = { id, src: `/media/${filename}`, name: file.name.slice(0, 200), width: result.info.width, height: result.info.height, createdAt: new Date().toISOString() };
-      await writeFile(path.join(uploadDirectory, filename), result.data, { flag: "wx", mode: 0o600 });
-      try { const content = updateContent(null, content => { content.media.unshift(asset); }); return json({ asset, content }, 201); }
-      catch (error) { await unlink(path.join(uploadDirectory, filename)); throw error; }
+      try {
+        const content = updateContent(null, draft => {
+          for (const asset of newAssets) {
+            draft.media.unshift(asset);
+          }
+        });
+        return json(
+          {
+            asset: newAssets[0],
+            assets: newAssets,
+            content,
+          },
+          201
+        );
+      } catch (error) {
+        for (const asset of newAssets) {
+          const fname = path.basename(asset.src);
+          await unlink(path.join(uploadDirectory, fname)).catch(() => {});
+        }
+        throw error;
+      }
     }
     const body = JSON.parse((await boundedBody(request, 1024 * 1024)).toString());
     if (action === "save") {
