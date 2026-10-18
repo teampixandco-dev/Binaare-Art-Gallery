@@ -61,7 +61,7 @@ export async function GET(_request: Request, context: Context) {
         escapeCsv(p.title),
         escapeCsv(p.slug),
         escapeCsv(p.category || ""),
-        escapeCsv(p.price || 0),
+        escapeCsv(p.price ? `$${p.price}` : "Price Upon Request"),
         escapeCsv(p.medium),
         escapeCsv(p.size),
         escapeCsv(p.width || ""),
@@ -160,6 +160,7 @@ export async function POST(request: Request, context: Context) {
           content.pages = content.pages.some(p => p.id === page.id) ? content.pages.map(p => p.id === page.id ? page : p) : [...content.pages, page];
         } else if (resource === "products") {
           const product = productSchema.parse(entry);
+          product.price = null;
           if (!product.images || product.images.length === 0) {
             product.images = product.src ? [product.src] : [];
           }

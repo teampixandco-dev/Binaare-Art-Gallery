@@ -487,15 +487,24 @@ export default function ShopPage() {
                         </p>
                       </div>
 
-                      {/* Button Row Matching Old Project Screenshot: [ ADD TO CART ] [ VIEW ↗ ] */}
+                      {/* Button Row: [ INQUIRE / ADD TO CART ] [ VIEW ↗ ] */}
                       <div className="grid grid-cols-[1fr_auto] gap-2 pt-1 mt-auto">
-                        <button
-                          type="button"
-                          onClick={() => handleAddToCart(item.slug)}
-                          className="h-9 min-h-[36px] px-3 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
-                        >
-                          {isAdded ? "Added ✓" : "Add to Cart"}
-                        </button>
+                        {item.price && item.price > 0 ? (
+                          <button
+                            type="button"
+                            onClick={() => handleAddToCart(item.slug)}
+                            className="h-9 min-h-[36px] px-3 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                          >
+                            {isAdded ? "Added ✓" : "Add to Cart"}
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}`}
+                            className="h-9 min-h-[36px] px-3 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                          >
+                            Inquire
+                          </Link>
+                        )}
 
                         <Link
                           href={`/shop/${item.slug}`}
@@ -578,13 +587,22 @@ export default function ShopPage() {
                         </div>
 
                         <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => handleAddToCart(item.slug)}
-                            className="h-9 min-h-[36px] px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
-                          >
-                            {isAdded ? "Added to Cart ✓" : "Add to Cart"}
-                          </button>
+                          {item.price && item.price > 0 ? (
+                            <button
+                              type="button"
+                              onClick={() => handleAddToCart(item.slug)}
+                              className="h-9 min-h-[36px] px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                            >
+                              {isAdded ? "Added to Cart ✓" : "Add to Cart"}
+                            </button>
+                          ) : (
+                            <Link
+                              href={`/contact?enquiry=Artwork+enquiries+and+purchases&artwork=${encodeURIComponent(item.title)}`}
+                              className="h-9 min-h-[36px] px-5 bg-[#8C704F] hover:bg-[#785E3E] text-white text-[0.68rem] uppercase tracking-[0.16em] font-semibold transition-colors flex items-center justify-center rounded-xs cursor-pointer shadow-xs whitespace-nowrap"
+                            >
+                              Inquire
+                            </Link>
+                          )}
 
                           <Link
                             href={`/shop/${item.slug}`}

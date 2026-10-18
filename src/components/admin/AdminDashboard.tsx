@@ -246,12 +246,6 @@ export default function AdminDashboard({
       if (!ed.value.size.trim()) {
         errors.size = "Artwork dimensions are required (e.g. 50 × 70 cm).";
       }
-      if (ed.value.price !== undefined && ed.value.price !== null && String(ed.value.price).trim() !== "") {
-        const priceNum = Number(ed.value.price);
-        if (isNaN(priceNum) || priceNum < 0) {
-          errors.price = "Price must be a valid number of 0 or greater, or leave blank.";
-        }
-      }
     } else if (ed.kind === "posts") {
       if (!ed.value.date.trim()) {
         errors.date = "Publication date is required.";
@@ -286,7 +280,7 @@ export default function AdminDashboard({
           category: "Oil Painting",
           medium: "",
           size: "",
-          price: undefined,
+          price: null,
           description: "",
           aboutPainting: "",
           artistMessage: "",
@@ -356,10 +350,9 @@ export default function AdminDashboard({
     try {
       let val = editor.value;
       if (editor.kind === "products") {
-        const prod = editor.value as unknown as { price?: unknown };
         val = {
           ...editor.value,
-          price: (!prod.price || prod.price === "" || prod.price === 0 || isNaN(Number(prod.price))) ? null : Number(prod.price),
+          price: null,
         };
       }
       const next: SiteContent = await request("save", {
@@ -987,7 +980,7 @@ export default function AdminDashboard({
                     <div className="admin-doc-info">
                       <h3>Artwork Inventory &amp; Catalog Report</h3>
                       <p>
-                        Complete artwork portfolio export containing all original pieces, prices, mediums, dimensions, materials, styles, themes, and photography links.
+                        Complete artwork portfolio export containing all original pieces, specifications, mediums, dimensions, materials, styles, themes, and photography links.
                       </p>
                     </div>
                   </div>
@@ -1317,35 +1310,13 @@ export default function AdminDashboard({
                         <h4>Artwork Overview</h4>
                         <span className="admin-field-badge">Basic Details</span>
                       </div>
-                      <div className="admin-two">
-                        <Field
-                          label="Category"
-                          badge="Collection"
-                          explanation="Artwork category (e.g. Oil Painting, Mixed Media, Acrylic, Texture, Water color)."
-                          value={editor.value.category || ""}
-                          onChange={category => change({ kind: "products", value: { ...editor.value, category } })}
-                        />
-                        <Field
-                          label="Price (USD)"
-                          badge="Optional"
-                          explanation="Artwork listing price in USD. Optional — leave empty or 0 to display 'Price Upon Request' and inquiry contact instead."
-                          type="number"
-                          error={fieldErrors.price}
-                          value={
-                            editor.value.price === undefined || editor.value.price === null || editor.value.price === 0
-                              ? ""
-                              : String(editor.value.price)
-                          }
-                          onChange={price => {
-                            const trimmed = price.trim();
-                            const num = trimmed === "" ? undefined : Number(trimmed);
-                            change(
-                              { kind: "products", value: { ...editor.value, price: num === undefined || isNaN(num) ? undefined : num } },
-                              "price"
-                            );
-                          }}
-                        />
-                      </div>
+                      <Field
+                        label="Category"
+                        badge="Collection"
+                        explanation="Artwork category (e.g. Oil Painting, Mixed Media, Acrylic, Texture, Water color)."
+                        value={editor.value.category || ""}
+                        onChange={category => change({ kind: "products", value: { ...editor.value, category } })}
+                      />
                     </div>
 
                     <div className="admin-spec-group">

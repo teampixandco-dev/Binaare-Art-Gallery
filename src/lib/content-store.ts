@@ -74,6 +74,9 @@ export function updateContent(revision: number | null, change: (content: SiteCon
     const content = getContent();
     if (revision !== null && content.revision !== revision) throw new ContentError("Content changed in another tab. Reload the latest content before saving again.", 409);
     change(content);
+    for (const p of content.products) {
+      p.price = null;
+    }
     content.revision++;
     db.prepare("UPDATE content SET document = ? WHERE id = 1").run(JSON.stringify(content));
     db.exec("COMMIT");
