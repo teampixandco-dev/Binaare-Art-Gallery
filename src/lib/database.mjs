@@ -4,10 +4,12 @@ import path from "node:path";
 
 export const dataDirectory = path.resolve(process.env.BINAARE_DATA_DIR || path.join(process.cwd(), "data"));
 export const uploadDirectory = path.join(dataDirectory, "uploads");
+export const publicMediaDirectory = path.join(process.cwd(), "public", "media");
 let database;
 export function getDatabase() {
   if (database) return database;
-  mkdirSync(uploadDirectory, { recursive: true, mode: 0o700 });
+  mkdirSync(uploadDirectory, { recursive: true, mode: 0o755 });
+  mkdirSync(publicMediaDirectory, { recursive: true, mode: 0o755 });
   const dbPath = path.join(dataDirectory, "gallery.sqlite");
   database = new DatabaseSync(dbPath);
   try {

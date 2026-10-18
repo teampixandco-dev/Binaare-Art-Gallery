@@ -7,7 +7,8 @@ import { checkOrigin, login, logout, requireAdmin } from "@/lib/admin-auth";
 import { getContent, updateContent, ContentError } from "@/lib/content-store";
 import { productSchema, pageSchema, postSchema, saveSchema, deleteSchema, referencedImages, validateContent } from "@/lib/content-validation";
 import type { MediaAsset } from "@/lib/content-types";
-import { uploadDirectory } from "@/lib/database.mjs";
+import { revalidatePath } from "next/cache";
+import { uploadDirectory, publicMediaDirectory } from "@/lib/database.mjs";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -120,21 +121,19 @@ export async function POST(request: Request, context: Context) {
       }
     }
     if (action === "upload") {
-      const raw = await boundedBody(request, 60 * 1024 * 1024);
       let form: FormData;
       try {
-        form = await new Response(raw, {
-          headers: { "Content-Type": request.headers.get("content-type") || "" },
-        }).formData();
-      } catch {
-        throw new ContentError("Choose an image to upload.");
+        form = await request.formData();
+      } catch (err) {
+        console.error("formData parsing error:", err);
+        throw new ContentError("Unable to read image upload. Please choose a valid image.");
       }
 
       const files: File[] = [];
-      const multi = form.getAll("files");
-      const single = form.getAll("file");
-      for (const item of [...multi, ...single]) {
-        if (item instanceof File && item.size > 0) files.push(item);
+      for (const [, value] of form.entries()) {
+        if (value instanceof File && value.size > 0) {
+          files.push(value);
+        }
       }
 
       if (files.length === 0) throw new ContentError("Choose at least one image to upload.");
@@ -189,7 +188,12 @@ export async function POST(request: Request, context: Context) {
           createdAt: new Date().toISOString(),
         };
 
-        await writeFile(path.join(uploadDirectory, filename), result.data, { flag: "wx", mode: 0o600 });
+        await writeFile(path.join(uploadDirectory, filename), result.data, { flag: "w", mode: 0o644 });
+        try {
+          await writeFile(path.join(publicMediaDirectory, filename), result.data, { flag: "w", mode: 0o644 });
+        } catch (err) {
+          console.warn("Could not copy uploaded image to publicMediaDirectory:", err);
+        }
         newAssets.push(asset);
       }
 
@@ -212,6 +216,7 @@ export async function POST(request: Request, context: Context) {
         for (const asset of newAssets) {
           const fname = path.basename(asset.src);
           await unlink(path.join(uploadDirectory, fname)).catch(() => {});
+          await unlink(path.join(publicMediaDirectory, fname)).catch(() => {});
         }
         throw error;
       }
@@ -248,6 +253,12 @@ export async function POST(request: Request, context: Context) {
         }
         validateContent(content);
       });
+      try {
+        revalidatePath("/shop");
+        revalidatePath("/shop/[slug]", "page");
+        revalidatePath("/gallery");
+        revalidatePath("/");
+      } catch {}
       return json(content);
     }
     if (action === "delete") {
@@ -269,7 +280,16 @@ export async function POST(request: Request, context: Context) {
         if (resource === "posts") content.posts = content.posts.filter(p => p.id !== id);
         if (resource === "media") content.media = content.media.filter(p => p.id !== id);
       });
-      if (filename) await unlink(path.join(uploadDirectory, filename)).catch(error => console.error("Could not remove unreferenced image", error));
+      if (filename) {
+        await unlink(path.join(uploadDirectory, filename)).catch(error => console.error("Could not remove unreferenced image", error));
+        await unlink(path.join(publicMediaDirectory, filename)).catch(() => {});
+      }
+      try {
+        revalidatePath("/shop");
+        revalidatePath("/shop/[slug]", "page");
+        revalidatePath("/gallery");
+        revalidatePath("/");
+      } catch {}
       return json(content);
     }
     return json({ error: "Not found" }, 404);

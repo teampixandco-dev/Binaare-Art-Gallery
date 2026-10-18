@@ -7,8 +7,8 @@ import { motion, type Variants } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageSections from "@/components/PageSections";
-import { usePageContent } from "@/context/ContentContext";
-import { PRODUCTS } from "@/data/products";
+import { useContent, usePageContent } from "@/context/ContentContext";
+import { PRODUCTS as STATIC_PRODUCTS } from "@/data/products";
 import SectionReveal from "@/components/SectionReveal";
 import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -90,12 +90,15 @@ export default function Home() {
     "beauty-beyond-colour"
   ];
   
+  const { products: contentProducts } = useContent();
+  const allProducts = contentProducts && contentProducts.length > 0 ? contentProducts : STATIC_PRODUCTS;
+
   const featuredWorks = featuredSlugs
-    .map(slug => PRODUCTS.find(p => p.slug === slug))
+    .map(slug => allProducts.find(p => p.slug === slug))
     .filter(Boolean)
     .map(p => ({
       id: p!.slug,
-      src: p!.images.find(img => img.includes("showcase")) || p!.src,
+      src: (p!.images || []).find(img => img.includes("showcase")) || p!.src || p!.images?.[0] || "",
       title: p!.title,
       medium: p!.medium,
       slug: p!.slug,

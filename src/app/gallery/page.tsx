@@ -10,11 +10,15 @@ import PageHero from "@/components/PageHero";
 
 
 import Link from "next/link";
-import { PRODUCTS } from "@/data/products";
+import { useContent } from "@/context/ContentContext";
+import { PRODUCTS as STATIC_PRODUCTS } from "@/data/products";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function GalleryPage() {
+  const { products: contentProducts } = useContent();
+  const PRODUCTS = contentProducts && contentProducts.length > 0 ? contentProducts : STATIC_PRODUCTS;
+
   // Use authentic original artworks by Binari Gamage
   const artworks = PRODUCTS.map((p) => {
     const category = p.category || "Acrylic";

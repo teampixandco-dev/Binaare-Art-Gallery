@@ -64,7 +64,7 @@ export default function ShopPage() {
   const heroTitle = shopPage?.title && shopPage.title !== "Shop" ? shopPage.title : "Art for a More Beautiful Everyday";
   const heroSubtitle = shopPage?.subtitle || "Timeless paintings celebrating resilience, friendship, and the quiet richness of life.";
   const PRODUCTS =
-    contentProducts && contentProducts.length >= STATIC_PRODUCTS.length
+    contentProducts && contentProducts.length > 0
       ? contentProducts
       : STATIC_PRODUCTS;
 

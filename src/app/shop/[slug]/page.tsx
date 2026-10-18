@@ -8,9 +8,8 @@ import ProductDetailView from "@/components/ProductDetailView";
 
 type Props = { params: Promise<{ slug: string }> };
 
-export async function generateStaticParams() {
-  return getPublicContent().products.map((p) => ({ slug: p.slug }));
-}
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
