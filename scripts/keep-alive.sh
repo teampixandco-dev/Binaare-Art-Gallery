@@ -5,6 +5,7 @@
 
 export PATH="/home/u890905085/.nvm/versions/node/v24.21.0/bin:/usr/local/bin:/usr/bin:$PATH"
 export PM2_HOME="/home/u890905085/.pm2"
+export NODE_OPTIONS="--max-old-space-size=256"
 
 APP_DIR="/home/u890905085/domains/binaareartgallery.com/public_html"
 TARGET_URL="http://145.79.58.61:3000"
