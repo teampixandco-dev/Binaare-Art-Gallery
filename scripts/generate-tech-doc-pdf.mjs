@@ -1093,7 +1093,7 @@ const htmlPath = path.resolve('public/specs/technical-documentation.html');
 const pdfDestRoot = path.resolve('Binaare-Art-Gallery-Technical-Documentation.pdf');
 const pdfDestPublic = path.resolve('public/Binaare-Art-Gallery-Technical-Documentation.pdf');
 
-execSync(\`google-chrome --headless --disable-gpu --no-sandbox --print-to-pdf="\${pdfDestRoot}" "file://\${htmlPath}"\`);
+execSync(`google-chrome --headless --disable-gpu --no-sandbox --print-to-pdf="${pdfDestRoot}" "file://${htmlPath}"`);
 await fs.copyFile(pdfDestRoot, pdfDestPublic);
 
 console.log('✓ Master PDF generated successfully at:');

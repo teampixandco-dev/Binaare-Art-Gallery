@@ -57,7 +57,11 @@ const SORT_OPTIONS = [
 const ITEMS_PER_PAGE = 12;
 
 export default function ShopPage() {
-  const { products: contentProducts } = useContent();
+  const { products: contentProducts, pages } = useContent();
+  const shopPage = pages?.find((p) => p.slug === "shop");
+  const heroImage = shopPage?.hero || "/artworks/together-we-bloom.webp";
+  const heroTitle = shopPage?.title && shopPage.title !== "Shop" ? shopPage.title : "Art for a More Beautiful Everyday";
+  const heroSubtitle = shopPage?.subtitle || "Timeless paintings celebrating resilience, friendship, and the quiet richness of life.";
   const PRODUCTS =
     contentProducts && contentProducts.length >= STATIC_PRODUCTS.length
       ? contentProducts
@@ -205,8 +209,8 @@ export default function ShopPage() {
       {/* Reduced Height Full-Width Hero Banner (No Curves, One-Line Title) */}
       <section className="relative w-full overflow-hidden min-h-[220px] sm:min-h-[250px] md:min-h-[270px] flex items-center justify-center text-center px-4 py-8 sm:py-10">
         <Image
-          src="/artworks/together-we-bloom.webp"
-          alt="Original Artworks by Binari Gamage"
+          src={heroImage}
+          alt={heroTitle}
           fill
           priority
           sizes="100vw"
@@ -220,10 +224,10 @@ export default function ShopPage() {
             Original Artworks
           </span>
           <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-[2.65rem] font-normal text-white leading-tight mb-2 whitespace-nowrap">
-            Art for a More Beautiful Everyday
+            {heroTitle}
           </h1>
           <p className="text-white/85 text-xs sm:text-sm font-light leading-relaxed max-w-xl">
-            Timeless paintings celebrating resilience, friendship, and the quiet richness of life.
+            {heroSubtitle}
           </p>
         </div>
       </section>

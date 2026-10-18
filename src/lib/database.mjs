@@ -21,7 +21,7 @@ export function getDatabase() {
         CREATE TABLE IF NOT EXISTS sessions (token_hash TEXT PRIMARY KEY, username TEXT NOT NULL, expires INTEGER NOT NULL);
         CREATE TABLE IF NOT EXISTS login_attempts (key TEXT PRIMARY KEY, count INTEGER NOT NULL, reset_at INTEGER NOT NULL);
       `);
-    } catch (e) {
+    } catch {
       // Ignore if another thread just created it
     }
   }

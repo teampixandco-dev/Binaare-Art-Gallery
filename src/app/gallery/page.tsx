@@ -5,8 +5,6 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PageSections from "@/components/PageSections";
-import { usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 
 

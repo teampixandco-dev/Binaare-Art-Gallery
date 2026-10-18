@@ -7,14 +7,43 @@ const slug = z.string().min(1).max(100).regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, "Use
 const title = z.string().trim().min(1).max(200);
 const text = z.string().max(20000);
 const image = z.string().max(2000).refine(src => {
-  if (/^\/media\/[a-f0-9-]+\.webp$/.test(src) || /^\/[a-zA-Z0-9_-]+\.(?:webp|jpg|jpeg|png|mp4)$/.test(src)) return true;
-  try { const url = new URL(src); return url.protocol === "https:" && url.hostname === "images.unsplash.com" && !url.username && !url.password; } catch { return false; }
-}, "Choose an uploaded image from the media library.");
+  if (/^\/media\/[a-f0-9-]+\.webp$/.test(src)) return true;
+  if (/^\/(?:[a-zA-Z0-9_\-.]+\/)*[a-zA-Z0-9_\-.]+\.(?:webp|jpg|jpeg|png|mp4|svg|avif)$/i.test(src)) return true;
+  try {
+    const url = new URL(src);
+    return (url.protocol === "https:" || url.protocol === "http:") && (url.hostname === "images.unsplash.com" || !url.username);
+  } catch {
+    return false;
+  }
+}, "Choose an uploaded image from the media library or an authentic artwork asset.");
 const section = z.object({
   id, title, kind: z.enum(["single", "grid"]), builtin: z.boolean(),
   items: z.array(z.object({ id, title: z.string().max(200), description: z.string().max(2000), category: z.string().max(100), src: image })).max(200),
 }).refine(s => s.kind !== "single" || s.items.length === 1, "This image section needs exactly one image.");
-export const productSchema = z.object({ id, slug, title, medium: title, size: title, price: z.number().finite().min(0).max(100000000), description: text, src: image, images: z.array(image).min(1).max(20), published: z.boolean() });
+export const productSchema = z.object({
+  id,
+  slug,
+  title,
+  medium: title,
+  size: title,
+  price: z.number().finite().min(0).max(100000000),
+  description: text,
+  src: image,
+  images: z.array(image).min(1).max(20),
+  published: z.boolean(),
+  category: z.string().max(200).optional().default(""),
+  materials: z.string().max(1000).optional().default(""),
+  width: z.string().max(100).optional().default(""),
+  height: z.string().max(100).optional().default(""),
+  depth: z.string().max(100).optional().default(""),
+  frame: z.string().max(1000).optional().default(""),
+  style: z.string().max(1000).optional().default(""),
+  colours: z.string().max(1000).optional().default(""),
+  theme: z.string().max(1000).optional().default(""),
+  artistMessage: z.string().max(10000).optional().default(""),
+  aboutPainting: z.string().max(20000).optional().default(""),
+  closingQuote: z.string().max(10000).optional().default(""),
+});
 export const pageSchema = z.object({ id, slug, title, subtitle: z.string().max(500), hero: image, body: text, builtin: z.boolean(), published: z.boolean(), showInNav: z.boolean(), sections: z.array(section).max(30) });
 export const postSchema = z.object({ id, slug, title, excerpt: z.string().trim().min(1).max(1000), body: z.string().trim().min(1).max(100000), cover: image, images: z.array(image).max(30), published: z.boolean(), date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine(s => !Number.isNaN(Date.parse(s))) });
 export const saveSchema = z.object({ revision: z.number().int().positive(), resource: z.enum(["products", "pages", "posts"]), value: z.unknown() });

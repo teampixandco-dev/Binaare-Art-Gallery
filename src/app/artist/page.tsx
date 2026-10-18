@@ -6,16 +6,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
+import { usePageContent } from "@/context/ContentContext";
 
 export default function ArtistPage() {
+  const page = usePageContent("artist");
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="The Artist"
-        subtitle="Binari Gamage"
+        title={page?.title || "The Artist"}
+        subtitle={page?.subtitle || "Binari Gamage"}
         tag="Meet the Creator"
-        backgroundImage="/artworks/blooming-in-grace.webp"
+        backgroundImage={page?.hero || "/artworks/blooming-in-grace.webp"}
       />
 
       <SectionReveal>

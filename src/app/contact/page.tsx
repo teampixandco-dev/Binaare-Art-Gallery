@@ -6,16 +6,18 @@ import Footer from "@/components/Footer";
 import PageSections from "@/components/PageSections";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
+import { usePageContent } from "@/context/ContentContext";
 
 export default function ContactPage() {
+  const page = usePageContent("contact");
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="Contact Us"
-        subtitle="We Would Love to Hear from You"
+        title={page?.title || "Contact Us"}
+        subtitle={page?.subtitle || "We Would Love to Hear from You"}
         tag="Inquiries & Commissions"
-        backgroundImage="/artworks/whispers-of-serenity.webp"
+        backgroundImage={page?.hero || "/artworks/whispers-of-serenity.webp"}
       />
 
       <SectionReveal>

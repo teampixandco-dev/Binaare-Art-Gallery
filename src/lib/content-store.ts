@@ -11,6 +11,7 @@ export class ContentError extends Error {
   }
 }
 export function getContent(): SiteContent {
+  const db = getDatabase();
   const initial: SiteContent = {
     revision: 1,
     products: PRODUCTS.map((p) => ({
@@ -23,7 +24,36 @@ export function getContent(): SiteContent {
     posts: seed.posts as SiteContent["posts"],
     media: [],
   };
-  return initial;
+
+  db.prepare("INSERT OR IGNORE INTO content (id, document) VALUES (1, ?)").run(JSON.stringify(initial));
+  const row = db.prepare("SELECT document FROM content WHERE id = 1").get() as { document: string } | undefined;
+  if (!row?.document) return initial;
+
+  try {
+    const content = JSON.parse(row.document) as SiteContent;
+
+    let changed = false;
+    const existingSlugs = new Set(content.products.map(p => p.slug || p.id));
+    for (const p of PRODUCTS) {
+      if (!existingSlugs.has(p.slug)) {
+        content.products.push({
+          ...p,
+          id: p.slug,
+          images: Array.isArray(p.images) && p.images.length ? p.images : [p.src],
+          published: true,
+        });
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      db.prepare("UPDATE content SET document = ? WHERE id = 1").run(JSON.stringify(content));
+    }
+
+    return content;
+  } catch {
+    return initial;
+  }
 }
 export function getPublicContent(): PublicContent {
   const content = getContent();

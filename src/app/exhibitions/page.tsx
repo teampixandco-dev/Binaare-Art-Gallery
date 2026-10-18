@@ -7,16 +7,18 @@ import PageSections from "@/components/PageSections";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
 import ExhibitionShowcase from "@/components/ExhibitionShowcase";
+import { usePageContent } from "@/context/ContentContext";
 
 export default function ExhibitionsPage() {
+  const page = usePageContent("exhibitions");
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="Exhibitions"
-        subtitle="Where Colors of Love Comes to Life"
+        title={page?.title || "Exhibitions"}
+        subtitle={page?.subtitle || "Where Colors of Love Comes to Life"}
         tag="Curated Spaces"
-        backgroundImage="/artworks/rhythm-of-the-city.webp"
+        backgroundImage={page?.hero || "/artworks/rhythm-of-the-city.webp"}
       />
 
       {/* Intro */}

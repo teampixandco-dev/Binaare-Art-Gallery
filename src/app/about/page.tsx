@@ -15,10 +15,10 @@ export default function AboutPage() {
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="About Us"
-        subtitle="Where Art Is Felt • Colors of Love"
+        title={page?.title || "About Us"}
+        subtitle={page?.subtitle || "Where Art Is Felt • Colors of Love"}
         tag="Our Philosophy"
-        backgroundImage="/artworks/path-of-natures-embrace.webp"
+        backgroundImage={page?.hero || "/artworks/path-of-natures-embrace.webp"}
       />
 
       <SectionReveal>
