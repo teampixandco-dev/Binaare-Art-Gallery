@@ -70,7 +70,7 @@ export default function ArtistPage() {
                 and contributing to her team&apos;s Mercantile Championship success. She was honored with
                 both School Colors and All-Island University Colors in recognition of her sporting
                 excellence and continues her association with sport as a member of the Sinhalese
-                Sports Club.
+                Sports Club(SSC).
               </p>
 
               <h3 className="font-serif text-xl mt-10 mb-4">Philosophy &amp; Practice</h3>
