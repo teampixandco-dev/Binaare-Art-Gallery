@@ -1,0 +1,23 @@
+{
+  "/api/contact/route": "app/api/contact/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/icon.svg/route": "app/icon.svg/route.js",
+  "/api/content/route": "app/api/content/route.js",
+  "/api/admin/[...path]/route": "app/api/admin/[...path]/route.js",
+  "/media/[filename]/route": "app/media/[filename]/route.js",
+  "/about/page": "app/about/page.js",
+  "/artist/page": "app/artist/page.js",
+  "/cart/page": "app/cart/page.js",
+  "/blog/page": "app/blog/page.js",
+  "/checkout/page": "app/checkout/page.js",
+  "/contact/page": "app/contact/page.js",
+  "/gallery/page": "app/gallery/page.js",
+  "/exhibitions/page": "app/exhibitions/page.js",
+  "/page": "app/page.js",
+  "/shop/page": "app/shop/page.js",
+  "/admin/page": "app/admin/page.js",
+  "/blog/[slug]/page": "app/blog/[slug]/page.js",
+  "/pages/[slug]/page": "app/pages/[slug]/page.js",
+  "/shop/[slug]/page": "app/shop/[slug]/page.js"
+}
