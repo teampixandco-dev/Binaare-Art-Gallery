@@ -46,6 +46,14 @@ export function getContent(): SiteContent {
       }
     }
 
+    // Set prices of all products to null
+    for (const p of content.products) {
+      if (p.price !== null) {
+        p.price = null;
+        changed = true;
+      }
+    }
+
     if (changed) {
       db.prepare("UPDATE content SET document = ? WHERE id = 1").run(JSON.stringify(content));
     }

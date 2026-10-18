@@ -1,8 +1,8 @@
 {
   "version": 1,
   "functions": {
-    "/media/[filename]": {},
+    "/api/admin/[...path]": {},
     "/api/content": {},
-    "/api/admin/[...path]": {}
+    "/media/[filename]": {}
   }
 }

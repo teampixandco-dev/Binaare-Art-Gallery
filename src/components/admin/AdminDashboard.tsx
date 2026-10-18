@@ -354,10 +354,18 @@ export default function AdminDashboard({
     setError("");
     setMessage("");
     try {
+      let val = editor.value;
+      if (editor.kind === "products") {
+        const prod = editor.value as unknown as { price?: unknown };
+        val = {
+          ...editor.value,
+          price: (!prod.price || prod.price === "" || prod.price === 0 || isNaN(Number(prod.price))) ? null : Number(prod.price),
+        };
+      }
       const next: SiteContent = await request("save", {
         revision: editorRevision,
         resource: editor.kind,
-        value: editor.value,
+        value: val,
       });
       setContent(next);
       setEditorRevision(next.revision);

@@ -27,9 +27,10 @@ export const productSchema = z.object({
   medium: title,
   size: title,
   price: z.union([z.number().finite().min(0).max(100000000), z.literal(""), z.null(), z.undefined()])
-    .transform(v => (v === "" || v === null || v === undefined || isNaN(Number(v))) ? 0 : Number(v))
+    .transform(v => (v === "" || v === null || v === undefined || Number(v) === 0 || isNaN(Number(v))) ? null : Number(v))
+    .nullable()
     .optional()
-    .default(0),
+    .default(null),
   description: text,
   src: image,
   images: z.array(image).max(30).optional().default([]),
