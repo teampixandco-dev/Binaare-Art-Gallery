@@ -54,6 +54,56 @@ export function getContent(): SiteContent {
       }
     }
 
+    if (!Array.isArray(content.media)) {
+      content.media = [];
+      changed = true;
+    }
+
+    // Auto-seed artwork assets into the media library so administrators can pick from all existing art
+    const existingMediaSrcs = new Set(content.media.map(m => m.src));
+    for (const p of PRODUCTS) {
+      const allImages = [p.src, ...(Array.isArray(p.images) ? p.images : [])];
+      for (const src of allImages) {
+        if (src && !existingMediaSrcs.has(src)) {
+          existingMediaSrcs.add(src);
+          content.media.push({
+            id: `artwork-${p.slug}`,
+            src,
+            name: `${p.title || p.slug}.webp`,
+            width: 1440,
+            height: 1440,
+            createdAt: new Date().toISOString(),
+          });
+          changed = true;
+        }
+      }
+    }
+
+    const extraArtworks = [
+      { src: "/artworks/beauty-beyond-colour-showcase.webp", name: "Beauty Beyond Colour (Showcase)" },
+      { src: "/artworks/petals-of-serenity-showcase.webp", name: "Petals of Serenity (Showcase)" },
+      { src: "/artworks/the-crimson-queen-showcase.webp", name: "The Crimson Queen (Showcase)" },
+      { src: "/artworks/unfolding-in-gold-landscape.webp", name: "Unfolding in Gold (Landscape)" },
+      { src: "/artworks/unfolding-in-gold.webp", name: "Unfolding in Gold" },
+      { src: "/artworks/young-at-heart-showcase.webp", name: "Young at Heart (Showcase)" },
+      { src: "/artist-home.webp", name: "Artist Studio Portrait" },
+      { src: "/hero-poster.webp", name: "Hero Gallery Poster" },
+    ];
+    for (const item of extraArtworks) {
+      if (!existingMediaSrcs.has(item.src)) {
+        existingMediaSrcs.add(item.src);
+        content.media.push({
+          id: `site-asset-${content.media.length + 1}`,
+          src: item.src,
+          name: `${item.name}.webp`,
+          width: 1440,
+          height: 1440,
+          createdAt: new Date().toISOString(),
+        });
+        changed = true;
+      }
+    }
+
     if (changed) {
       db.prepare("UPDATE content SET document = ? WHERE id = 1").run(JSON.stringify(content));
     }
