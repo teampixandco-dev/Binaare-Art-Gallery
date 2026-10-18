@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import type { BlogPost, MediaAsset, PageSection, ShopProduct, SiteContent, SitePage } from "@/lib/content-types";
 import { pageHref } from "@/lib/content-types";
+import { toast, Toaster } from "@/components/ui/sonner";
 
 type Resource = "products" | "pages" | "posts" | "documents" | "media";
 const CURRENT_USING_PAGE_SLUGS = ["home", "shop", "about", "artist", "exhibitions", "contact"];
@@ -203,11 +204,20 @@ export default function AdminDashboard({
       body: body ? JSON.stringify(body) : undefined,
       cache: "no-store",
     });
-    const result = await response.json();
+    const text = await response.text();
+    let result: any = null;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      if (response.status === 401) {
+        throw new Error("Your session has expired. Open /admin in a new tab and sign in, then retry your save.");
+      }
+      throw new Error("Server communication error. Please try again in a moment.");
+    }
     if (response.status === 401) {
       throw new Error("Your session has expired. Open /admin in a new tab and sign in, then retry your save.");
     }
-    if (!response.ok) throw new Error(result.error || "The request failed.");
+    if (!response.ok) throw new Error(result?.error || "The request failed.");
     return result;
   }
 
@@ -357,6 +367,9 @@ export default function AdminDashboard({
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setError("Please check the form and fix the highlighted fields below.");
+      toast.error("Validation Error", {
+        description: "Please check and fix the highlighted fields below.",
+      });
       return;
     }
 
@@ -380,13 +393,23 @@ export default function AdminDashboard({
       setContent(next);
       setEditorRevision(next.revision);
       setDirty(false);
+      const isPub = Boolean(editor.value.published);
+      const title = editor.value.title ? `"${editor.value.title}"` : "Entry";
       setMessage(
-        editor.value.published
+        isPub
           ? "Saved. Your changes are now visible on the website."
           : "Draft saved. It is hidden from the website."
       );
+      toast.success(isPub ? "Artwork Published Live!" : "Draft Saved", {
+        description: `${title} was successfully updated.`,
+        duration: 4000,
+      });
     } catch (err) {
       report(err);
+      toast.error("Save Failed", {
+        description: err instanceof Error ? err.message : "Could not save changes.",
+        duration: 5000,
+      });
     } finally {
       setBusy(false);
     }
@@ -404,8 +427,16 @@ export default function AdminDashboard({
       setDirty(false);
       setFieldErrors({});
       setMessage("Item deleted.");
+      toast.success("Item Deleted", {
+        description: "The item was permanently removed from your catalog.",
+        duration: 3500,
+      });
     } catch (err) {
       report(err);
+      toast.error("Delete Failed", {
+        description: err instanceof Error ? err.message : "Could not delete item.",
+        duration: 5000,
+      });
     } finally {
       setBusy(false);
     }
@@ -431,11 +462,26 @@ export default function AdminDashboard({
     try {
       const form = new FormData();
       for (const file of fileList) {
-        form.append("files", file);
+        form.append("files[]", file);
       }
       const response = await fetch("/api/admin/upload", { method: "POST", body: form });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Upload failed.");
+      const text = await response.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        if (response.status === 401) {
+          throw new Error("Your session has expired. Please refresh the page and sign in again.");
+        }
+        if (response.status === 413) {
+          throw new Error("The upload is too large for the server. Please select smaller images.");
+        }
+        if (response.status >= 500 || text.includes("<!DOCTYPE")) {
+          throw new Error("The upload service was briefly reconnecting. Please click Browse and try again.");
+        }
+        throw new Error("Unexpected server response while uploading. Please try again.");
+      }
+      if (!response.ok) throw new Error(data?.error || "Upload failed.");
       setContent(data.content);
       setEditorRevision(previous =>
         previous === data.content.revision - 1 ? data.content.revision : previous
@@ -454,10 +500,18 @@ export default function AdminDashboard({
       } else {
         setMessage(`${fileList.length} image${fileList.length > 1 ? "s" : ""} uploaded and optimized.`);
       }
+      toast.success("Upload & Optimization Complete", {
+        description: `${fileList.length} artwork image${fileList.length > 1 ? "s" : ""} converted to WebP and added to library.`,
+        duration: 4000,
+      });
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed.";
       setPickerError(msg);
       report(err);
+      toast.error("Upload Failed", {
+        description: msg,
+        duration: 5000,
+      });
     } finally {
       setBusy(false);
       setUploadProgress("");
@@ -1005,8 +1059,15 @@ export default function AdminDashboard({
                         try {
                           await request("generate-pdf", {});
                           setMessage("Technical Specification PDF compiled and updated successfully!");
+                          toast.success("PDF Compiled Successfully", {
+                            description: "The technical architecture specification has been updated.",
+                            duration: 4000,
+                          });
                         } catch (e) {
                           report(e);
+                          toast.error("PDF Compilation Failed", {
+                            description: e instanceof Error ? e.message : "Could not compile PDF.",
+                          });
                         } finally {
                           setBusy(false);
                         }
@@ -1906,6 +1967,7 @@ export default function AdminDashboard({
           )}
         </div>
       </dialog>
+      <Toaster />
     </main>
   );
 }

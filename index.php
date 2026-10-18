@@ -23,15 +23,56 @@ $headers[] = 'X-Forwarded-Proto: ' . (isset($_SERVER['HTTPS']) && $_SERVER['HTTP
 
 $input = null;
 if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH', 'DELETE'])) {
-    $input = file_get_contents('php://input');
+    if (!empty($_FILES)) {
+        // Multipart file uploads parsed by PHP: re-package as CURLFile for cURL
+        $post_data = $_POST;
+        foreach ($_FILES as $field => $data) {
+            if (is_array($data['name'])) {
+                foreach ($data['name'] as $idx => $name) {
+                    if (isset($data['error'][$idx]) && $data['error'][$idx] === UPLOAD_ERR_OK && !empty($data['tmp_name'][$idx])) {
+                        $post_data["{$field}[{$idx}]"] = new CURLFile(
+                            $data['tmp_name'][$idx],
+                            !empty($data['type'][$idx]) ? $data['type'][$idx] : 'application/octet-stream',
+                            $name
+                        );
+                    }
+                }
+            } else {
+                if (isset($data['error']) && $data['error'] === UPLOAD_ERR_OK && !empty($data['tmp_name'])) {
+                    $post_data[$field] = new CURLFile(
+                        $data['tmp_name'],
+                        !empty($data['type']) ? $data['type'] : 'application/octet-stream',
+                        $data['name']
+                    );
+                }
+            }
+        }
+        $input = $post_data;
+
+        // Strip incoming Content-Type/Length so cURL generates a clean multipart boundary
+        $clean_headers = [];
+        foreach ($headers as $h) {
+            if (stripos($h, 'Content-Type:') !== 0 && stripos($h, 'Content-Length:') !== 0 && stripos($h, 'Expect:') !== 0) {
+                $clean_headers[] = $h;
+            }
+        }
+        $clean_headers[] = 'Expect:';
+        $headers = $clean_headers;
+    } else {
+        $input = file_get_contents('php://input');
+    }
 }
 
-function execute_request($url, $headers, $input, $timeout = 25) {
+function execute_request($url, $headers, $input, $timeout = 60) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, true);
     curl_setopt($ch, CURLOPT_FOLLOWLOCATION, false);
-    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        curl_setopt($ch, CURLOPT_POST, true);
+    } else if ($_SERVER['REQUEST_METHOD'] !== 'GET' && $_SERVER['REQUEST_METHOD'] !== 'HEAD') {
+        curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
+    }
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
     curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
     curl_setopt($ch, CURLOPT_TCP_NODELAY, 1);
@@ -67,8 +108,8 @@ function trigger_self_healing() {
     }
 }
 
-// 1. First proxy attempt
-list($response, $info, $error) = execute_request($url, $headers, $input, 15);
+// 1. First proxy attempt (60s timeout for image optimization/uploads)
+list($response, $info, $error) = execute_request($url, $headers, $input, 60);
 
 // 2. If backend is down, auto-heal and retry
 if ($response === false) {
@@ -86,9 +127,19 @@ if ($response === false) {
     }
 }
 
-// 3. If still offline, render luxury auto-reload recovery page
+// 3. If still offline, render JSON for API calls or auto-reload page for browser navigation
 if ($response === false) {
     http_response_code(503);
+    if (strpos($uri, '/api/') === 0 || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Retry-After: 3');
+        echo json_encode([
+            'error' => 'Service temporarily reconnecting. Please try again in a moment.',
+            'status' => 503,
+            'retry_after' => 3
+        ]);
+        exit;
+    }
     header('Retry-After: 3');
     header('Content-Type: text/html; charset=utf-8');
     ?>
