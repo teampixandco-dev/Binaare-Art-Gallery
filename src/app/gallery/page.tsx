@@ -19,12 +19,7 @@ const ease = [0.22, 1, 0.36, 1] as const;
 export default function GalleryPage() {
   // Use authentic original artworks by Binari Gamage
   const artworks = PRODUCTS.map((p) => {
-    let category = "Acrylic on Canvas";
-    const mLower = (p.medium || p.materials || "").toLowerCase();
-    if (mLower.includes("oil")) category = "Oil on Canvas";
-    else if (mLower.includes("mixed-media") || mLower.includes("mix media")) category = "Mixed Media";
-    else if (mLower.includes("texture")) category = "Textured Canvas";
-    else if (mLower.includes("acrylic")) category = "Acrylic on Canvas";
+    const category = p.category || "Acrylic";
 
     return {
       id: p.slug,
@@ -38,7 +33,12 @@ export default function GalleryPage() {
     };
   });
 
-  const filters = ["All", ...new Set(artworks.map((a) => a.category).filter(Boolean))];
+  const rawCategories = Array.from(new Set(artworks.map((a) => a.category).filter(Boolean)));
+  const orderedCategories = [
+    ...rawCategories.filter((c) => c !== "Oil Painting"),
+    ...(rawCategories.includes("Oil Painting") ? ["Oil Painting"] : []),
+  ];
+  const filters = ["All", ...orderedCategories];
   const [filter, setFilter] = useState("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
 

@@ -59,11 +59,17 @@ export default function ContactPage() {
                 <div className="flex flex-col gap-4" style={{ fontSize: "0.9rem" }}>
                   <div>
                     <p style={{ fontWeight: 600, marginBottom: "0.2rem" }}>Email</p>
-                    <p style={{ color: "var(--muted)" }}>hello@binaare.com</p>
+                    <a
+                      href="mailto:Binari.gamage@binaareartgallery.com"
+                      style={{ color: "var(--muted)" }}
+                      className="hover:underline transition-colors"
+                    >
+                      Binari.gamage@binaareartgallery.com
+                    </a>
                   </div>
                   <div>
                     <p style={{ fontWeight: 600, marginBottom: "0.2rem" }}>Phone</p>
-                    <p style={{ color: "var(--muted)" }}>+94 77 000 0000</p>
+                    <p style={{ color: "var(--muted)" }}>+94 77 721 4696</p>
                   </div>
                   <div>
                     <p style={{ fontWeight: 600, marginBottom: "0.2rem" }}>Location</p>

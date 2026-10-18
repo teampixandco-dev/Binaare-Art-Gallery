@@ -114,14 +114,14 @@ export default function ShopPage() {
     }, 2000);
   };
 
-  // Category Pills: All, Oil Painting, Water color, Mixed Media, Texture, Acrylic
+  // Category Pills: All, Water color, Mixed Media, Texture, Acrylic, Oil Painting
   const categories = [
     { label: "All", icon: <Sparkles size={13} /> },
-    { label: "Oil Painting", icon: <Palette size={13} /> },
     { label: "Water color", icon: <Droplets size={13} /> },
     { label: "Mixed Media", icon: <Layers size={13} /> },
     { label: "Texture", icon: <Box size={13} /> },
     { label: "Acrylic", icon: <Brush size={13} /> },
+    { label: "Oil Painting", icon: <Palette size={13} /> },
   ];
 
   // Filtering & Sorting
@@ -143,7 +143,13 @@ export default function ShopPage() {
           p.description
         ).toLowerCase();
 
-        if (activeCategory === "Oil Painting") {
+        if (p.category) {
+          if (activeCategory === "Water color") {
+            matchesCat = p.category.toLowerCase().includes("water");
+          } else {
+            matchesCat = p.category.toLowerCase() === activeCategory.toLowerCase();
+          }
+        } else if (activeCategory === "Oil Painting") {
           matchesCat = s.includes("oil");
         } else if (activeCategory === "Water color") {
           matchesCat =

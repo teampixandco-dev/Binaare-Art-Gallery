@@ -79,12 +79,17 @@ h1, h2, h3, h4 {
 
 .about-section {
   position: sticky;
-  top: 0;
-  min-height: 100vh;
+  top: 3.85rem;
   z-index: 2;
   background-color: var(--bg);
   box-shadow: 0 -12px 36px rgba(0, 0, 0, 0.06);
   will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .about-section {
+    top: 3.5rem;
+  }
 }
 
 .about-content {
@@ -400,7 +405,15 @@ h1, h2, h3, h4 {
   text-decoration: none;
 }
 
-.btn-primary:hover { background: var(--dark); }
+.btn-primary:hover:not(:disabled) { background: var(--dark); }
+.btn-primary:disabled,
+.btn-primary[disabled],
+.btn-outline:disabled,
+.btn-outline[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
 
 .btn-outline {
   display: inline-flex; align-items: center; gap: 0.6rem;
@@ -1305,3 +1318,21 @@ h1, h2, h3, h4 {
   .preloader-corner::after { height: 10px; }
   .preloader-footer { padding: 0 0.6rem; }
 }
+
+/* ── Hide native iOS Safari / WebKit media controls & play button overlay ── */
+video::-webkit-media-controls,
+video::-webkit-media-controls-start-playback-button,
+video::-webkit-media-controls-play-button,
+video::-webkit-media-controls-enclosure,
+video::-webkit-media-controls-panel,
+video::-webkit-media-controls-overlay-play-button,
+*::-webkit-media-controls-start-playback-button {
+  display: none !important;
+  -webkit-appearance: none !important;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+

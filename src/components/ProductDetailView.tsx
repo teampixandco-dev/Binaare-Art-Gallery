@@ -6,8 +6,6 @@ import Link from "next/link";
 import { useCart } from "@/context/CartContext";
 import { Product } from "@/data/products";
 import {
-  ChevronLeft,
-  ChevronRight,
   ArrowRight,
   Square,
   Layers,
@@ -24,14 +22,6 @@ import {
 
 type Props = {
   product: Product;
-};
-
-type ViewMode = {
-  id: number;
-  label: string;
-  src: string;
-  zoomClass: string;
-  thumbnailClass: string;
 };
 
 // Formatted text helper to render markdown **bold** and *italic* from the PDF
@@ -63,7 +53,6 @@ function FormattedText({ text }: { text: string }) {
 export default function ProductDetailView({ product }: Props) {
   const { addItem } = useCart();
   const [added, setAdded] = useState(false);
-  const [activeViewIndex, setActiveViewIndex] = useState(0);
 
   // Helper to normalize strings for comparison (removes formatting, punctuation, whitespace differences)
   const normalizeText = (str: string) =>
@@ -150,61 +139,11 @@ export default function ProductDetailView({ product }: Props) {
     return product.size || "Original Dimensions";
   };
 
-  // Prepare 4 interactive views (full view, focal detail, impasto texture, frame & corner)
-  const hasMultipleImages = Array.isArray(product.images) && product.images.length > 1;
-  const viewModes: ViewMode[] = hasMultipleImages
-    ? [
-        { id: 0, label: "Full Painting", src: product.images[0], zoomClass: "object-contain", thumbnailClass: "object-cover" },
-        { id: 1, label: "Detail View", src: product.images[1] || product.src, zoomClass: "object-contain", thumbnailClass: "object-cover" },
-        { id: 2, label: "Texture View", src: product.images[2] || product.src, zoomClass: "object-contain", thumbnailClass: "object-cover" },
-        { id: 3, label: "Corner View", src: product.images[3] || product.src, zoomClass: "object-contain", thumbnailClass: "object-cover" },
-      ]
-    : [
-        {
-          id: 0,
-          label: "Full Painting",
-          src: product.src,
-          zoomClass: "object-contain scale-100 transition-transform duration-500",
-          thumbnailClass: "object-cover scale-100",
-        },
-        {
-          id: 1,
-          label: "Focal Detail",
-          src: product.src,
-          zoomClass: "object-cover scale-[1.9] object-center transition-transform duration-500",
-          thumbnailClass: "object-cover scale-[2.1] object-center",
-        },
-        {
-          id: 2,
-          label: "Impasto Texture",
-          src: product.src,
-          zoomClass: "object-cover scale-[2.2] object-top transition-transform duration-500",
-          thumbnailClass: "object-cover scale-[2.4] object-top",
-        },
-        {
-          id: 3,
-          label: "Frame & Canvas",
-          src: product.src,
-          zoomClass: "object-cover scale-[1.9] object-[85%_85%] transition-transform duration-500",
-          thumbnailClass: "object-cover scale-[2.2] object-[90%_90%]",
-        },
-      ];
-
-  const prevView = () => {
-    setActiveViewIndex((prev) => (prev === 0 ? viewModes.length - 1 : prev - 1));
-  };
-
-  const nextView = () => {
-    setActiveViewIndex((prev) => (prev === viewModes.length - 1 ? 0 : prev + 1));
-  };
-
   const handleAddToCart = () => {
     addItem(product.slug, 1);
     setAdded(true);
     window.setTimeout(() => setAdded(false), 2000);
   };
-
-  const activeView = viewModes[activeViewIndex];
 
   return (
     <div className="w-full bg-[#FAF8F5] text-[#24211F]">
@@ -227,76 +166,18 @@ export default function ProductDetailView({ product }: Props) {
           {/* ======================================================== */}
           <div className="w-full lg:w-[48%] xl:w-[46%] lg:sticky lg:top-[90px] self-start flex flex-col gap-5">
             
-            {/* Museum Wall & Ornate Frame Presentation (Extra Small Radius) */}
-            <div className="relative w-full aspect-[4/4.8] sm:aspect-[4/4.5] bg-gradient-to-b from-[#FAF8F4] via-[#F3EFE7] to-[#EBE5DA] p-6 sm:p-10 flex items-center justify-center border border-[#E7E0D7] rounded-xs shadow-[inset_0_2px_12px_rgba(0,0,0,0.03)] overflow-hidden">
-              
-              {/* Luxury Frame Container */}
-              <div className="relative w-full max-w-[430px] aspect-[4/4.8] sm:aspect-[4/4.6] p-3 sm:p-4 bg-[#231A14] border-[7px] sm:border-[8px] border-[#38261B] shadow-[0_28px_60px_-15px_rgba(35,22,14,0.38),0_12px_24px_-6px_rgba(35,22,14,0.22)] rounded-xs">
-                
-                {/* Gold Inner Bevel / Fillet */}
-                <div className="w-full h-full p-1 bg-[#17100A] border border-[#8C704F]/80 relative overflow-hidden flex items-center justify-center">
-                  <div className="relative w-full h-full overflow-hidden bg-[#0F0A07]">
-                    <Image
-                      src={activeView.src}
-                      alt={`${product.title} — ${activeView.label}`}
-                      fill
-                      priority
-                      sizes="(max-width: 1024px) 100vw, 45vw"
-                      className={`${activeView.zoomClass}`}
-                    />
-                  </div>
-                </div>
+            {/* Clean Artwork Presentation (No outer frame, resized given artwork image only) */}
+            <div className="relative w-full aspect-square bg-white p-4 sm:p-8 flex items-center justify-center border border-[#EBE5DA] rounded-xs shadow-xs overflow-hidden">
+              <div className="relative w-full h-full flex items-center justify-center">
+                <Image
+                  src={product.src}
+                  alt={product.title}
+                  fill
+                  priority
+                  sizes="(max-width: 1024px) 100vw, 48vw"
+                  className="object-contain"
+                />
               </div>
-
-              {/* Navigation Arrows */}
-              <button
-                type="button"
-                onClick={prevView}
-                aria-label="Previous view"
-                className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-xs bg-white/95 hover:bg-white text-[#24211F] shadow-[0_4px_16px_rgba(0,0,0,0.12)] flex items-center justify-center transition-all hover:scale-105 z-20 cursor-pointer"
-              >
-                <ChevronLeft size={18} strokeWidth={2} />
-              </button>
-
-              <button
-                type="button"
-                onClick={nextView}
-                aria-label="Next view"
-                className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-xs bg-white/95 hover:bg-white text-[#24211F] shadow-[0_4px_16px_rgba(0,0,0,0.12)] flex items-center justify-center transition-all hover:scale-105 z-20 cursor-pointer"
-              >
-                <ChevronRight size={18} strokeWidth={2} />
-              </button>
-            </div>
-
-            {/* Row of 4 Thumbnails (Extra Small Radius) */}
-            <div className="flex items-center justify-center gap-2.5 sm:gap-3.5">
-              {viewModes.map((view, idx) => {
-                const isSelected = activeViewIndex === idx;
-                return (
-                  <button
-                    key={view.id}
-                    type="button"
-                    onClick={() => setActiveViewIndex(idx)}
-                    aria-label={`Select ${view.label}`}
-                    aria-pressed={isSelected}
-                    className={`relative w-[66px] h-[66px] sm:w-[72px] sm:h-[72px] rounded-xs overflow-hidden transition-all cursor-pointer ${
-                      isSelected
-                        ? "border-2 border-[#8C704F] p-0.5 shadow-sm scale-105"
-                        : "border border-[#E7E0D7] opacity-75 hover:opacity-100 hover:border-[#8C704F]/60 p-0.5"
-                    }`}
-                  >
-                    <div className="relative w-full h-full bg-[#FAF8F5] overflow-hidden rounded-[2px]">
-                      <Image
-                        src={view.src}
-                        alt={view.label}
-                        fill
-                        sizes="80px"
-                        className={`${view.thumbnailClass}`}
-                      />
-                    </div>
-                  </button>
-                );
-              })}
             </div>
 
             {/* Subtle Gallery Badges */}

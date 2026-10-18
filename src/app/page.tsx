@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
@@ -17,7 +17,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const HERO_VIDEO = "/hero-video.mp4";
 const HERO_POSTER = "/hero-poster.webp";
 
 const heroStagger: Variants = {
@@ -41,12 +40,54 @@ const heroItem: Variants = {
 
 export default function Home() {
   const page = usePageContent("home");
+  const [isHeroPlaying, setIsHeroPlaying] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    if (!video.paused) {
+      setIsHeroPlaying(true);
+    }
+
+    const onPlaySuccess = () => {
+      setIsHeroPlaying(true);
+    };
+
+    video.addEventListener("playing", onPlaySuccess);
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(onPlaySuccess)
+        .catch(() => {
+          // Autoplay blocked by browser (e.g. iOS Low Power Mode)
+          setIsHeroPlaying(false);
+        });
+    }
+
+    const handleFirstGesture = () => {
+      if (video && video.paused) {
+        video.play().then(onPlaySuccess).catch(() => {});
+      }
+    };
+
+    window.addEventListener("touchstart", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("scroll", handleFirstGesture, { once: true, passive: true });
+
+    return () => {
+      video.removeEventListener("playing", onPlaySuccess);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("scroll", handleFirstGesture);
+    };
+  }, [page?.hero]);
   
   const featuredSlugs = [
-    "a-new-dawn",
-    "together-we-bloom",
-    "beauty-in-simplicity",
-    "petals-of-tender-strength"
+    "petals-of-serenity",
+    "the-crimson-queen",
+    "young-at-heart",
+    "beauty-beyond-colour"
   ];
   
   const featuredWorks = featuredSlugs
@@ -54,7 +95,7 @@ export default function Home() {
     .filter(Boolean)
     .map(p => ({
       id: p!.slug,
-      src: p!.src,
+      src: p!.images.find(img => img.includes("showcase")) || p!.src,
       title: p!.title,
       medium: p!.medium,
       slug: p!.slug,
@@ -190,21 +231,35 @@ export default function Home() {
                 className="absolute"
                 style={{ top: "-6%", left: "-6%", right: "-6%", bottom: "-6%" }}
               >
-                {page?.hero && page.hero.endsWith(".mp4") ? (
+                {/* Fallback image underneath: Always visible immediately. Never triggers iOS play button overlay. */}
+                <Image
+                  src={HERO_POSTER}
+                  alt={page?.title || "Binaare Art Gallery"}
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="object-cover"
+                />
+
+                {/* Hero video: Fades in only once playing is confirmed by browser */}
+                {page?.hero && page.hero.endsWith(".mp4") && (
                   <video
-                    className="absolute inset-0 h-full w-full object-cover"
+                    ref={heroVideoRef}
+                    className={`absolute inset-0 h-full w-full object-cover pointer-events-none transition-opacity duration-700 ${
+                      isHeroPlaying ? "opacity-100" : "opacity-0"
+                    }`}
                     src={page.hero}
-                    poster={HERO_POSTER}
                     autoPlay
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     disablePictureInPicture
+                    disableRemotePlayback
+                    tabIndex={-1}
+                    aria-hidden="true"
                     suppressHydrationWarning
                   />
-                ) : (
-                  <Image src={page?.hero || HERO_POSTER} alt={page?.title || "Hero"} fill priority sizes="100vw" className="object-cover" />
                 )}
               </div>
             </div>
@@ -267,8 +322,8 @@ export default function Home() {
       {/* ═══ ABOUT PREVIEW ═══ */}
       <section
         id="section-about"
-        className="about-section relative w-full z-[2]"
-        style={{ paddingTop: "3rem", paddingBottom: "3rem", background: "var(--bg)" }}
+        className="about-section sticky w-full z-[2]"
+        style={{ paddingTop: "3rem", paddingBottom: "5rem", background: "var(--bg)" }}
       >
         <div
           id="about-content"
@@ -321,13 +376,13 @@ export default function Home() {
               >
                 {/* Artwork display box with extra-small radius and object-contain */}
                 <div className="relative w-full aspect-[4/4.5] bg-[#FAF8F5] p-3 rounded-xs flex items-center justify-center mb-3.5">
-                  <Link href={`/shop/${work.slug}`} className="relative w-full h-full flex items-center justify-center">
+                  <Link href={`/shop/${work.slug}`} className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xs">
                     <Image
                       src={work.src}
                       alt={work.title}
                       fill
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                      className="object-contain transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   </Link>
                 </div>

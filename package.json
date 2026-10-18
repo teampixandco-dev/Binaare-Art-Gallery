@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "admin:setup": "node scripts/admin-setup.mjs",
-    "test:backend": "playwright test"
+    "test:backend": "playwright test",
+    "cpanel:zip": "node scripts/build-cpanel.mjs",
+    "pdf:generate": "node scripts/generate-technical-pdf.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",

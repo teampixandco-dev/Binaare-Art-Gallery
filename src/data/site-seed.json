@@ -21,7 +21,7 @@
               "id": "featured-0",
               "title": "The Crimson Queen",
               "description": "",
-              "category": "Oil on Canvas",
+              "category": "Acrylic",
               "src": "/the-crimson-queen.webp"
             },
             {
@@ -100,28 +100,28 @@
               "id": "artworks-0",
               "title": "The Crimson Queen",
               "description": "Contemporary Floral Acrylic Painting on Canvas",
-              "category": "Acrylic on Canvas",
+              "category": "Acrylic",
               "src": "/artworks/the-crimson-queen.webp"
             },
             {
               "id": "artworks-1",
               "title": "Together We Bloom",
               "description": "Original Floral Garden Oil Painting on Canvas",
-              "category": "Oil on Canvas",
+              "category": "Oil Painting",
               "src": "/artworks/together-we-bloom.webp"
             },
             {
               "id": "artworks-2",
               "title": "Beauty in Simplicity",
               "description": "Original Textured Abstract Mix Media Landscape Painting on Canvas",
-              "category": "Textured Canvas",
+              "category": "Mixed Media",
               "src": "/artworks/beauty-in-simplicity.webp"
             },
             {
               "id": "artworks-3",
               "title": "Fields of Quiet Gold",
               "description": "Original Textured Mix Media Abstract Painting on Canvas",
-              "category": "Textured Canvas",
+              "category": "Mixed Media",
               "src": "/artworks/fields-of-quiet-gold.webp"
             },
             {
@@ -135,28 +135,28 @@
               "id": "artworks-5",
               "title": "Reflections of a Golden City",
               "description": "Original Textured Abstract Cityscape Painting on Canvas",
-              "category": "Mixed Media",
+              "category": "Texture",
               "src": "/artworks/reflections-of-a-golden-city.webp"
             },
             {
               "id": "artworks-6",
               "title": "A New Dawn",
               "description": "Original Textured Abstract Landscape Painting on Canvas",
-              "category": "Textured Canvas",
+              "category": "Texture",
               "src": "/artworks/a-new-dawn.webp"
             },
             {
               "id": "artworks-7",
               "title": "Whispers of Serenity",
               "description": "Original Textured Floral Painting on Canvas",
-              "category": "Textured Canvas",
+              "category": "Texture",
               "src": "/artworks/whispers-of-serenity.webp"
             },
             {
               "id": "artworks-8",
               "title": "Still She Shines",
               "description": "Original Textured Abstract Floral Acrylic Painting on Canvas",
-              "category": "Acrylic on Canvas",
+              "category": "Acrylic",
               "src": "/artworks/still-she-shines.webp"
             }
           ]
@@ -260,7 +260,7 @@
       "slug": "artist",
       "title": "The Artist",
       "subtitle": "Binari Gamage",
-      "hero": "/artworks/a-new-dawn.webp",
+      "hero": "/artworks/blooming-in-grace.webp",
       "body": "",
       "builtin": true,
       "published": true,

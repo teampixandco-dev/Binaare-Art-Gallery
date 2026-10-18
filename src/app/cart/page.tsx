@@ -7,10 +7,9 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import { useCart } from "@/context/CartContext";
-import { formatPriceUSD } from "@/data/products";
 
 export default function CartPage() {
-  const { lineEntries, setQuantity, removeItem, formatSubtotal, itemCount } = useCart();
+  const { lineEntries, setQuantity, removeItem, itemCount } = useCart();
 
   return (
     <main style={{ background: "var(--bg)" }}>
@@ -36,7 +35,6 @@ export default function CartPage() {
           ) : (
             <>
               {lineEntries.map(({ line, product }) => {
-                const lineTotal = product.price * line.quantity;
                 return (
                   <article key={product.slug} className="cart-item">
                     <div className="cart-item-main" style={{ flex: 1 }}>
@@ -59,9 +57,6 @@ export default function CartPage() {
                         <p className="artwork-card-medium">
                           {product.medium} · {product.size}
                         </p>
-                        <p style={{ marginTop: "0.5rem", fontSize: "0.85rem", color: "var(--muted)" }}>
-                          {formatPriceUSD(product.price)} each
-                        </p>
                       </div>
                     </div>
 
@@ -81,9 +76,6 @@ export default function CartPage() {
                           aria-label={`Quantity for ${product.title}`}
                         />
                       </label>
-                      <p style={{ fontFamily: "var(--font-serif)", fontSize: "1.15rem", minWidth: "5rem" }}>
-                        {formatPriceUSD(lineTotal)}
-                      </p>
                       <button type="button" className="cart-remove-btn" onClick={() => removeItem(product.slug)}>
                         Remove
                       </button>
@@ -93,9 +85,6 @@ export default function CartPage() {
               })}
 
               <div style={{ marginTop: "2.5rem", paddingTop: "2rem", borderTop: "1px solid var(--border)", display: "flex", flexDirection: "column", gap: "1.5rem", alignItems: "flex-end" }}>
-                <p style={{ fontSize: "1.35rem", fontFamily: "var(--font-serif)" }}>
-                  Subtotal <span style={{ color: "var(--accent)", marginLeft: "0.75rem" }}>{formatSubtotal()}</span>
-                </p>
                 <p className="section-text" style={{ maxWidth: "28rem", textAlign: "right", fontSize: "0.85rem" }}>
                   Shipping and insurance are confirmed after you submit your details. No payment is processed on this site until the gallery contacts you.
                 </p>
@@ -103,9 +92,15 @@ export default function CartPage() {
                   <Link href="/shop" className="btn-outline">
                     Continue shopping
                   </Link>
-                  <Link href="/checkout" className="btn-primary">
+                  <button
+                    type="button"
+                    disabled
+                    className="btn-primary"
+                    style={{ opacity: 0.5, cursor: "not-allowed" }}
+                    aria-disabled="true"
+                  >
                     Checkout
-                  </Link>
+                  </button>
                 </div>
               </div>
             </>

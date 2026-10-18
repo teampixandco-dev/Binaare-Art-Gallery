@@ -15,7 +15,7 @@ export default function ArtistPage() {
         title="The Artist"
         subtitle="Binari Gamage"
         tag="Meet the Creator"
-        backgroundImage="/artworks/a-new-dawn.webp"
+        backgroundImage="/artworks/blooming-in-grace.webp"
       />
 
       <SectionReveal>
