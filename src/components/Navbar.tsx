@@ -10,12 +10,12 @@ import { pageHref } from "@/lib/content-types";
 
 const links = [
   { href: "/", label: "Home" },
-  { href: "/gallery", label: "Gallery" },
+  // { href: "/gallery", label: "Gallery" },
   { href: "/shop", label: "Shop" },
   { href: "/about", label: "About Us" },
   { href: "/artist", label: "Artist" },
   { href: "/exhibitions", label: "Exhibitions" },
-  { href: "/blog", label: "Blog" },
+  // { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact Us" },
 ];
 

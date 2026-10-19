@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageSections from "@/components/PageSections";
-import { usePageContent } from "@/context/ContentContext";
+import { useContent, usePageContent } from "@/context/ContentContext";
+import { PRODUCTS as STATIC_PRODUCTS } from "@/data/products";
 import SectionReveal from "@/components/SectionReveal";
 import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -16,7 +17,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
-const HERO_VIDEO = "/hero-video.mp4";
 const HERO_POSTER = "/hero-poster.webp";
 
 const heroStagger: Variants = {
@@ -40,7 +40,69 @@ const heroItem: Variants = {
 
 export default function Home() {
   const page = usePageContent("home");
-  const featuredWorks = (page?.sections.find(s => s.id === "featured")?.items || []).map(item => ({ ...item, medium: item.category }));
+  const [isHeroPlaying, setIsHeroPlaying] = useState(false);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
+
+  useEffect(() => {
+    const video = heroVideoRef.current;
+    if (!video) return;
+
+    if (!video.paused) {
+      setIsHeroPlaying(true);
+    }
+
+    const onPlaySuccess = () => {
+      setIsHeroPlaying(true);
+    };
+
+    video.addEventListener("playing", onPlaySuccess);
+
+    const playPromise = video.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(onPlaySuccess)
+        .catch(() => {
+          // Autoplay blocked by browser (e.g. iOS Low Power Mode)
+          setIsHeroPlaying(false);
+        });
+    }
+
+    const handleFirstGesture = () => {
+      if (video && video.paused) {
+        video.play().then(onPlaySuccess).catch(() => {});
+      }
+    };
+
+    window.addEventListener("touchstart", handleFirstGesture, { once: true, passive: true });
+    window.addEventListener("scroll", handleFirstGesture, { once: true, passive: true });
+
+    return () => {
+      video.removeEventListener("playing", onPlaySuccess);
+      window.removeEventListener("touchstart", handleFirstGesture);
+      window.removeEventListener("scroll", handleFirstGesture);
+    };
+  }, [page?.hero]);
+  
+  const featuredSlugs = [
+    "petals-of-serenity",
+    "the-crimson-queen",
+    "young-at-heart",
+    "beauty-beyond-colour"
+  ];
+  
+  const { products: contentProducts } = useContent();
+  const allProducts = contentProducts && contentProducts.length > 0 ? contentProducts : STATIC_PRODUCTS;
+
+  const featuredWorks = featuredSlugs
+    .map(slug => allProducts.find(p => p.slug === slug))
+    .filter(Boolean)
+    .map(p => ({
+      id: p!.slug,
+      src: (p!.images || []).find(img => img.includes("showcase")) || p!.src || p!.images?.[0] || "",
+      title: p!.title,
+      medium: p!.medium,
+      slug: p!.slug,
+    }));
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -83,20 +145,7 @@ export default function Home() {
         ease: "none",
       });
 
-      // 3. About preview scroll-linked fade & scale as Featured Collection overlaps
-      gsap.to("#about-content", {
-        scrollTrigger: {
-          trigger: "#section-about",
-          start: "top top",
-          end: "bottom top",
-          scrub: true,
-        },
-        opacity: 0,
-        scale: 0.96,
-        y: -60,
-        ease: "none",
-      });
-
+      // 3. Refresh ScrollTrigger
       requestAnimationFrame(() => ScrollTrigger.refresh());
     });
 
@@ -185,21 +234,35 @@ export default function Home() {
                 className="absolute"
                 style={{ top: "-6%", left: "-6%", right: "-6%", bottom: "-6%" }}
               >
-                {page?.hero && page.hero.endsWith(".mp4") ? (
+                {/* Fallback image underneath: Always visible immediately. Never triggers iOS play button overlay. */}
+                <Image
+                  src={HERO_POSTER}
+                  alt={page?.title || "Binaare Art Gallery"}
+                  fill
+                  priority
+                  sizes="100vw"
+                  className="object-cover"
+                />
+
+                {/* Hero video: Fades in only once playing is confirmed by browser */}
+                {page?.hero && page.hero.endsWith(".mp4") && (
                   <video
-                    className="absolute inset-0 h-full w-full object-cover"
+                    ref={heroVideoRef}
+                    className={`absolute inset-0 h-full w-full object-cover pointer-events-none transition-opacity duration-700 ${
+                      isHeroPlaying ? "opacity-100" : "opacity-0"
+                    }`}
                     src={page.hero}
-                    poster={HERO_POSTER}
                     autoPlay
                     muted
                     loop
                     playsInline
-                    preload="metadata"
+                    preload="auto"
                     disablePictureInPicture
+                    disableRemotePlayback
+                    tabIndex={-1}
+                    aria-hidden="true"
                     suppressHydrationWarning
                   />
-                ) : (
-                  <Image src={page?.hero || HERO_POSTER} alt={page?.title || "Hero"} fill priority sizes="100vw" className="object-cover" />
                 )}
               </div>
             </div>
@@ -249,7 +312,7 @@ export default function Home() {
                   becomes a language of the soul.
                 </motion.p>
                 <motion.div variants={heroItem}>
-                  <Link href="/gallery" className="btn-white btn-arrow">
+                  <Link href="/shop" className="btn-white btn-arrow">
                     Explore Gallery <ArrowRight className="w-4 h-4 btn-arrow-icon" />
                   </Link>
                 </motion.div>
@@ -262,29 +325,29 @@ export default function Home() {
       {/* ═══ ABOUT PREVIEW ═══ */}
       <section
         id="section-about"
-        className="about-section sticky top-0 min-h-screen w-full flex items-center justify-center z-[2]"
-        style={{ paddingTop: "6rem", paddingBottom: "6rem", background: "var(--bg)" }}
+        className="about-section sticky w-full z-[2]"
+        style={{ paddingTop: "3rem", paddingBottom: "5rem", background: "var(--bg)" }}
       >
         <div
           id="about-content"
           className="about-content w-full gallery-section"
-          style={{ paddingTop: 0, paddingBottom: 0, willChange: "transform, opacity" }}
+          style={{ paddingTop: 0, paddingBottom: 0 }}
         >
-          <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
+          <div className="flex flex-col lg:flex-row gap-10 lg:gap-16 items-start">
             <div className="lg:w-1/2">
               <p className="section-label">The Gallery</p>
               <h2 className="section-title">Where Art Is Felt</h2>
               <div className="section-divider" />
             </div>
             <div className="lg:w-1/2">
-              <p className="section-text" style={{ marginBottom: "1.5rem" }}>
+              <p className="section-text" style={{ marginBottom: "1.25rem" }}>
                 Binaare Art Gallery is a contemplative creative space where emotion finds form
                 and colour becomes a language of the soul. Rooted in the philosophy of Colors of
                 Love, the gallery presents works that explore the quiet depth of human feeling
                 through acrylic paintings, expressive landscapes, textured abstraction,
                 watercolour compositions, and layered mixed media.
               </p>
-              <Link href="/about" className="btn-outline btn-arrow">
+              <Link href="/about" className="btn-outline btn-arrow rounded-xs">
                 Learn More <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
               </Link>
             </div>
@@ -292,14 +355,14 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ═══ FEATURED COLLECTION (Parallax Gallery) ═══ */}
+      {/* ═══ FEATURED COLLECTION ═══ */}
       <section
         id="section-featured-collection"
         className="featured-section relative z-[3] w-full"
-        style={{ background: "var(--bg-alt)", padding: "6rem 0" }}
+        style={{ background: "var(--bg-alt)", paddingTop: "3.5rem", paddingBottom: "3.5rem" }}
       >
         <div className="gallery-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
-          <div className="text-center" style={{ marginBottom: "4rem" }}>
+          <div className="text-center" style={{ marginBottom: "2.5rem" }}>
             <p className="section-label">Featured Collection</p>
             <h2 className="section-title">Selected Works</h2>
           </div>
@@ -308,35 +371,57 @@ export default function Home() {
             {featuredWorks.map((work, i) => (
               <motion.div
                 key={work.id}
-                className="artwork-card"
-                initial={{ y: 50 }}
-                whileInView={{ y: 0 }}
+                className="group flex flex-col h-full bg-white p-4 sm:p-5 rounded-xs border border-[#EBE5DA] shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1"
+                initial={{ y: 40, opacity: 0 }}
+                whileInView={{ y: 0, opacity: 1 }}
                 viewport={{ once: true, margin: "-60px" }}
-                transition={{ duration: 0.9, delay: i * 0.12, ease }}
+                transition={{ duration: 0.6, delay: i * 0.1, ease }}
               >
-                <div style={{ overflow: "hidden" }}>
-                  <Image
-                    src={work.src}
-                    alt={work.title}
-                    width={600}
-                    height={800}
-                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                    className="artwork-card-img"
-                    style={{ width: "100%", height: "auto" }}
-                  />
+                {/* Artwork display box with extra-small radius and object-contain */}
+                <div className="relative w-full aspect-[4/4.5] bg-[#FAF8F5] p-3 rounded-xs flex items-center justify-center mb-3.5">
+                  <Link href={`/shop/${work.slug}`} className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xs">
+                    <Image
+                      src={work.src}
+                      alt={work.title}
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </Link>
                 </div>
-                <div className="artwork-card-info">
-                  <h3 className="artwork-card-title">{work.title}</h3>
-                  <p className="artwork-card-medium">{work.medium}</p>
-                  {work.description && <p className="section-text mt-2">{work.description}</p>}
+
+                {/* Card Info */}
+                <div className="flex-1 flex flex-col items-center text-center">
+                  {/* Centered gold divider line */}
+                  <div className="w-8 h-[1px] bg-[#B78646] mx-auto my-2" />
+
+                  <h3 className="font-serif text-[1.08rem] sm:text-[1.12rem] font-normal leading-snug px-1 text-[#24211F] line-clamp-2">
+                    <Link href={`/shop/${work.slug}`} className="transition-colors hover:text-[#8C704F]">
+                      {work.title}
+                    </Link>
+                  </h3>
+                  <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#77716B] leading-relaxed mt-1.5 mb-4 line-clamp-2">
+                    {work.medium}
+                  </p>
+
+                  {/* Centered circular outline arrow button */}
+                  <div className="mt-auto flex justify-center pb-1">
+                    <Link
+                      href={`/shop/${work.slug}`}
+                      className="w-9 h-9 rounded-full border border-[#B78646]/70 flex items-center justify-center text-[#B78646] hover:bg-[#8C704F] hover:text-white hover:border-[#8C704F] transition-all"
+                      aria-label={`View ${work.title}`}
+                    >
+                      <ArrowRight size={14} />
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             ))}
           </div>
 
-          <div className="text-center" style={{ marginTop: "3rem" }}>
-            <Link href="/gallery" className="btn-primary btn-arrow">
-              View Full Gallery <ArrowRight className="w-4 h-4 btn-arrow-icon" />
+          <div className="text-center" style={{ marginTop: "2.5rem" }}>
+            <Link href="/shop" className="btn-primary btn-arrow rounded-xs">
+              View Shop <ArrowRight className="w-4 h-4 btn-arrow-icon" />
             </Link>
           </div>
         </div>
@@ -346,17 +431,18 @@ export default function Home() {
       <div className="relative z-[3] w-full" style={{ background: "var(--bg)" }}>
         {/* ═══ ARTIST PREVIEW ═══ */}
         <SectionReveal>
-          <section className="gallery-section" style={{ paddingTop: "8rem", paddingBottom: "8rem", background: "var(--bg)" }}>
+          <section className="gallery-section" style={{ paddingTop: "4rem", paddingBottom: "4rem", background: "var(--bg)" }}>
             <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start justify-center">
               <div className="lg:w-4/12">
                 <div style={{ overflow: "hidden", borderRadius: "2px" }}>
                   <Image
-                    src={page?.sections.find(s => s.id === "artist")?.items[0]?.src || HERO_POSTER}
-                    alt={page?.sections.find(s => s.id === "artist")?.items[0]?.title || "Binari Gamage - Artist"}
+                    src="/binari-gamage-painting.webp"
+                    alt="Binari Gamage - Artist"
                     width={800}
                     height={1200}
                     sizes="(max-width: 1024px) 100vw, 33vw"
                     style={{ width: "100%", height: "auto", objectFit: "cover" }}
+                    priority
                   />
                 </div>
               </div>
@@ -375,7 +461,7 @@ export default function Home() {
                   art becomes a personal language — one that speaks of transformation, presence,
                   and the quiet unfolding of self.
                 </p>
-                <Link href="/artist" className="btn-outline btn-arrow">
+                <Link href="/artist" className="btn-outline btn-arrow rounded-xs">
                   Read Full Story <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
                 </Link>
               </div>
@@ -388,8 +474,8 @@ export default function Home() {
           id="section-10-1219"
           className="relative flex items-center justify-center text-center overflow-hidden"
           style={{
-            minHeight: "60vh",
-            backgroundImage: `url(${page?.sections.find(s => s.id === "quote")?.items[0]?.src || HERO_POSTER})`,
+            minHeight: "55vh",
+            backgroundImage: "url(/artworks/whispers-of-serenity.webp)",
             backgroundSize: "cover",
             backgroundPosition: "50% 100%",
           }}
@@ -422,7 +508,7 @@ export default function Home() {
               commissions, exhibitions, and collaboration opportunities.
             </p>
             <div className="flex flex-wrap justify-center gap-4">
-              <Link href="/gallery" className="btn-primary">
+              <Link href="/shop" className="btn-primary">
                 Explore Gallery
               </Link>
               <Link href="/contact" className="btn-outline">

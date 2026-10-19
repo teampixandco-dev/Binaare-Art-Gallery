@@ -4,10 +4,9 @@ import React from "react";
 import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PageSections from "@/components/PageSections";
-import { usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
+import { usePageContent } from "@/context/ContentContext";
 
 export default function ArtistPage() {
   const page = usePageContent("artist");
@@ -15,22 +14,24 @@ export default function ArtistPage() {
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="The Artist"
-        subtitle="Binari Gamage"
-        backgroundImage="https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1920&h=800&fit=crop"
+        title={page?.title || "The Artist"}
+        subtitle={page?.subtitle || "Binari Gamage"}
+        tag="Meet the Creator"
+        backgroundImage={page?.hero || "/artworks/blooming-in-grace.webp"}
       />
 
       <SectionReveal>
-        <section className="gallery-section" style={{ paddingTop: "6rem" }}>
+        <section className="gallery-section" style={{ paddingTop: "5rem" }}>
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
             <div className="lg:w-5/12 lg:sticky lg:top-32">
               <Image
-                src={page?.sections.find(s => s.id === "image-0")?.items[0]?.src || "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=800&fit=crop"}
-                alt={page?.sections.find(s => s.id === "image-0")?.items[0]?.title || "Binari Gamage"}
+                src="/binari-gamage-painting.webp"
+                alt="Binari Gamage - Artist"
                 width={600}
                 height={800}
                 sizes="(max-width: 1024px) 100vw, 42vw"
                 style={{ width: "100%", height: "auto", objectFit: "cover", borderRadius: "2px" }}
+                priority
               />
               <div style={{ marginTop: "1.5rem", padding: "1.5rem", background: "var(--bg-alt)" }}>
                 <p style={{ fontFamily: "var(--font-serif)", fontSize: "1rem", fontStyle: "italic", color: "var(--fg)", lineHeight: 1.7 }}>
@@ -71,7 +72,7 @@ export default function ArtistPage() {
                 and contributing to her team&apos;s Mercantile Championship success. She was honored with
                 both School Colors and All-Island University Colors in recognition of her sporting
                 excellence and continues her association with sport as a member of the Sinhalese
-                Sports Club.
+                Sports Club(SSC).
               </p>
 
               <h3 className="font-serif text-xl mt-10 mb-4">Philosophy &amp; Practice</h3>
@@ -94,7 +95,6 @@ export default function ArtistPage() {
         </section>
       </SectionReveal>
 
-      <PageSections slug="artist" />
       <Footer />
     </main>
   );

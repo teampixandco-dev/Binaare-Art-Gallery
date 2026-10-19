@@ -1,0 +1,23 @@
+{
+  "/_not-found/page": "/_not-found",
+  "/api/contact/route": "/api/contact",
+  "/icon.svg/route": "/icon.svg",
+  "/favicon.ico/route": "/favicon.ico",
+  "/api/content/route": "/api/content",
+  "/media/[filename]/route": "/media/[filename]",
+  "/api/admin/[...path]/route": "/api/admin/[...path]",
+  "/checkout/page": "/checkout",
+  "/exhibitions/page": "/exhibitions",
+  "/blog/page": "/blog",
+  "/gallery/page": "/gallery",
+  "/cart/page": "/cart",
+  "/contact/page": "/contact",
+  "/artist/page": "/artist",
+  "/about/page": "/about",
+  "/page": "/",
+  "/shop/page": "/shop",
+  "/admin/page": "/admin",
+  "/blog/[slug]/page": "/blog/[slug]",
+  "/pages/[slug]/page": "/pages/[slug]",
+  "/shop/[slug]/page": "/shop/[slug]"
+}

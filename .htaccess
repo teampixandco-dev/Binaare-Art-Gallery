@@ -1,0 +1,46 @@
+# ==============================================================================
+# Hostinger Optimized Reverse Proxy & Static Caching for Next.js
+# ==============================================================================
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # 1. Force HTTPS
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # 2. Allow SSL certificate renewals (.well-known)
+  RewriteCond %{REQUEST_URI} ^/\.well-known [NC]
+  RewriteRule ^ - [L]
+
+  # 3. Direct disk delivery for Next.js static assets (Zero Node.js CPU/Memory!)
+  RewriteCond %{DOCUMENT_ROOT}/.next/static/$1 -f
+  RewriteRule ^_next/static/(.*)$ .next/static/$1 [L]
+
+  RewriteCond %{REQUEST_URI} ^/_next/static/ [NC]
+  RewriteRule ^ - [R=404,L]
+
+  # 4. Direct disk delivery for uploaded gallery media (Zero Node.js CPU/Memory!)
+  RewriteCond %{DOCUMENT_ROOT}/public/media/$1 -f
+  RewriteRule ^media/(.*)$ public/media/$1 [L]
+
+  RewriteCond %{DOCUMENT_ROOT}/data/uploads/$1 -f
+  RewriteRule ^media/(.*)$ data/uploads/$1 [L]
+
+  # 5. Direct disk delivery for public directory assets (images, icons)
+  RewriteCond %{DOCUMENT_ROOT}/public/$1 -f
+  RewriteRule ^(.*)$ public/$1 [L]
+
+  # 6. Route dynamic pages and API calls through high-performance index.php bridge
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteRule ^ index.php [L,QSA]
+</IfModule>
+
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/webp "access plus 1 month"
+  ExpiresByType image/jpeg "access plus 1 month"
+  ExpiresByType image/png "access plus 1 month"
+  ExpiresByType text/css "access plus 1 year"
+  ExpiresByType application/javascript "access plus 1 year"
+</IfModule>

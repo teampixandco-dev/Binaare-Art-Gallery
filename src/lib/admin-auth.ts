@@ -7,18 +7,74 @@ import { ContentError } from "./content-store";
 const COOKIE = "binaare_admin";
 const tokenHash = (token: string) => createHash("sha256").update(token).digest("hex");
 const dummyPassword = hashPassword(randomBytes(24).toString("hex"));
-export async function currentAdmin(): Promise<string | null> {
+export type AdminRole = "admin" | "editor";
+
+export type AdminUser = {
+  username: string;
+  role: AdminRole;
+};
+
+export async function currentAdmin(): Promise<AdminUser | null> {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
-  const row = getDatabase().prepare("SELECT username FROM sessions WHERE token_hash = ? AND expires > ?").get(tokenHash(token), Date.now()) as { username: string } | undefined;
-  return row?.username || null;
+  const db = getDatabase();
+  const session = db.prepare("SELECT username FROM sessions WHERE token_hash = ? AND expires > ?").get(tokenHash(token), Date.now()) as { username: string } | undefined;
+  if (!session) return null;
+  const admin = db.prepare("SELECT username, role FROM admins WHERE username = ?").get(session.username) as { username: string; role?: string } | undefined;
+  if (!admin) return null;
+  return {
+    username: admin.username,
+    role: admin.role === "editor" ? "editor" : "admin",
+  };
 }
-export async function requireAdmin() {
-  if (!await currentAdmin()) throw new ContentError("Please sign in to continue.", 401);
+
+export async function requireAdmin(requiredRole?: AdminRole): Promise<AdminUser> {
+  const user = await currentAdmin();
+  if (!user) throw new ContentError("Please sign in to continue.", 401);
+  if (requiredRole === "admin" && user.role !== "admin") {
+    throw new ContentError("Access restricted. Only the administrator can modify site design and configurations.", 403);
+  }
+  return user;
 }
 export function checkOrigin(request: Request) {
-  const expected = process.env.APP_ORIGIN || new URL(request.url).origin;
-  if (request.headers.get("origin") !== expected) throw new ContentError("Request origin is not allowed.", 403);
+  const origin = request.headers.get("origin");
+  if (!origin) return; // Non-browser or same-origin direct calls
+
+  const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
+
+  const allowed = new Set<string>([
+    "https://binaareartgallery.com",
+    "http://binaareartgallery.com",
+    "https://www.binaareartgallery.com",
+    "http://www.binaareartgallery.com",
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+  ]);
+
+  if (process.env.APP_ORIGIN) {
+    allowed.add(process.env.APP_ORIGIN.replace(/\/$/, ""));
+  }
+
+  try {
+    allowed.add(new URL(request.url).origin);
+  } catch {}
+
+  if (forwardedHost) {
+    allowed.add(`${forwardedProto}://${forwardedHost}`);
+    allowed.add(`https://${forwardedHost}`);
+    allowed.add(`http://${forwardedHost}`);
+  }
+
+  const cleanOrigin = origin.replace(/\/$/, "");
+  if (!allowed.has(cleanOrigin)) {
+    // If incoming origin ends with binaareartgallery.com or matches host
+    if (cleanOrigin.includes("binaareartgallery.com") || (forwardedHost && cleanOrigin.includes(forwardedHost.split(":")[0]))) {
+      return;
+    }
+    console.warn(`[admin-auth] Blocked unauthorized origin: "${origin}". Allowed origins:`, Array.from(allowed));
+    throw new ContentError("Request origin is not allowed.", 403);
+  }
 }
 export async function login(username: string, password: string) {
   const db = getDatabase();

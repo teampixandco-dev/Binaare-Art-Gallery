@@ -5,30 +5,55 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import PageSections from "@/components/PageSections";
-import { usePageContent } from "@/context/ContentContext";
 import PageHero from "@/components/PageHero";
 
 
 
+import Link from "next/link";
+import { useContent } from "@/context/ContentContext";
+import { PRODUCTS as STATIC_PRODUCTS } from "@/data/products";
+
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function GalleryPage() {
-  const page = usePageContent("gallery");
-  const artworks = (page?.sections.find(s => s.id === "artworks")?.items || []).map(item => ({ ...item, medium: item.category }));
-  const filters = ["All", ...new Set(artworks.map(a => a.medium).filter(Boolean))];
+  const { products: contentProducts } = useContent();
+  const PRODUCTS = contentProducts && contentProducts.length > 0 ? contentProducts : STATIC_PRODUCTS;
+
+  // Use authentic original artworks by Binari Gamage
+  const artworks = PRODUCTS.map((p) => {
+    const category = p.category || "Acrylic";
+
+    return {
+      id: p.slug,
+      slug: p.slug,
+      title: p.title,
+      src: p.src,
+      medium: p.materials || p.medium,
+      category,
+      size: p.size || "",
+      description: p.theme || "",
+    };
+  });
+
+  const rawCategories = Array.from(new Set(artworks.map((a) => a.category).filter(Boolean)));
+  const orderedCategories = [
+    ...rawCategories.filter((c) => c !== "Oil Painting"),
+    ...(rawCategories.includes("Oil Painting") ? ["Oil Painting"] : []),
+  ];
+  const filters = ["All", ...orderedCategories];
   const [filter, setFilter] = useState("All");
   const [lightbox, setLightbox] = useState<number | null>(null);
 
-  const filtered = filter === "All" ? artworks : artworks.filter((a) => a.medium === filter);
+  const filtered = filter === "All" ? artworks : artworks.filter((a) => a.category === filter);
 
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
         title="Gallery"
-        subtitle="Explore the Online Gallery"
-        backgroundImage="https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=1920&h=800&fit=crop"
+        subtitle="Explore the Complete Collection of Original Paintings"
+        tag="Original Collection"
+        backgroundImage="/artworks/reflections-of-a-golden-city.webp"
       />
 
       <section className="gallery-section">
@@ -118,6 +143,14 @@ export default function GalleryPage() {
                 <p style={{ fontSize: "0.75rem", letterSpacing: "0.15em", textTransform: "uppercase", opacity: 0.6, marginTop: "0.3rem" }}>
                   {artworks[lightbox].medium}
                 </p>
+                <div className="mt-3">
+                  <Link
+                    href={`/shop/${artworks[lightbox].slug}`}
+                    className="btn-primary inline-block text-xs uppercase tracking-widest px-4 py-2"
+                  >
+                    View in Shop
+                  </Link>
+                </div>
               </div>
             </motion.div>
             <button
@@ -135,7 +168,6 @@ export default function GalleryPage() {
         )}
       </AnimatePresence>
 
-      <PageSections slug="gallery" />
       <Footer />
     </main>
   );

@@ -6,29 +6,32 @@ import Footer from "@/components/Footer";
 import PageSections from "@/components/PageSections";
 import PageHero from "@/components/PageHero";
 import SectionReveal from "@/components/SectionReveal";
+import ExhibitionShowcase from "@/components/ExhibitionShowcase";
+import { usePageContent } from "@/context/ContentContext";
 
 export default function ExhibitionsPage() {
+  const page = usePageContent("exhibitions");
   return (
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="Exhibitions"
-        subtitle="Where Colors of Love Comes to Life"
-        backgroundImage="https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop"
+        title={page?.title || "Exhibitions"}
+        subtitle={page?.subtitle || "Where Colors of Love Comes to Life"}
+        tag="Curated Spaces"
+        backgroundImage={page?.hero || "/artworks/rhythm-of-the-city.webp"}
       />
 
       {/* Intro */}
       <SectionReveal>
-        <section className="gallery-section text-center" style={{ maxWidth: "800px" }}>
-          <p className="section-label">The Journey Begins</p>
-          <h2 className="section-title">A Space in the Making</h2>
+        <section className="gallery-section text-center" style={{ maxWidth: "820px" }}>
+          <p className="section-label">Curated Presence</p>
+          <h2 className="section-title">A Living Space of Art &amp; Emotion</h2>
           <div className="section-divider" style={{ margin: "1.5rem auto" }} />
           <p className="section-text" style={{ maxWidth: "100%", textAlign: "center" }}>
-            Binaare Art Gallery is currently evolving as a purely online space, and we are in the
-            process of shaping our first physical exhibition experiences. While no exhibitions have
-            been held yet, this space marks the beginning of that journey — a future extension of the
-            gallery where Colors of Love will move beyond the canvas and into immersive, shared
-            environments.
+            Binaare Art Gallery bridges physical presence and digital curation, bringing
+            together contemplative creative spaces where emotion finds form. From our
+            past exhibition showcase in Colombo to our online gallery, each presentation
+            allows Colors of Love to be experienced through stillness, reflection, and depth.
           </p>
         </section>
       </SectionReveal>
@@ -66,41 +69,8 @@ export default function ExhibitionsPage() {
         </SectionReveal>
       </section>
 
-      {/* Stay Connected */}
-      <SectionReveal>
-        <section className="gallery-section text-center" style={{ maxWidth: "900px" }}>
-          <p className="section-label">Stay Connected</p>
-          <h2 className="section-title">Be the First to Know</h2>
-          <p className="section-text" style={{ maxWidth: "100%", textAlign: "center", marginBottom: "3rem" }}>
-            Be the first to know when our exhibitions are announced and receive early access to
-            upcoming showcases. If you are interested in future exhibitions, collaborations, or
-            private viewing experiences, we would love to hear from you.
-          </p>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5" style={{ marginBottom: "3rem" }}>
-            <div className="exhibit-cta">
-              <div style={{ fontSize: "2rem", marginBottom: "0.8rem" }}>✉</div>
-              <h4>Join the Exhibition List</h4>
-              <p>Email signup for updates and early access</p>
-            </div>
-            <div className="exhibit-cta">
-              <div style={{ fontSize: "2rem", marginBottom: "0.8rem" }}>🎨</div>
-              <h4>Register Interest</h4>
-              <p>For collectors, galleries, or private invitations</p>
-            </div>
-            <div className="exhibit-cta">
-              <div style={{ fontSize: "2rem", marginBottom: "0.8rem" }}>🤝</div>
-              <h4>Inquire for Collaboration</h4>
-              <p>For institutions, curators, or events</p>
-            </div>
-          </div>
-
-          <p className="section-text" style={{ maxWidth: "100%", textAlign: "center", fontStyle: "italic", fontFamily: "var(--font-serif)" }}>
-            Until our first exhibition takes form, the gallery continues to live online — where each
-            artwork exists as its own quiet exhibition of emotion, reflection, and presence.
-          </p>
-        </section>
-      </SectionReveal>
+      {/* ═══ PHYSICAL GALLERY & EXHIBITION SHOWCASE ═══ */}
+      <ExhibitionShowcase />
 
       <PageSections slug="exhibitions" />
       <Footer />

@@ -2,7 +2,6 @@
 /* eslint-disable @next/next/no-img-element -- Admin previews use the original uploaded images. */
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
-  BookOpen,
   Images,
   LayoutTemplate,
   LogOut,
@@ -17,11 +16,24 @@ import {
   Trash2,
   AlertCircle,
   Sparkles,
+  Download,
+  FileText,
+  FileSpreadsheet,
+  FolderDown,
+  Video,
+  Shield,
+  User,
+  Star,
+  Check,
+  Loader2,
 } from "lucide-react";
 import type { BlogPost, MediaAsset, PageSection, ShopProduct, SiteContent, SitePage } from "@/lib/content-types";
 import { pageHref } from "@/lib/content-types";
+import { toast, Toaster } from "@/components/ui/sonner";
 
-type Resource = "products" | "pages" | "posts" | "media";
+type Resource = "products" | "pages" | "posts" | "documents" | "media";
+const CURRENT_USING_PAGE_SLUGS = ["home", "shop", "about", "artist", "exhibitions", "contact"];
+
 type Editor =
   | { kind: "products"; value: ShopProduct }
   | { kind: "pages"; value: SitePage }
@@ -29,8 +41,8 @@ type Editor =
 
 const tabs = [
   { id: "products", label: "Shop artworks", icon: ShoppingBag },
-  { id: "pages", label: "Pages & sections", icon: LayoutTemplate },
-  { id: "posts", label: "Blog posts", icon: BookOpen },
+  { id: "pages", label: "Pages & header images", icon: LayoutTemplate },
+  { id: "documents", label: "Download documents", icon: FolderDown },
   { id: "media", label: "Media library", icon: Images },
 ] as const;
 
@@ -131,9 +143,11 @@ function Field({
 export default function AdminDashboard({
   initial,
   username,
+  role = "admin",
 }: {
   initial: SiteContent;
   username: string;
+  role?: "admin" | "editor";
 }) {
   const [content, setContent] = useState(initial);
   const [tab, setTab] = useState<Resource>("products");
@@ -147,14 +161,33 @@ export default function AdminDashboard({
   const busy = working || !ready;
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  const [picker, setPicker] = useState<{ select: (src: string) => void } | null>(null);
+  const [picker, setPicker] = useState<{
+    select: (src: string) => void;
+    selectMultiple?: (srcs: string[]) => void;
+    multiple?: boolean;
+    label?: string;
+  } | null>(null);
+  const [pickerError, setPickerError] = useState("");
+  const [uploadProgress, setUploadProgress] = useState("");
+  const [selectedLibraryImages, setSelectedLibraryImages] = useState<string[]>([]);
+  const [dragActive, setDragActive] = useState(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const uploadInput = useRef<HTMLInputElement>(null);
+  const pickerFileInput = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (picker) dialog.current?.showModal();
-    else dialog.current?.close();
+    if (picker) {
+      setPickerError("");
+      setSelectedLibraryImages([]);
+      dialog.current?.showModal();
+    } else {
+      dialog.current?.close();
+    }
   }, [picker]);
+
+  if (role !== "admin" && tab === "pages") {
+    setTab("products");
+  }
 
   useEffect(() => {
     const warn = (event: BeforeUnloadEvent) => {
@@ -171,11 +204,20 @@ export default function AdminDashboard({
       body: body ? JSON.stringify(body) : undefined,
       cache: "no-store",
     });
-    const result = await response.json();
+    const text = await response.text();
+    let result: any = null;
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      if (response.status === 401) {
+        throw new Error("Your session has expired. Open /admin in a new tab and sign in, then retry your save.");
+      }
+      throw new Error("Server communication error. Please try again in a moment.");
+    }
     if (response.status === 401) {
       throw new Error("Your session has expired. Open /admin in a new tab and sign in, then retry your save.");
     }
-    if (!response.ok) throw new Error(result.error || "The request failed.");
+    if (!response.ok) throw new Error(result?.error || "The request failed.");
     return result;
   }
 
@@ -231,10 +273,6 @@ export default function AdminDashboard({
       if (!ed.value.size.trim()) {
         errors.size = "Artwork dimensions are required (e.g. 50 × 70 cm).";
       }
-      const priceNum = Number(ed.value.price);
-      if (isNaN(priceNum) || priceNum < 0) {
-        errors.price = "Price must be a valid number of 0 or greater.";
-      }
     } else if (ed.kind === "posts") {
       if (!ed.value.date.trim()) {
         errors.date = "Publication date is required.";
@@ -266,10 +304,22 @@ export default function AdminDashboard({
           id,
           slug: "",
           title: "",
+          category: "Oil Painting",
           medium: "",
           size: "",
-          price: 0,
+          price: null,
           description: "",
+          aboutPainting: "",
+          artistMessage: "",
+          closingQuote: "",
+          materials: "",
+          width: "",
+          height: "",
+          depth: "",
+          frame: "",
+          style: "",
+          colours: "",
+          theme: "",
           src: "",
           images: [],
           published: false,
@@ -317,6 +367,9 @@ export default function AdminDashboard({
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       setError("Please check the form and fix the highlighted fields below.");
+      toast.error("Validation Error", {
+        description: "Please check and fix the highlighted fields below.",
+      });
       return;
     }
 
@@ -325,21 +378,38 @@ export default function AdminDashboard({
     setError("");
     setMessage("");
     try {
+      let val = editor.value;
+      if (editor.kind === "products") {
+        val = {
+          ...editor.value,
+          price: null,
+        };
+      }
       const next: SiteContent = await request("save", {
         revision: editorRevision,
         resource: editor.kind,
-        value: editor.value,
+        value: val,
       });
       setContent(next);
       setEditorRevision(next.revision);
       setDirty(false);
+      const isPub = Boolean(editor.value.published);
+      const title = editor.value.title ? `"${editor.value.title}"` : "Entry";
       setMessage(
-        editor.value.published
+        isPub
           ? "Saved. Your changes are now visible on the website."
           : "Draft saved. It is hidden from the website."
       );
+      toast.success(isPub ? "Artwork Published Live!" : "Draft Saved", {
+        description: `${title} was successfully updated.`,
+        duration: 4000,
+      });
     } catch (err) {
       report(err);
+      toast.error("Save Failed", {
+        description: err instanceof Error ? err.message : "Could not save changes.",
+        duration: 5000,
+      });
     } finally {
       setBusy(false);
     }
@@ -357,42 +427,96 @@ export default function AdminDashboard({
       setDirty(false);
       setFieldErrors({});
       setMessage("Item deleted.");
+      toast.success("Item Deleted", {
+        description: "The item was permanently removed from your catalog.",
+        duration: 3500,
+      });
     } catch (err) {
       report(err);
+      toast.error("Delete Failed", {
+        description: err instanceof Error ? err.message : "Could not delete item.",
+        duration: 5000,
+      });
     } finally {
       setBusy(false);
     }
   }
 
-  async function upload(file: File) {
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Images must be 10 MB or smaller.");
+  async function upload(files: FileList | File[]) {
+    const fileList = Array.from(files).filter(f => f.size > 0);
+    if (fileList.length === 0) {
+      setPickerError("Please choose at least one image to upload.");
       return;
     }
+
+    for (const f of fileList) {
+      if (f.size > 15 * 1024 * 1024) {
+        setPickerError(`"${f.name}" exceeds the 15 MB limit. Please select smaller images.`);
+        return;
+      }
+    }
+
     setBusy(true);
-    setError("");
-    setMessage("");
+    setPickerError("");
+    setUploadProgress(`Optimizing & uploading ${fileList.length} image${fileList.length > 1 ? "s" : ""}…`);
     try {
       const form = new FormData();
-      form.append("file", file);
+      for (const file of fileList) {
+        form.append("files[]", file);
+      }
       const response = await fetch("/api/admin/upload", { method: "POST", body: form });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || "Upload failed.");
+      const text = await response.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        if (response.status === 401) {
+          throw new Error("Your session has expired. Please refresh the page and sign in again.");
+        }
+        if (response.status === 413) {
+          throw new Error("The upload is too large for the server. Please select smaller images.");
+        }
+        if (response.status >= 500 || text.includes("<!DOCTYPE")) {
+          throw new Error("The upload service was briefly reconnecting. Please click Browse and try again.");
+        }
+        throw new Error("Unexpected server response while uploading. Please try again.");
+      }
+      if (!response.ok) throw new Error(data?.error || "Upload failed.");
       setContent(data.content);
       setEditorRevision(previous =>
         previous === data.content.revision - 1 ? data.content.revision : previous
       );
+
+      const addedAssets = (data.assets || (data.asset ? [data.asset] : [])) as Array<{ src: string }>;
+      const addedSrcs = addedAssets.map(a => a.src);
+
       if (picker) {
-        picker.select(data.asset.src);
+        if (picker.multiple && picker.selectMultiple) {
+          picker.selectMultiple(addedSrcs);
+        } else if (picker.select && addedSrcs[0]) {
+          picker.select(addedSrcs[0]);
+        }
         setPicker(null);
       } else {
-        setMessage("Image uploaded. Choose it in a product, post or page section to display it on the website.");
+        setMessage(`${fileList.length} image${fileList.length > 1 ? "s" : ""} uploaded and optimized.`);
       }
+      toast.success("Upload & Optimization Complete", {
+        description: `${fileList.length} artwork image${fileList.length > 1 ? "s" : ""} converted to WebP and added to library.`,
+        duration: 4000,
+      });
     } catch (err) {
+      const msg = err instanceof Error ? err.message : "Upload failed.";
+      setPickerError(msg);
       report(err);
+      toast.error("Upload Failed", {
+        description: msg,
+        duration: 5000,
+      });
     } finally {
       setBusy(false);
+      setUploadProgress("");
       if (uploadInput.current) uploadInput.current.value = "";
+      if (pickerFileInput.current) pickerFileInput.current.value = "";
     }
   }
 
@@ -430,9 +554,16 @@ export default function AdminDashboard({
           <button
             type="button"
             className="admin-small"
-            onClick={() => setPicker({ select: src => select([...values, src]) })}
+            onClick={() =>
+              setPicker({
+                select: src => select([...values, src]),
+                selectMultiple: srcs => select([...values, ...srcs]),
+                multiple: true,
+                label: `Add to ${label}`,
+              })
+            }
           >
-            <Plus size={14} /> Add image
+            <Plus size={14} /> Add images
           </button>
         </div>
         {values.length === 0 && (
@@ -442,7 +573,12 @@ export default function AdminDashboard({
         )}
         <div className="admin-thumbnails">
           {values.map((src, index) => (
-            <div key={`${src}-${index}`}>
+            <div key={`${src}-${index}`} className="admin-thumb-wrapper">
+              {index === 0 && (
+                <span className="admin-thumb-cover-tag" title="Primary cover photo shown in catalog">
+                  Cover
+                </span>
+              )}
               <button
                 type="button"
                 className="admin-thumb"
@@ -457,6 +593,20 @@ export default function AdminDashboard({
                 <img src={src} alt={`${label} ${index + 1}`} />
               </button>
               <div className="admin-thumb-actions">
+                {index > 0 && (
+                  <button
+                    type="button"
+                    aria-label={`Make image ${index + 1} the primary cover photo`}
+                    onClick={() => {
+                      const item = values[index];
+                      const rest = values.filter((_, i) => i !== index);
+                      select([item, ...rest]);
+                    }}
+                    title="Set as Primary Cover Photo"
+                  >
+                    <Star size={13} />
+                  </button>
+                )}
                 <button
                   type="button"
                   aria-label={`Move image ${index + 1} earlier`}
@@ -678,9 +828,18 @@ export default function AdminDashboard({
     );
   }
 
-  const entries = content[tab].filter(item =>
-    ("title" in item ? item.title : item.name).toLowerCase().includes(search.toLowerCase())
-  );
+  const entries =
+    tab === "pages"
+      ? content.pages
+          .filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug))
+          .filter(p => p.title.toLowerCase().includes(search.toLowerCase()) || p.slug.toLowerCase().includes(search.toLowerCase()))
+      : tab === "products"
+      ? content.products.filter(p =>
+          (p.title + " " + (p.medium || "") + " " + (p.category || "") + " " + (p.materials || "") + " " + (p.theme || "")).toLowerCase().includes(search.toLowerCase())
+        )
+      : tab === "media"
+      ? content.media.filter(m => m.name.toLowerCase().includes(search.toLowerCase()))
+      : [];
   const href = editor
     ? editor.kind === "pages"
       ? pageHref(editor.value)
@@ -688,6 +847,8 @@ export default function AdminDashboard({
       ? `/blog/${editor.value.slug}`
       : `/shop/${editor.value.slug}`
     : "";
+
+  const visibleTabs = tabs.filter(t => role === "admin" || t.id !== "pages");
 
   return (
     <main className="admin-root admin-dashboard">
@@ -697,7 +858,7 @@ export default function AdminDashboard({
         </a>
         <p className="admin-nav-caption">Manage your website</p>
         <nav>
-          {tabs.map(({ id, label, icon: Icon }) => (
+          {visibleTabs.map(({ id, label, icon: Icon }) => (
             <button
               key={id}
               disabled={busy}
@@ -715,11 +876,28 @@ export default function AdminDashboard({
             >
               <Icon size={18} />
               {label}
-              <span>{content[id].length}</span>
+              <span>
+                {id === "documents"
+                  ? (role === "admin" ? 3 : 2)
+                  : id === "pages"
+                  ? content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length
+                  : content[id]?.length || 0}
+              </span>
             </button>
           ))}
         </nav>
         <div className="admin-sidebar-bottom">
+          <div className="admin-user-badge">
+            <div className="admin-user-avatar">
+              {role === "admin" ? <Shield size={15} /> : <User size={15} />}
+            </div>
+            <div className="admin-user-meta">
+              <span className="admin-user-name">{username}</span>
+              <span className={`admin-user-pill ${role === "admin" ? "admin-pill-admin" : "admin-pill-editor"}`}>
+                {role === "admin" ? "Site Designer / Admin" : "Art Curator / Shop Editor"}
+              </span>
+            </div>
+          </div>
           <a href="/" target="_blank" rel="noreferrer">
             <ExternalLink size={15} /> View live gallery
           </a>
@@ -735,7 +913,7 @@ export default function AdminDashboard({
               }
             }}
           >
-            <LogOut size={15} /> Sign out ({username})
+            <LogOut size={15} /> Sign out
           </button>
         </div>
       </aside>
@@ -749,37 +927,42 @@ export default function AdminDashboard({
             <h1>{tabs.find(t => t.id === tab)?.label}</h1>
             <p className="admin-muted">
               {tab === "products"
-                ? "Manage your original artwork portfolio, prices, dimensions, and shop availability."
+                ? "Manage your original artwork portfolio, high-resolution photography, specifications, and shop availability."
                 : tab === "pages"
-                ? "Customize page titles, hero photography, narrative sections, and visual image grids."
-                : tab === "posts"
-                ? "Publish reflections, journal entries, technique stories, and exhibition updates."
+                ? "Replace hero header images and customize image sections for the active pages on the website."
+                : tab === "documents"
+                ? "Download technical specifications, architecture blueprints, artwork inventory catalogs, and site backups."
                 : "Central image vault. Upload high-resolution photography ready for public display."}
             </p>
           </div>
-          <button
-            className="admin-primary"
-            disabled={busy}
-            onClick={() => (tab === "media" ? uploadInput.current?.click() : newEntry())}
-          >
-            {tab === "media" ? <Upload size={16} /> : <Plus size={16} />}
-            {tab === "media"
-              ? "Upload image"
-              : tab === "products"
-              ? "Add artwork"
-              : tab === "posts"
-              ? "New post"
-              : "New page"}
-          </button>
+          {tab === "products" && (
+            <button
+              className="admin-primary"
+              disabled={busy}
+              onClick={() => newEntry()}
+            >
+              <Plus size={16} /> Add artwork
+            </button>
+          )}
+          {tab === "media" && (
+            <button
+              className="admin-primary"
+              disabled={busy}
+              onClick={() => uploadInput.current?.click()}
+            >
+              <Upload size={16} /> Upload image
+            </button>
+          )}
         </header>
 
         <input
           ref={uploadInput}
           type="file"
+          multiple
           accept="image/jpeg,image/png,image/webp,image/avif"
           hidden
           onChange={e => {
-            if (e.target.files?.[0]) void upload(e.target.files[0]);
+            if (e.target.files?.length) void upload(e.target.files);
           }}
         />
 
@@ -823,75 +1006,246 @@ export default function AdminDashboard({
           </p>
         )}
 
-        <div className={`admin-content ${editor ? "editing" : ""}`}>
-          <section className="admin-list">
-            <div className="admin-search">
-              <Search size={16} color="var(--admin-ink-light)" />
-              <input
-                placeholder={`Search ${tab === "media" ? "images" : tab}…`}
-                aria-label="Search content"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-              />
-            </div>
-
-            {entries.length === 0 && (
-              <p className="admin-muted admin-empty-inline">
-                No {tab === "media" ? "images" : tab} found. Click above to add your first item.
-              </p>
-            )}
-
-            <div className={tab === "media" || !editor ? "admin-cards" : "admin-list-rows"}>
-              {entries.map(item => {
-                if (tab === "media") {
-                  const media = item as MediaAsset;
-                  return (
-                    <article className="admin-media-card" key={media.id}>
-                      <img src={media.src} alt={media.name} />
-                      <strong>{media.name}</strong>
+        {tab === "documents" ? (
+          <div className="admin-doc-center">
+            <div className="admin-doc-grid">
+              {/* Card 1: Technical Specification & Architecture Manual */}
+              <div className="admin-doc-card">
+                <div>
+                  <div className="admin-doc-header">
+                    <div className="admin-doc-icon">
+                      <FileText size={24} />
+                    </div>
+                    <div className="admin-doc-info">
+                      <h3>Technical Specification &amp; Architecture Manual</h3>
                       <p>
-                        {media.width} × {media.height} px
-                      </p>
-                      <button
-                        disabled={busy}
-                        className="admin-small admin-danger"
-                        onClick={() => remove("media", media.id)}
-                      >
-                        Delete image
-                      </button>
-                    </article>
-                  );
-                }
-
-                const value = item as ShopProduct | SitePage | BlogPost;
-                const src = "src" in value ? value.src : "hero" in value ? value.hero : value.cover;
-
-                return (
-                  <button
-                    key={item.id}
-                    className={`admin-content-card ${editor?.value.id === item.id ? "selected" : ""}`}
-                    disabled={busy}
-                    onClick={() => open({ kind: tab, value } as Editor)}
-                  >
-                    <img src={src} alt="" />
-                    <div>
-                      <span className={`admin-badge ${value.published ? "published" : ""}`}>
-                        {value.published ? "Published" : "Draft"}
-                      </span>
-                      <h3>{value.title}</h3>
-                      <p>
-                        {"medium" in value
-                          ? value.medium
-                          : "sections" in value
-                          ? `${value.sections.length} image sections`
-                          : value.date}
+                        11-page Master Edition with Vector Blueprints, system diagram, Next.js deployment topology, database schemas, and performance benchmarks.
                       </p>
                     </div>
+                  </div>
+                  <div className="admin-doc-meta">
+                    <span><strong>Format:</strong> Adobe PDF</span>
+                    <span>•</span>
+                    <span><strong>Pages:</strong> 11 Pages</span>
+                    <span>•</span>
+                    <span><strong>Size:</strong> ~266 KB</span>
+                  </div>
+                </div>
+                <div className="admin-doc-actions">
+                  <a
+                    href="/documents/Binaare-Art-Gallery-Technical-Specification.pdf"
+                    download="Binaare-Art-Gallery-Technical-Specification.pdf"
+                    className="admin-primary"
+                  >
+                    <Download size={14} /> Download PDF
+                  </a>
+                  <a
+                    href="/documents/Binaare-Art-Gallery-Technical-Specification.pdf"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="admin-small"
+                  >
+                    <ExternalLink size={14} /> View in Browser
+                  </a>
+                  {role === "admin" && (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      className="admin-small"
+                      onClick={async () => {
+                        setBusy(true);
+                        setError("");
+                        setMessage("");
+                        try {
+                          await request("generate-pdf", {});
+                          setMessage("Technical Specification PDF compiled and updated successfully!");
+                          toast.success("PDF Compiled Successfully", {
+                            description: "The technical architecture specification has been updated.",
+                            duration: 4000,
+                          });
+                        } catch (e) {
+                          report(e);
+                          toast.error("PDF Compilation Failed", {
+                            description: e instanceof Error ? e.message : "Could not compile PDF.",
+                          });
+                        } finally {
+                          setBusy(false);
+                        }
+                      }}
+                    >
+                      <Sparkles size={14} /> Re-compile PDF
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Card 2: Artwork Catalog & Inventory Data */}
+              <div className="admin-doc-card">
+                <div>
+                  <div className="admin-doc-header">
+                    <div className="admin-doc-icon">
+                      <FileSpreadsheet size={24} />
+                    </div>
+                    <div className="admin-doc-info">
+                      <h3>Artwork Inventory &amp; Catalog Report</h3>
+                      <p>
+                        Complete artwork portfolio export containing all original pieces, specifications, mediums, dimensions, materials, styles, themes, and photography links.
+                      </p>
+                    </div>
+                  </div>
+                  <div className="admin-doc-meta">
+                    <span><strong>Total Artworks:</strong> {content.products.length} Items</span>
+                    <span>•</span>
+                    <span><strong>Published:</strong> {content.products.filter(p => p.published).length} Live</span>
+                  </div>
+                </div>
+                <div className="admin-doc-actions">
+                  <a
+                    href="/api/admin/catalog-csv"
+                    download="binaare-artworks-catalog.csv"
+                    className="admin-primary"
+                  >
+                    <Download size={14} /> Download CSV (Excel)
+                  </a>
+                  <button
+                    type="button"
+                    className="admin-small"
+                    onClick={() => {
+                      const blob = new Blob([JSON.stringify(content.products, null, 2)], { type: "application/json" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `binaare-artworks-catalog-${new Date().toISOString().slice(0, 10)}.json`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                    }}
+                  >
+                    <Download size={14} /> Download JSON
                   </button>
-                );
-              })}
+                </div>
+              </div>
+
+              {/* Card 3: Site Content & Pages Backup (Admin Only) */}
+              {role === "admin" && (
+                <div className="admin-doc-card">
+                  <div>
+                    <div className="admin-doc-header">
+                      <div className="admin-doc-icon">
+                        <FolderDown size={24} />
+                      </div>
+                      <div className="admin-doc-info">
+                        <h3>Gallery Content &amp; Pages Backup</h3>
+                        <p>
+                          Full system snapshot of all active pages, header image replacements, curated image grids, and studio configurations.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="admin-doc-meta">
+                      <span><strong>Revision:</strong> v{content.revision}</span>
+                      <span>•</span>
+                      <span><strong>Pages:</strong> {content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length} Active</span>
+                      <span>•</span>
+                      <span><strong>Media Assets:</strong> {content.media.length} Uploads</span>
+                    </div>
+                  </div>
+                  <div className="admin-doc-actions">
+                    <a
+                      href="/api/admin/backup"
+                      download={`binaare-site-backup-${new Date().toISOString().slice(0, 10)}.json`}
+                      className="admin-primary"
+                    >
+                      <Download size={14} /> Download Site Backup (JSON)
+                    </a>
+                  </div>
+                </div>
+              )}
             </div>
-          </section>
+          </div>
+        ) : (
+          <div className={`admin-content ${editor ? "editing" : ""}`}>
+            <section className="admin-list">
+              <div className="admin-search">
+                <Search size={16} color="var(--admin-ink-light)" />
+                <input
+                  placeholder={`Search ${tab === "media" ? "images" : tab}…`}
+                  aria-label="Search content"
+                  value={search}
+                  onChange={e => setSearch(e.target.value)}
+                />
+              </div>
+
+              {entries.length === 0 && (
+                <p className="admin-muted admin-empty-inline">
+                  No {tab === "media" ? "images" : tab} found. Click above to add your first item.
+                </p>
+              )}
+
+              <div className={tab === "media" || !editor ? "admin-cards" : "admin-list-rows"}>
+                {entries.map(item => {
+                  if (tab === "media") {
+                    const media = item as MediaAsset;
+                    return (
+                      <article className="admin-media-card" key={media.id}>
+                        <img src={media.src} alt={media.name} />
+                        <strong>{media.name}</strong>
+                        <p>
+                          {media.width} × {media.height} px
+                        </p>
+                        <button
+                          disabled={busy}
+                          className="admin-small admin-danger"
+                          onClick={() => remove("media", media.id)}
+                        >
+                          Delete image
+                        </button>
+                      </article>
+                    );
+                  }
+
+                  const value = item as ShopProduct | SitePage | BlogPost;
+                  const isVideoHero = "hero" in value && Boolean(value.hero?.endsWith(".mp4"));
+                  const src =
+                    "src" in value
+                      ? value.src
+                      : "hero" in value
+                      ? isVideoHero
+                        ? "/artworks/together-we-bloom.webp"
+                        : value.hero || "/artworks/together-we-bloom.webp"
+                      : value.cover;
+
+                  return (
+                    <button
+                      key={item.id}
+                      className={`admin-content-card ${editor?.value.id === item.id ? "selected" : ""}`}
+                      disabled={busy}
+                      onClick={() => open({ kind: tab as "products" | "pages" | "posts", value } as Editor)}
+                    >
+                      <div className="admin-card-media-wrapper">
+                        <img src={src} alt="" />
+                        {isVideoHero && (
+                          <span className="admin-card-video-pill">
+                            <Video size={10} /> Ambient Video
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className={`admin-badge ${value.published ? "published" : ""}`}>
+                          {value.published ? "Published" : "Draft"}
+                        </span>
+                        <h3>{value.title}</h3>
+                        <p>
+                          {"medium" in value
+                            ? (value.category ? `${value.category} • ` : "") + (value.medium || value.size)
+                            : "sections" in value
+                            ? `Header: ${isVideoHero ? "Ambient Video" : "Custom Photo"} • ${value.sections.length} sections`
+                            : value.date}
+                        </p>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
 
           {editor && (
             <form
@@ -984,68 +1338,239 @@ export default function AdminDashboard({
 
                 {editor.kind === "products" && (
                   <>
-                    <div className="admin-two">
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Artwork Photography &amp; Images</h4>
+                        <span
+                          className="admin-field-badge"
+                          style={{
+                            background:
+                              (editor.value.images || []).length > 1
+                                ? "rgba(140, 112, 79, 0.15)"
+                                : "rgba(0, 0, 0, 0.05)",
+                            color:
+                              (editor.value.images || []).length > 1
+                                ? "#8c704f"
+                                : "#57534e",
+                            fontWeight: 600,
+                          }}
+                        >
+                          {(editor.value.images || []).length > 1
+                            ? `Detailed Gallery Mode (${(editor.value.images || []).length} images)`
+                            : (editor.value.images || []).length === 1 || editor.value.src
+                            ? "Single Image Mode (1 image)"
+                            : "No Images"}
+                        </span>
+                      </div>
+
+                      <div
+                        style={{
+                          background: "#faf8f5",
+                          border: "1px solid #ebd7b5",
+                          borderRadius: "8px",
+                          padding: "10px 14px",
+                          marginBottom: "16px",
+                          fontSize: "12.5px",
+                          lineHeight: 1.5,
+                          color: "#6b5d4d",
+                        }}
+                      >
+                        <strong>Artwork Display Rule:</strong>
+                        <ul style={{ margin: "4px 0 0", paddingLeft: "18px", listStyleType: "disc" }}>
+                          <li><strong>1 image:</strong> Product page displays a clean, focused single artwork view without thumbnail bars.</li>
+                          <li><strong>2+ images:</strong> Product page automatically displays the interactive detailed view with thumbnail gallery strip, arrows, and zoom inspection.</li>
+                        </ul>
+                      </div>
+
+                      {imageField(
+                        "Primary Cover Image",
+                        editor.value.src,
+                        src => {
+                          const existingImages = (editor.value.images || []).filter(s => s !== src);
+                          const nextImages = [src, ...existingImages];
+                          change({ kind: "products", value: { ...editor.value, src, images: nextImages } });
+                        },
+                        "Main photograph shown in the shop catalog, cart, and default artwork view."
+                      )}
+                      {imageList(
+                        "Artwork Gallery Photography & Detailed Views",
+                        editor.value.images && editor.value.images.length > 0
+                          ? editor.value.images
+                          : editor.value.src
+                          ? [editor.value.src]
+                          : [],
+                        images => {
+                          const primarySrc = images[0] || "";
+                          change({
+                            kind: "products",
+                            value: {
+                              ...editor.value,
+                              images,
+                              src: primarySrc,
+                            },
+                          });
+                        },
+                        "Add additional angled views, texture close-ups, room mockups, or framed photography. The first image is always the primary cover photo."
+                      )}
+                    </div>
+
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Artwork Overview</h4>
+                        <span className="admin-field-badge">Basic Details</span>
+                      </div>
                       <Field
-                        label="Medium"
-                        badge="Technique & Surface"
-                        explanation="Artistic medium used (e.g. Oil on Canvas, Mixed Media, Acrylic)."
-                        required
-                        error={fieldErrors.medium}
-                        value={editor.value.medium}
-                        onChange={medium =>
-                          change(
-                            { kind: "products", value: { ...editor.value, medium } },
-                            "medium"
-                          )
+                        label="Category"
+                        badge="Collection"
+                        explanation="Artwork category (e.g. Oil Painting, Mixed Media, Acrylic, Texture, Water color)."
+                        value={editor.value.category || ""}
+                        onChange={category => change({ kind: "products", value: { ...editor.value, category } })}
+                      />
+                    </div>
+
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Dimensions &amp; Specifications</h4>
+                        <span className="admin-field-badge">Technical Details</span>
+                      </div>
+                      <div className="admin-two">
+                        <Field
+                          label="Medium"
+                          badge="Technique & Surface"
+                          explanation="Medium used (e.g. Original Floral Garden Oil Painting on Canvas)."
+                          required
+                          error={fieldErrors.medium}
+                          value={editor.value.medium}
+                          onChange={medium =>
+                            change(
+                              { kind: "products", value: { ...editor.value, medium } },
+                              "medium"
+                            )
+                          }
+                        />
+                        <Field
+                          label="Size / Dimensions"
+                          badge="Display Size"
+                          explanation="Measurements with units (e.g. 15 × 19 inches, 28 × 20 inches)."
+                          required
+                          error={fieldErrors.size}
+                          value={editor.value.size}
+                          onChange={size =>
+                            change(
+                              { kind: "products", value: { ...editor.value, size } },
+                              "size"
+                            )
+                          }
+                        />
+                      </div>
+                      <div className="admin-two">
+                        <Field
+                          label="Width"
+                          badge="Width Dimension"
+                          explanation="Width with unit (e.g. 15 inches, 28 inches)."
+                          value={editor.value.width || ""}
+                          onChange={width => change({ kind: "products", value: { ...editor.value, width } })}
+                        />
+                        <Field
+                          label="Height"
+                          badge="Height Dimension"
+                          explanation="Height with unit (e.g. 19 inches, 20 inches)."
+                          value={editor.value.height || ""}
+                          onChange={height => change({ kind: "products", value: { ...editor.value, height } })}
+                        />
+                      </div>
+                      <div className="admin-two">
+                        <Field
+                          label="Depth"
+                          badge="Canvas Depth"
+                          explanation="Depth / thickness (e.g. 1.5 inches, 1 inch)."
+                          value={editor.value.depth || ""}
+                          onChange={depth => change({ kind: "products", value: { ...editor.value, depth } })}
+                        />
+                        <Field
+                          label="Style & Movement"
+                          badge="Style"
+                          explanation="Artistic style (e.g. Contemporary Expressive Floral and Botanical Art)."
+                          value={editor.value.style || ""}
+                          onChange={style => change({ kind: "products", value: { ...editor.value, style } })}
+                        />
+                      </div>
+                      <Field
+                        label="Materials"
+                        badge="Physical Materials"
+                        explanation="Exact materials used (e.g. Original oil painting on canvas with glass beads)."
+                        value={editor.value.materials || ""}
+                        onChange={materials => change({ kind: "products", value: { ...editor.value, materials } })}
+                      />
+                      <Field
+                        label="Frame Specification"
+                        badge="Framing Details"
+                        explanation="Frame description (e.g. Framed in an elegant dark wood frame with subtle antique gold detailing)."
+                        value={editor.value.frame || ""}
+                        onChange={frame => change({ kind: "products", value: { ...editor.value, frame } })}
+                      />
+                      <Field
+                        label="Colours Palette"
+                        badge="Colour Harmony"
+                        explanation="Colours used (e.g. Cream, Blush Pink, Deep Rose, Burgundy, Warm Gold, Green)."
+                        value={editor.value.colours || ""}
+                        onChange={colours => change({ kind: "products", value: { ...editor.value, colours } })}
+                      />
+                      <Field
+                        label="Theme & Concept"
+                        badge="Thematic Focus"
+                        explanation="Theme of this piece (e.g. Love, Friendship, Togetherness, Individuality and Personal Growth)."
+                        value={editor.value.theme || ""}
+                        onChange={theme => change({ kind: "products", value: { ...editor.value, theme } })}
+                      />
+                    </div>
+
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Content Blocks &amp; Descriptions</h4>
+                        <span className="admin-field-badge">Narrative & Philosophy</span>
+                      </div>
+                      <Field
+                        label="Artwork Description (Markdown supported)"
+                        badge="Editorial Story"
+                        explanation="Main narrative describing the artwork's symbolism, composition, and feeling. Use **bold** and *italic* for formatting."
+                        area
+                        value={editor.value.description}
+                        onChange={description =>
+                          change({ kind: "products", value: { ...editor.value, description } })
                         }
                       />
                       <Field
-                        label="Dimensions"
-                        badge="Physical Dimensions"
-                        explanation="Artwork measurements with units (e.g. 50 × 70 cm, 24 × 36 in)."
-                        required
-                        error={fieldErrors.size}
-                        value={editor.value.size}
-                        onChange={size =>
-                          change(
-                            { kind: "products", value: { ...editor.value, size } },
-                            "size"
-                          )
+                        label="About This Painting (Extended Narrative)"
+                        badge="In-depth Reflection"
+                        explanation="Optional supplementary background or technique details."
+                        area
+                        value={editor.value.aboutPainting || ""}
+                        onChange={aboutPainting =>
+                          change({ kind: "products", value: { ...editor.value, aboutPainting } })
+                        }
+                      />
+                      <Field
+                        label="Artist Note / Message"
+                        badge="Curator Statement"
+                        explanation="Personal message from the artist featured in the callout box on the artwork detail page."
+                        area
+                        value={editor.value.artistMessage || ""}
+                        onChange={artistMessage =>
+                          change({ kind: "products", value: { ...editor.value, artistMessage } })
+                        }
+                      />
+                      <Field
+                        label="Inspiration & Reflection Quote"
+                        badge="Closing Quote"
+                        explanation="Poetic quote featured prominently at the end of the artwork showcase."
+                        area
+                        value={editor.value.closingQuote || ""}
+                        onChange={closingQuote =>
+                          change({ kind: "products", value: { ...editor.value, closingQuote } })
                         }
                       />
                     </div>
-                    <Field
-                      label="Price (USD)"
-                      badge="Listing Price"
-                      explanation="Purchase price in US Dollars. Displayed in the shop and added to the cart."
-                      required
-                      type="number"
-                      error={fieldErrors.price}
-                      value={String(editor.value.price)}
-                      onChange={price =>
-                        change(
-                          { kind: "products", value: { ...editor.value, price: Number(price) } },
-                          "price"
-                        )
-                      }
-                    />
-                    <Field
-                      label="Description"
-                      badge="Artwork Narrative"
-                      explanation="Artist reflection, technique background, and emotional story of this piece."
-                      area
-                      value={editor.value.description}
-                      onChange={description =>
-                        change({ kind: "products", value: { ...editor.value, description } })
-                      }
-                    />
-                    {imageList(
-                      "Artwork images — first image is the cover",
-                      editor.value.images,
-                      images =>
-                        change({ kind: "products", value: { ...editor.value, images, src: images[0] || "" } }),
-                      "High-resolution photographs of this artwork. The first photo is the primary shop cover."
-                    )}
                   </>
                 )}
 
@@ -1104,50 +1629,88 @@ export default function AdminDashboard({
 
                 {editor.kind === "pages" && (
                   <>
-                    <Field
-                      label="Subtitle"
-                      badge="Hero Subtitle"
-                      explanation="Secondary tagline displayed gracefully beneath the main title in the hero banner."
-                      value={editor.value.subtitle}
-                      onChange={subtitle =>
-                        change({ kind: "pages", value: { ...editor.value, subtitle } })
-                      }
-                    />
-                    {imageField(
-                      editor.value.slug === "home"
-                        ? "Home hero image — choosing an image replaces the video"
-                        : "Page hero image",
-                      editor.value.hero,
-                      hero => change({ kind: "pages", value: { ...editor.value, hero } }),
-                      editor.value.slug === "home"
-                        ? "Upload a high-resolution photo to replace the ambient video on the homepage."
-                        : "Full-width background photograph in the page header hero."
-                    )}
-                    {editor.value.slug === "home" && (
-                      <button
-                        type="button"
-                        className="admin-small"
-                        style={{ marginBottom: "18px" }}
-                        onClick={() =>
-                          change({ kind: "pages", value: { ...editor.value, hero: "/hero-video.mp4" } })
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Header Image Replacement</h4>
+                        <span className="admin-field-badge">Hero Banner</span>
+                      </div>
+                      <p className="admin-muted" style={{ marginBottom: "12px" }}>
+                        Replace the full-width hero header image or video displayed at the top of the {editor.value.title} page.
+                      </p>
+
+                      {/* Header Preview */}
+                      <div className="admin-hero-preview">
+                        <span className="admin-hero-badge">
+                          {editor.value.hero?.endsWith(".mp4") ? "Ambient Video" : "Header Image"}
+                        </span>
+                        {editor.value.hero?.endsWith(".mp4") ? (
+                          <video src={editor.value.hero} autoPlay muted loop playsInline />
+                        ) : (
+                          <img src={editor.value.hero || "/artworks/together-we-bloom.webp"} alt={editor.value.title} />
+                        )}
+                      </div>
+
+                      {imageField(
+                        editor.value.slug === "home"
+                          ? "Hero header photo (or uploaded video)"
+                          : `${editor.value.title} hero header image`,
+                        editor.value.hero,
+                        hero => change({ kind: "pages", value: { ...editor.value, hero } }),
+                        editor.value.slug === "home"
+                          ? "Choose a photograph from your library to replace the homepage video, or choose another video."
+                          : "Primary banner photograph displayed across the top of this page."
+                      )}
+
+                      {editor.value.slug === "home" && (
+                        <button
+                          type="button"
+                          className="admin-small"
+                          style={{ marginBottom: "18px", marginTop: "8px" }}
+                          onClick={() =>
+                            change({ kind: "pages", value: { ...editor.value, hero: "/hero-video.mp4" } })
+                          }
+                        >
+                          Restore original ambient video (/hero-video.mp4)
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Header Typography &amp; Narrative</h4>
+                        <span className="admin-field-badge">Page Text</span>
+                      </div>
+                      <Field
+                        label="Subtitle"
+                        badge="Hero Subtitle"
+                        explanation="Secondary tagline displayed gracefully beneath the main title in the hero banner."
+                        value={editor.value.subtitle}
+                        onChange={subtitle =>
+                          change({ kind: "pages", value: { ...editor.value, subtitle } })
                         }
-                      >
-                        Use original hero video
-                      </button>
-                    )}
-                    <Field
-                      label={editor.value.builtin ? "Additional page text" : "Page text"}
-                      badge="Narrative"
-                      explanation={
-                        editor.value.builtin
-                          ? "Optional editorial narrative displayed in the story section below the main hero."
-                          : "Primary editorial text and artist statement displayed on this page."
-                      }
-                      area
-                      value={editor.value.body}
-                      onChange={body => change({ kind: "pages", value: { ...editor.value, body } })}
-                    />
-                    {pageSections(editor.value)}
+                      />
+                      <Field
+                        label={editor.value.builtin ? "Additional page text" : "Page text"}
+                        badge="Narrative"
+                        explanation={
+                          editor.value.builtin
+                            ? "Optional editorial narrative displayed in the story section below the main hero."
+                            : "Primary editorial text and artist statement displayed on this page."
+                        }
+                        area
+                        value={editor.value.body}
+                        onChange={body => change({ kind: "pages", value: { ...editor.value, body } })}
+                      />
+                    </div>
+
+                    <div className="admin-spec-group">
+                      <div className="admin-spec-header">
+                        <h4>Page Image Sections &amp; Galleries</h4>
+                        <span className="admin-field-badge">Curated Grids</span>
+                      </div>
+                      {pageSections(editor.value)}
+                    </div>
+
                     {!editor.value.builtin && (
                       <label className="admin-check">
                         <input
@@ -1205,6 +1768,18 @@ export default function AdminDashboard({
             </form>
           )}
         </div>
+      )}
+
+        <footer className="admin-studio-footer">
+          <div className="admin-footer-brand">
+            <span className="admin-footer-title">BINAARE ART GALLERY</span>
+            <span className="admin-footer-dot">•</span>
+            <span className="admin-footer-sub">Fine Art Curator &amp; Management Studio</span>
+          </div>
+          <div className="admin-footer-credits">
+            <span>Designed &amp; Engineered by <strong>PIXANDCO</strong></span>
+          </div>
+        </footer>
       </div>
 
       <dialog
@@ -1214,59 +1789,185 @@ export default function AdminDashboard({
           if (busy) e.preventDefault();
           else setPicker(null);
         }}
+        onClick={e => {
+          if (e.target === dialog.current && !busy) {
+            setPicker(null);
+          }
+        }}
       >
-        <header className="admin-row">
-          <div>
-            <h2>Choose an image</h2>
-            <p className="admin-muted">JPG, PNG, WebP or AVIF. Up to 10 MB.</p>
-          </div>
-          <button
-            type="button"
-            disabled={busy}
-            aria-label="Close image library"
-            onClick={() => setPicker(null)}
-          >
-            <X size={21} />
-          </button>
-        </header>
-
-        {error && (
-          <p className="admin-error" role="alert">
-            {error}
-          </p>
-        )}
-
-        <button
-          type="button"
-          className="admin-primary"
-          disabled={busy}
-          onClick={() => uploadInput.current?.click()}
-        >
-          <Upload size={16} />
-          {busy ? "Uploading…" : "Upload & use image"}
-        </button>
-
-        {!content.media.length && (
-          <p className="admin-empty-inline admin-muted">Your media library is empty. Upload your first image above.</p>
-        )}
-
-        <div className="admin-picker-grid">
-          {content.media.map(asset => (
+        <div className="admin-picker-shell">
+          <header className="admin-picker-header">
+            <div>
+              <h2>{picker?.label || (picker?.multiple ? "Select or Upload Images" : "Choose an Image")}</h2>
+              <p className="admin-muted">
+                JPG, PNG, WebP or AVIF • Up to 15 MB • Auto-optimized to WebP
+              </p>
+            </div>
             <button
               type="button"
               disabled={busy}
-              key={asset.id}
-              onClick={() => {
-                picker?.select(asset.src);
-                setPicker(null);
+              aria-label="Close image library"
+              onClick={() => setPicker(null)}
+            >
+              <X size={18} />
+            </button>
+          </header>
+
+          <div className="admin-picker-body">
+            {pickerError && (
+              <div className="admin-picker-error" role="alert">
+                <AlertCircle size={16} />
+                <span>{pickerError}</span>
+                <button type="button" onClick={() => setPickerError("")} aria-label="Dismiss error">
+                  <X size={14} />
+                </button>
+              </div>
+            )}
+
+            {/* Compact Drag & Drop Upload Zone */}
+            <div
+              className={`admin-dropzone ${dragActive ? "drag-active" : ""}`}
+              onDragOver={e => {
+                e.preventDefault();
+                setDragActive(true);
+              }}
+              onDragLeave={() => setDragActive(false)}
+              onDrop={e => {
+                e.preventDefault();
+                setDragActive(false);
+                if (e.dataTransfer.files?.length) {
+                  void upload(e.dataTransfer.files);
+                }
               }}
             >
-              <img src={asset.src} alt={asset.name} />
-              <span>{asset.name}</span>
-            </button>
-          ))}
+              <input
+                ref={pickerFileInput}
+                type="file"
+                multiple
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                hidden
+                onChange={e => {
+                  if (e.target.files?.length) {
+                    void upload(e.target.files);
+                  }
+                }}
+              />
+              <div className="admin-dropzone-left">
+                <div className="admin-dropzone-icon">
+                  <Upload size={18} />
+                </div>
+                <div className="admin-dropzone-text">
+                  <strong>Drag &amp; drop artwork images here</strong>
+                  <span>or browse multiple files from your computer</span>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="admin-primary admin-dropzone-btn"
+                disabled={busy}
+                onClick={() => pickerFileInput.current?.click()}
+              >
+                <Upload size={14} />
+                {busy ? (uploadProgress || "Optimizing…") : "Browse files"}
+              </button>
+            </div>
+
+            {/* Gallery Library Section */}
+            <div className="admin-picker-library-header">
+              <h3>
+                Media Library <span>({content.media.length})</span>
+              </h3>
+              {picker?.multiple && selectedLibraryImages.length > 0 && (
+                <div className="admin-picker-multi-actions">
+                  <span>{selectedLibraryImages.length} selected</span>
+                  <button
+                    type="button"
+                    className="admin-primary admin-small"
+                    onClick={() => {
+                      if (picker.selectMultiple) {
+                        picker.selectMultiple(selectedLibraryImages);
+                      }
+                      setPicker(null);
+                    }}
+                  >
+                    <Check size={14} /> Add Selected ({selectedLibraryImages.length})
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {!content.media.length ? (
+              <div className="admin-picker-empty">
+                <Images size={32} className="admin-picker-empty-icon" />
+                <h4>Your media library is empty</h4>
+                <p>Upload artwork photographs using the button above to build your gallery.</p>
+              </div>
+            ) : (
+              <div className="admin-picker-grid">
+                {content.media.map(asset => {
+                  const isSelected = selectedLibraryImages.includes(asset.src);
+                  return (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      key={asset.id}
+                      className={`admin-picker-item ${isSelected ? "selected" : ""}`}
+                      onClick={() => {
+                        if (picker?.multiple) {
+                          setSelectedLibraryImages(prev =>
+                            prev.includes(asset.src) ? prev.filter(s => s !== asset.src) : [...prev, asset.src]
+                          );
+                        } else {
+                          picker?.select(asset.src);
+                          setPicker(null);
+                        }
+                      }}
+                    >
+                      <div className="admin-picker-img-wrapper">
+                        <img src={asset.src} alt={asset.name} loading="lazy" />
+                        {picker?.multiple && (
+                          <span className={`admin-picker-checkbox ${isSelected ? "checked" : ""}`}>
+                            {isSelected && <Check size={12} />}
+                          </span>
+                        )}
+                      </div>
+                      <span className="admin-picker-name" title={asset.name}>{asset.name}</span>
+                      {asset.width && asset.height ? (
+                        <span className="admin-picker-dim">{asset.width} × {asset.height} px</span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {picker?.multiple && selectedLibraryImages.length > 0 && (
+            <footer className="admin-picker-footer">
+              <button
+                type="button"
+                className="admin-small"
+                onClick={() => setSelectedLibraryImages([])}
+              >
+                Clear selection
+              </button>
+              <button
+                type="button"
+                className="admin-primary"
+                onClick={() => {
+                  if (picker.selectMultiple) {
+                    picker.selectMultiple(selectedLibraryImages);
+                  }
+                  setPicker(null);
+                }}
+              >
+                <Check size={15} /> Add {selectedLibraryImages.length} Image{selectedLibraryImages.length > 1 ? "s" : ""}
+              </button>
+            </footer>
+          )}
         </div>
       </dialog>
+      <Toaster />
     </main>
   );
 }

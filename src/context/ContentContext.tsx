@@ -11,15 +11,29 @@ export function ContentProvider({ initial, children }: { initial: PublicContent;
     if (pathname.startsWith("/admin")) return;
     const controller = new AbortController();
     const refresh = () => {
-      if (document.visibilityState === "hidden") return;
+      if (typeof document !== "undefined" && document.visibilityState === "hidden") return;
       fetch("/api/content", { cache: "no-store", signal: controller.signal })
-        .then(async response => { if (response.ok) { const data: PublicContent = await response.json(); setContent(current => current.revision === data.revision ? current : data); } })
+        .then(async response => {
+          if (response.ok) {
+            const data: PublicContent = await response.json();
+            setContent(data);
+          }
+        })
         .catch(() => { /* Keep the last server-rendered content when offline. */ });
     };
     refresh();
+    const onVisibility = () => {
+      if (typeof document !== "undefined" && document.visibilityState === "visible") refresh();
+    };
     window.addEventListener("focus", refresh);
-    const timer = window.setInterval(refresh, 30000);
-    return () => { controller.abort(); window.removeEventListener("focus", refresh); window.clearInterval(timer); };
+    document.addEventListener("visibilitychange", onVisibility);
+    const timer = window.setInterval(refresh, 10000);
+    return () => {
+      controller.abort();
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", onVisibility);
+      window.clearInterval(timer);
+    };
   }, [pathname]);
   return <ContentContext.Provider value={content}>{children}</ContentContext.Provider>;
 }

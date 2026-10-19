@@ -21,7 +21,7 @@
               "id": "featured-0",
               "title": "The Crimson Queen",
               "description": "",
-              "category": "Oil on Canvas",
+              "category": "Acrylic",
               "src": "/the-crimson-queen.webp"
             },
             {
@@ -84,7 +84,7 @@
       "slug": "gallery",
       "title": "Gallery",
       "subtitle": "Explore the Online Gallery",
-      "hero": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=1920&h=800&fit=crop",
+      "hero": "/artworks/reflections-of-a-golden-city.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -99,86 +99,65 @@
             {
               "id": "artworks-0",
               "title": "The Crimson Queen",
-              "description": "Oil on Canvas",
-              "category": "Oil on Canvas",
-              "src": "/the-crimson-queen.webp"
+              "description": "Contemporary Floral Acrylic Painting on Canvas",
+              "category": "Acrylic",
+              "src": "/artworks/the-crimson-queen.webp"
             },
             {
               "id": "artworks-1",
-              "title": "Emotional Currents",
-              "description": "",
-              "category": "Mixed Media",
-              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=900&fit=crop"
+              "title": "Together We Bloom",
+              "description": "Original Floral Garden Oil Painting on Canvas",
+              "category": "Oil Painting",
+              "src": "/artworks/together-we-bloom.webp"
             },
             {
               "id": "artworks-2",
-              "title": "Inner Landscape",
-              "description": "",
-              "category": "Watercolour",
-              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=700&fit=crop"
+              "title": "Beauty in Simplicity",
+              "description": "Original Textured Abstract Mix Media Landscape Painting on Canvas",
+              "category": "Mixed Media",
+              "src": "/artworks/beauty-in-simplicity.webp"
             },
             {
               "id": "artworks-3",
-              "title": "Presence in Gold",
-              "description": "",
-              "category": "Texture",
-              "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=800&fit=crop"
+              "title": "Fields of Quiet Gold",
+              "description": "Original Textured Mix Media Abstract Painting on Canvas",
+              "category": "Mixed Media",
+              "src": "/artworks/fields-of-quiet-gold.webp"
             },
             {
               "id": "artworks-4",
-              "title": "Reflections of Peace",
-              "description": "",
-              "category": "Acrylic",
-              "src": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=600&h=850&fit=crop"
+              "title": "Blooming from Broken Pieces",
+              "description": "Original Textured Mixed-Media Floral Painting on Canvas",
+              "category": "Mixed Media",
+              "src": "/artworks/blooming-from-broken-pieces.webp"
             },
             {
               "id": "artworks-5",
-              "title": "Memory and Light",
-              "description": "",
-              "category": "Mixed Media",
-              "src": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&h=750&fit=crop"
+              "title": "Reflections of a Golden City",
+              "description": "Original Textured Abstract Cityscape Painting on Canvas",
+              "category": "Texture",
+              "src": "/artworks/reflections-of-a-golden-city.webp"
             },
             {
               "id": "artworks-6",
-              "title": "The Quiet Unfolding",
-              "description": "",
-              "category": "Watercolour",
-              "src": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=900&fit=crop"
+              "title": "A New Dawn",
+              "description": "Original Textured Abstract Landscape Painting on Canvas",
+              "category": "Texture",
+              "src": "/artworks/a-new-dawn.webp"
             },
             {
               "id": "artworks-7",
-              "title": "Layers of Emotion",
-              "description": "",
+              "title": "Whispers of Serenity",
+              "description": "Original Textured Floral Painting on Canvas",
               "category": "Texture",
-              "src": "https://images.unsplash.com/photo-1543857778-c4a1a3e0b2eb?w=600&h=700&fit=crop"
+              "src": "/artworks/whispers-of-serenity.webp"
             },
             {
               "id": "artworks-8",
-              "title": "Vulnerability in Blue",
-              "description": "",
+              "title": "Still She Shines",
+              "description": "Original Textured Abstract Floral Acrylic Painting on Canvas",
               "category": "Acrylic",
-              "src": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=600&h=800&fit=crop"
-            },
-            {
-              "id": "artworks-9",
-              "title": "Connection",
-              "description": "",
-              "category": "Mixed Media",
-              "src": "https://images.unsplash.com/photo-1482160549825-59d1b23cb208?w=600&h=850&fit=crop"
-            },
-            {
-              "id": "artworks-10",
-              "title": "Passage of Time",
-              "description": "",
-              "category": "Watercolour",
-              "src": "https://images.unsplash.com/photo-1500462918059-b1a0cb512f1d?w=600&h=750&fit=crop"
-            },
-            {
-              "id": "artworks-11",
-              "title": "Balance",
-              "description": "",
-              "category": "Texture",
-              "src": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&h=900&fit=crop"
+              "src": "/artworks/still-she-shines.webp"
             }
           ]
         }
@@ -189,7 +168,7 @@
       "slug": "shop",
       "title": "Shop",
       "subtitle": "Original Artworks by Binari Gamage",
-      "hero": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=1920&h=800&fit=crop",
+      "hero": "/artworks/fields-of-quiet-gold.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -206,28 +185,28 @@
               "title": "Acrylic Paintings",
               "description": "Bold expressions of emotion through vibrant acrylic layers",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1541961017774-22349e4a1262?w=600&h=750&fit=crop"
+              "src": "/artworks/the-crimson-queen.webp"
             },
             {
               "id": "collections-1",
               "title": "Watercolour",
               "description": "Fluid compositions capturing light, memory, and feeling",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=600&h=750&fit=crop"
+              "src": "/artworks/beauty-beyond-colour.webp"
             },
             {
               "id": "collections-2",
               "title": "Textured Abstraction",
               "description": "Tactile surfaces where texture carries meaning",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1579783902614-a3fb3927b6a5?w=600&h=750&fit=crop"
+              "src": "/artworks/reflections-of-a-golden-city.webp"
             },
             {
               "id": "collections-3",
               "title": "Mixed Media",
               "description": "Layered works blending materials and techniques",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=600&h=750&fit=crop"
+              "src": "/artworks/beauty-in-simplicity.webp"
             }
           ]
         }
@@ -238,7 +217,7 @@
       "slug": "about",
       "title": "About Us",
       "subtitle": "The Philosophy Behind the Gallery",
-      "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
+      "hero": "/artworks/reflections-of-a-golden-city.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -281,7 +260,7 @@
       "slug": "artist",
       "title": "The Artist",
       "subtitle": "Binari Gamage",
-      "hero": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=1920&h=800&fit=crop",
+      "hero": "/artworks/blooming-in-grace.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -298,7 +277,7 @@
               "title": "Binari Gamage",
               "description": "",
               "category": "",
-              "src": "https://images.unsplash.com/photo-1460661419201-fd4cecdf8a8b?w=600&h=800&fit=crop"
+              "src": "/binari-gamage-painting.webp"
             }
           ]
         }
@@ -309,7 +288,7 @@
       "slug": "exhibitions",
       "title": "Exhibitions",
       "subtitle": "Where Colors of Love Comes to Life",
-      "hero": "https://images.unsplash.com/photo-1547891654-e66ed7ebb968?w=1920&h=800&fit=crop",
+      "hero": "/artworks/whispers-of-serenity.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -321,7 +300,7 @@
       "slug": "blog",
       "title": "Blog",
       "subtitle": "A journal of art, emotion, and creative reflections",
-      "hero": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1920&h=800&fit=crop",
+      "hero": "/artworks/reflections-of-a-golden-city.webp",
       "body": "",
       "builtin": true,
       "published": true,
@@ -333,7 +312,7 @@
       "slug": "contact",
       "title": "Contact Us",
       "subtitle": "We Would Love to Hear from You",
-      "hero": "https://images.unsplash.com/photo-1518998053901-5348d3961a04?w=1920&h=800&fit=crop",
+      "hero": "/artworks/together-we-bloom.webp",
       "body": "",
       "builtin": true,
       "published": true,

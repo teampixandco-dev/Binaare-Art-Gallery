@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/
+/.next/cache/
 /out/
 
 # production
@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+*.zip
 Thumbs.db
 
 # debug & logs
@@ -59,6 +60,7 @@ next-env.d.ts
 # Local backend data and admin credentials
 /data/
 /.admin-credentials
+/.binaaree-credentials
 /test-results/
 /playwright-report/
 /.next-test/
