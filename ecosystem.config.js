@@ -11,8 +11,8 @@ module.exports = {
       restart_delay: 5000,
       kill_timeout: 5000,
       listen_timeout: 8000,
-      max_memory_restart: "450M",
-      node_args: "--max-old-space-size=384",
+      max_memory_restart: "1G",
+      node_args: "--max-old-space-size=768",
       env: {
         NODE_ENV: "production",
         PORT: 3000,
