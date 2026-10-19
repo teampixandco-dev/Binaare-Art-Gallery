@@ -3,7 +3,7 @@
 // Binaare Art Gallery — Self-Healing Reverse Proxy for Hostinger
 // ==============================================================================
 
-$backend = 'http://127.0.0.1:3000';
+$backend = 'http://145.79.58.61:3000';
 $uri = $_SERVER['REQUEST_URI'];
 $url = $backend . $uri;
 
