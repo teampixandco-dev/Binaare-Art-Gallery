@@ -3,7 +3,7 @@
 // Binaare Art Gallery — Self-Healing Reverse Proxy for Hostinger
 // ==============================================================================
 
-$backend = 'http://145.79.58.61:3000';
+$backend = 'http://127.0.0.1:3000';
 $uri = $_SERVER['REQUEST_URI'];
 $url = $backend . $uri;
 
@@ -63,7 +63,7 @@ if (in_array($_SERVER['REQUEST_METHOD'], ['POST', 'PUT', 'PATCH', 'DELETE'])) {
     }
 }
 
-function execute_request($url, $headers, $input, $timeout = 60) {
+function execute_request($url, $headers, $input, $timeout = 30) {
     $ch = curl_init($url);
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
     curl_setopt($ch, CURLOPT_HEADER, true);
@@ -74,6 +74,7 @@ function execute_request($url, $headers, $input, $timeout = 60) {
         curl_setopt($ch, CURLOPT_CUSTOMREQUEST, $_SERVER['REQUEST_METHOD']);
     }
     curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 2); // 2s connect timeout prevents Apache thread exhaustion
     curl_setopt($ch, CURLOPT_TIMEOUT, $timeout);
     curl_setopt($ch, CURLOPT_TCP_NODELAY, 1);
 
@@ -90,6 +91,13 @@ function execute_request($url, $headers, $input, $timeout = 60) {
 }
 
 function trigger_self_healing() {
+    $throttle_file = sys_get_temp_dir() . '/binaare_self_heal.throttle';
+    // Prevent storming PM2: only trigger self-healing once every 60 seconds
+    if (file_exists($throttle_file) && (time() - filemtime($throttle_file) < 60)) {
+        return;
+    }
+    @touch($throttle_file);
+
     $script = __DIR__ . '/scripts/keep-alive.sh';
     if (file_exists($script) && function_exists('proc_open')) {
         $cmd = '/bin/bash ' . escapeshellarg($script) . ' > /dev/null 2>&1 &';
@@ -108,17 +116,17 @@ function trigger_self_healing() {
     }
 }
 
-// 1. First proxy attempt (60s timeout for image optimization/uploads)
-list($response, $info, $error) = execute_request($url, $headers, $input, 60);
+// 1. First proxy attempt (2s connect timeout, 30s read timeout)
+list($response, $info, $error) = execute_request($url, $headers, $input, 30);
 
 // 2. If backend is down, auto-heal and retry
 if ($response === false) {
     trigger_self_healing();
 
-    // Fast retry loop for 4 seconds
-    for ($attempt = 1; $attempt <= 4; $attempt++) {
-        usleep(1000000); // Wait 1 second for Node.js boot
-        list($retry_response, $retry_info, $retry_error) = execute_request($url, $headers, $input, 5);
+    // Fast retry loop for 3 seconds
+    for ($attempt = 1; $attempt <= 2; $attempt++) {
+        usleep(1500000); // Wait 1.5s for Node.js boot
+        list($retry_response, $retry_info, $retry_error) = execute_request($url, $headers, $input, 3);
         if ($retry_response !== false) {
             $response = $retry_response;
             $info = $retry_info;
@@ -132,15 +140,15 @@ if ($response === false) {
     http_response_code(503);
     if (strpos($uri, '/api/') === 0 || stripos($_SERVER['HTTP_ACCEPT'] ?? '', 'application/json') !== false) {
         header('Content-Type: application/json; charset=utf-8');
-        header('Retry-After: 3');
+        header('Retry-After: 8');
         echo json_encode([
             'error' => 'Service temporarily reconnecting. Please try again in a moment.',
             'status' => 503,
-            'retry_after' => 3
+            'retry_after' => 8
         ]);
         exit;
     }
-    header('Retry-After: 3');
+    header('Retry-After: 8');
     header('Content-Type: text/html; charset=utf-8');
     ?>
     <!DOCTYPE html>
@@ -148,7 +156,7 @@ if ($response === false) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta http-equiv="refresh" content="3">
+        <meta http-equiv="refresh" content="8">
         <title>Binaare Art Gallery — Loading</title>
         <style>
             * { box-sizing: border-box; margin: 0; padding: 0; }

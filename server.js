@@ -44,12 +44,28 @@ const handle = app.getRequestHandler();
       console.log(`[Next.js Server] > Ready on http://${hostname}:${port}`);
     });
 
-    // Automatic runtime low-memory cleanup
+    // Graceful shutdown handling for PM2 restarts
+    const gracefulShutdown = (signal) => {
+      console.log(`[Next.js Server] Received ${signal}. Closing HTTP listener cleanly...`);
+      server.close(() => {
+        console.log("[Next.js Server] Server stopped cleanly. Port released.");
+        process.exit(0);
+      });
+      setTimeout(() => {
+        console.warn("[Next.js Server] Shutdown timed out. Forcing exit.");
+        process.exit(0);
+      }, 4000).unref();
+    };
+
+    process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
+    process.on("SIGINT", () => gracefulShutdown("SIGINT"));
+
+    // Runtime memory safety cleanup for long-running Node.js processes
     if (typeof global.gc === "function") {
       setInterval(() => {
         try {
           const mem = process.memoryUsage();
-          if (mem.heapUsed > 120 * 1024 * 1024) {
+          if (mem.heapUsed > 200 * 1024 * 1024) {
             global.gc();
           }
         } catch (_) {}
