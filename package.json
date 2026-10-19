@@ -11,7 +11,8 @@
     "admin:setup": "node scripts/admin-setup.mjs",
     "test:backend": "playwright test",
     "cpanel:zip": "node scripts/build-cpanel.mjs",
-    "pdf:generate": "node scripts/generate-technical-pdf.mjs"
+    "pdf:generate": "node scripts/generate-technical-pdf.mjs",
+    "rescue": "bash scripts/rescue.sh"
   },
   "dependencies": {
     "clsx": "^2.1.1",
