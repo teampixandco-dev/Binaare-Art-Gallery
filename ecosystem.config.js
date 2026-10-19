@@ -12,7 +12,7 @@ module.exports = {
       kill_timeout: 5000,
       listen_timeout: 8000,
       max_memory_restart: "450M",
-      node_args: "--expose-gc --max-old-space-size=256 --max-semi-space-size=16",
+      node_args: "--max-old-space-size=384",
       env: {
         NODE_ENV: "production",
         PORT: 3000,

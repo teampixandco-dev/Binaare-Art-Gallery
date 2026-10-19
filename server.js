@@ -59,18 +59,6 @@ const handle = app.getRequestHandler();
 
     process.on("SIGTERM", () => gracefulShutdown("SIGTERM"));
     process.on("SIGINT", () => gracefulShutdown("SIGINT"));
-
-    // Runtime memory safety cleanup for long-running Node.js processes
-    if (typeof global.gc === "function") {
-      setInterval(() => {
-        try {
-          const mem = process.memoryUsage();
-          if (mem.heapUsed > 200 * 1024 * 1024) {
-            global.gc();
-          }
-        } catch (_) {}
-      }, 30000);
-    }
   })
   .catch((err) => {
     console.error("[Next.js Server] Fatal error during app.prepare():", err);
