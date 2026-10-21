@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/cache/
+/.next/
 /out/
 
 # production
@@ -65,3 +65,10 @@ next-env.d.ts
 /playwright-report/
 /.next-test/
 /.next-build/
+
+# Docker & VPS deploy files (local only)
+Dockerfile
+docker-compose.yml
+.dockerignore
+Caddyfile
+scripts/deploy-vps.sh
