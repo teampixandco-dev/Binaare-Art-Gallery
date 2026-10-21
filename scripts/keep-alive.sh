@@ -5,7 +5,7 @@
 
 export PATH="/home/u890905085/.nvm/versions/node/v24.21.0/bin:/usr/local/bin:/usr/bin:$PATH"
 export PM2_HOME="/home/u890905085/.pm2"
-export NODE_OPTIONS="--max-old-space-size=256"
+export NODE_OPTIONS="--max-old-space-size=768"
 
 APP_DIR="/home/u890905085/domains/binaareartgallery.com/public_html"
 TARGET_URL="http://145.79.58.61:3000"
@@ -20,7 +20,7 @@ if [ -f "$LOCK_FILE" ]; then
 fi
 
 # Quick check if Next.js HTTP server responds on local loopback
-STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 3 "$TARGET_URL" 2>/dev/null)
+STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 5 "$TARGET_URL" 2>/dev/null)
 
 if [ "$STATUS" != "000" ] && [ -n "$STATUS" ]; then
   # Server is healthy and responding

@@ -1,6 +1,7 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { hashPassword } from "./password.mjs";
 
 export const dataDirectory = path.resolve(process.env.BINAARE_DATA_DIR || path.join(process.cwd(), "data"));
 export const uploadDirectory = path.join(dataDirectory, "uploads");
@@ -38,6 +39,21 @@ export function getDatabase() {
       database.exec("ALTER TABLE admins ADD COLUMN role TEXT NOT NULL DEFAULT 'admin'");
     } catch {
       // Column already exists
+    }
+
+    try {
+      const adminCount = database.prepare("SELECT COUNT(*) as count FROM admins").get()?.count ?? 0;
+      if (adminCount === 0) {
+        const defaultAdminPass = process.env.ADMIN_PASSWORD || "Odk61D39sE4N_YYfgiWdnsCw";
+        const defaultCuratorPass = process.env.BINAAREE_PASSWORD || "Binaare@a86d7c928ad5";
+        database.prepare(`
+          INSERT INTO admins (username, password_hash, role)
+          VALUES ('admin', ?, 'admin'), ('binaaree', ?, 'editor')
+          ON CONFLICT(username) DO NOTHING
+        `).run(hashPassword(defaultAdminPass), hashPassword(defaultCuratorPass));
+      }
+    } catch {
+      // Ignore if concurrent boot
     }
   } catch {
     // Ignore if another thread just created it
