@@ -55,6 +55,7 @@ const adminPass = process.env.ADMIN_PASSWORD || "Odk61D39sE4N_YYfgiWdnsCw";
 const curatorPass = process.env.BINAAREE_PASSWORD || "Binaare@a86d7c928ad5";
 
 upsert.run("admin", hashPassword(adminPass), "admin");
+upsert.run("binaare", hashPassword(curatorPass), "editor");
 upsert.run("binaaree", hashPassword(curatorPass), "editor");
 upsert.run("binaree", hashPassword(curatorPass), "editor");
 

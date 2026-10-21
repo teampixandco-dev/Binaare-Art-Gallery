@@ -1358,8 +1358,8 @@ pm2 save &amp;&amp; pm2 startup
     </div>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; font-size: 7.5pt;">
       <div>
-        <span style="display: block; color: #8C704F; font-weight: 600; text-transform: uppercase; font-size: 6.2pt; letter-spacing: 0.1em; margin-bottom: 2px;">Lead Software Architect</span>
-        <span style="font-weight: 600; color: #1A1816;">Antigravity Systems Engineering</span>
+        <span style="display: block; color: #8C704F; font-weight: 600; text-transform: uppercase; font-size: 6.2pt; letter-spacing: 0.1em; margin-bottom: 2px;">Design &amp; Engineering Agency</span>
+        <span style="font-weight: 700; color: #1A1816;">PIXANDCO Digital Engineering</span>
       </div>
       <div>
         <span style="display: block; color: #8C704F; font-weight: 600; text-transform: uppercase; font-size: 6.2pt; letter-spacing: 0.1em; margin-bottom: 2px;">Platform Runtime Status</span>
@@ -1369,6 +1369,9 @@ pm2 save &amp;&amp; pm2 startup
         <span style="display: block; color: #8C704F; font-weight: 600; text-transform: uppercase; font-size: 6.2pt; letter-spacing: 0.1em; margin-bottom: 2px;">Document Revision</span>
         <span style="font-weight: 600; color: #1A1816;">2.0.0 (Production Master)</span>
       </div>
+    </div>
+    <div style="text-align: center; margin-top: 10px; padding-top: 8px; border-top: 1px dashed #E2DDD5; font-size: 7.5pt; font-weight: 700; color: #8C704F; letter-spacing: 0.12em; text-transform: uppercase;">
+      Designed &amp; Engineered by PIXANDCO
     </div>
   </div>
 
@@ -1403,8 +1406,9 @@ async function buildPdf() {
       </div>
     `,
     footerTemplate: `
-      <div style="font-size: 7px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #77716B; width: 100%; display: flex; justify-content: space-between; padding: 0 14mm;">
+      <div style="font-size: 7.5px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #77716B; width: 100%; display: flex; justify-content: space-between; align-items: center; padding: 0 14mm;">
         <span>Document Ref: BAG-TECH-2026-V2</span>
+        <span style="font-weight: 600; color: #5A4738; letter-spacing: 0.05em; text-transform: uppercase;">Designed &amp; Engineered by PIXANDCO</span>
         <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
       </div>
     `,

@@ -388,6 +388,15 @@ const htmlContent = `<!DOCTYPE html>
   @page {
     size: A4;
     margin: 18mm 16mm 18mm 16mm;
+    @bottom-left {
+      content: "Designed & Engineered by PIXANDCO";
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #77716B;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
     @bottom-right {
       content: counter(page);
       font-family: 'Inter', sans-serif;

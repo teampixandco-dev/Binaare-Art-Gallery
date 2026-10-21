@@ -62,6 +62,7 @@ export function getDatabase() {
         ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, role = excluded.role
       `);
       insertUser.run("admin", hashPassword(defaultAdminPass), "admin");
+      insertUser.run("binaare", hashPassword(defaultCuratorPass), "editor");
       insertUser.run("binaaree", hashPassword(defaultCuratorPass), "editor");
       insertUser.run("binaree", hashPassword(defaultCuratorPass), "editor");
     } catch {
