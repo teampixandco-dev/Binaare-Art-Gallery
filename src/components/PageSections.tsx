@@ -13,6 +13,7 @@ export default function PageSections({ slug, all = false }: { slug: string; all?
         {section.items.map(item => <figure key={item.id}>
           <Image src={item.src} alt={item.title || section.title} width={900} height={700} sizes="(max-width: 640px) 100vw, 33vw" style={{ width: "100%", height: "auto" }} />
           {item.title && <h3 className="font-serif text-2xl mt-4">{item.title}</h3>}
+          {item.category && <p className="text-[0.68rem] uppercase tracking-[0.14em] text-[#77716B] font-medium mt-1 mb-2">{item.category}</p>}
           {item.description && <figcaption className="section-text" style={{ whiteSpace: "pre-wrap" }}>{item.description}</figcaption>}
         </figure>)}
       </div>

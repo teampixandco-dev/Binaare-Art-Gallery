@@ -104,11 +104,14 @@ export default function Home() {
                (item.src && (p.src === item.src || (p.images || []).includes(item.src)))
         );
         const slug = matched?.slug || (item.title ? item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : "");
+        const categoryTag = (item.category || matched?.category || "").trim();
+        const curatorCaption = (item.description || matched?.medium || "").trim();
         return {
           id: item.id || `featured-${index}`,
           src: item.src || matched?.src || "/artworks/together-we-bloom.webp",
           title: item.title || matched?.title || "Featured Artwork",
-          medium: item.category || item.description || matched?.medium || "Original Artwork",
+          medium: categoryTag || "Original Artwork",
+          caption: curatorCaption,
           slug,
         };
       })
@@ -119,7 +122,8 @@ export default function Home() {
           id: p!.slug,
           src: (p!.images || []).find(img => img.includes("showcase")) || p!.src || p!.images?.[0] || "",
           title: p!.title,
-          medium: p!.medium,
+          medium: (p!.category || "Original Artwork").trim(),
+          caption: (p!.medium || "").trim(),
           slug: p!.slug,
         }));
   useEffect(() => {
@@ -421,9 +425,17 @@ export default function Home() {
                       {work.title}
                     </Link>
                   </h3>
-                  <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#77716B] leading-relaxed mt-1.5 mb-4 line-clamp-2">
-                    {work.medium}
-                  </p>
+                  {work.medium && (
+                    <p className="text-[0.62rem] uppercase tracking-[0.18em] text-[#77716B] leading-relaxed mt-1.5 mb-2 line-clamp-1 font-medium">
+                      {work.medium}
+                    </p>
+                  )}
+
+                  {work.caption && (
+                    <p className="text-[0.8125rem] text-[#635E59] font-normal leading-relaxed px-1 mt-0.5 mb-4 line-clamp-3">
+                      {work.caption}
+                    </p>
+                  )}
 
                   {/* Centered circular outline arrow button */}
                   <div className="mt-auto flex justify-center pb-1">
