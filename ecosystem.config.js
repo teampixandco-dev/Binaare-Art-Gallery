@@ -17,7 +17,12 @@ module.exports = {
         NODE_ENV: "production",
         PORT: 3000,
         HOSTNAME: "0.0.0.0",
+        // Persistent data dir - survives across Hostinger deployments
+        // On Hostinger: /home/u890905085/binaare-data (outside public_html)
+        // Override with BINAARE_DATA_DIR env var in hPanel if needed
+        BINAARE_DATA_DIR: process.env.BINAARE_DATA_DIR || "/home/u890905085/binaare-data",
       },
     },
   ],
 };
+
