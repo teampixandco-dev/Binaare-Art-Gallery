@@ -24,7 +24,7 @@ Binaare Art Gallery is a high-performance Next.js 15 application running on Node
 - /_next/static/*                      │  (Timeout: 30s, ConnectTimeout: 2s)
 - /media/* (data/uploads)              ▼
                            [ Node.js Next.js Server ]
-                           - Bound to: 145.79.58.61:3000
+                           - Bound to: 127.0.0.1:3000
                            - Managed by: PM2 fork mode
                            - Memory Heap: --max-old-space-size=768
                            - Max Restart Threshold: 1G
@@ -34,14 +34,15 @@ Binaare Art Gallery is a high-performance Next.js 15 application running on Node
 
 ## 2. Critical CloudLinux Environment Quirks
 
-### 2.1. Loopback Address & Network Namespace (`145.79.58.61`)
-* **Do NOT change backend host to `127.0.0.1` or `localhost`.**
-* Under Hostinger's CloudLinux network namespace isolation, each hosting user is assigned a dedicated IP alias on the loopback (`lo`) interface (in this account: `145.79.58.61`).
-* Standard loopback (`127.0.0.1`) connection attempts are intercepted by CloudLinux firewall rules to prevent cross-account socket snooping.
-* **Production Rule:** Both `index.php` and `scripts/keep-alive.sh` **must target `http://145.79.58.61:3000`**.
+### 2.1. Network Namespace Binding (`145.79.58.61`)
+* Under Hostinger's CloudLinux network namespace isolation, each hosting user is assigned a dedicated IP alias on their network interface: `145.79.58.61`.
+* Standard loopback (`127.0.0.1`) connection attempts are intercepted and rejected (`ECONNREFUSED`) by CloudLinux firewall rules to prevent cross-account socket snooping.
+* **Production Rule:** Both `index.php` and `scripts/keep-alive.sh` **must target `http://145.79.58.61:3000`**. Attempting to use `127.0.0.1` will immediately produce 503 errors.
 
 ### 2.2. V8 Memory Heap Requirements
 * Next.js 15 pre-renders pages and compiles runtime route trees during boot, requiring **~150MB–200MB RSS** at startup.
+* Restricting V8 heap (`NODE_OPTIONS="--max-old-space-size=256"`) causes V8 GC to fail with `Allocation failed - JavaScript heap out of memory`, triggering infinite PM2 crash-restart storms!
+* **Production Rule:** Both `ecosystem.config.js` and `scripts/keep-alive.sh` must specify `--max-old-space-size=768`.
 * Artificially restricting V8 heap (`--max-old-space-size`) below 512MB causes V8 scavenge GC to fail with:
   `FATAL ERROR: MarkCompactCollector: young object promotion failed Allocation failed - JavaScript heap out of memory`
 * **Production Rule:** `ecosystem.config.js` must specify:
@@ -127,7 +128,7 @@ To ensure zero-downtime self-healing across server reboots and CloudLinux proces
 
 ### Watchdog Logic (`scripts/keep-alive.sh`):
 1. Verifies if `/tmp/binaare_keep_alive.lock` is less than 60 seconds old; if so, exits immediately (cooldown protection).
-2. Sends a 3-second cURL probe to `http://145.79.58.61:3000`.
+2. Sends a 3-second cURL probe to `http://127.0.0.1:3000`.
 3. If HTTP code is `000` (offline), sets the cooldown lock and triggers PM2 restart/start.
 4. Saves state with `pm2 save`.
 
@@ -149,7 +150,7 @@ npm run rescue
 3. Calls `npx pm2 delete all` and `npx pm2 kill` to purge desynchronized daemon state.
 4. Spawns a clean PM2 instance with `--max-old-space-size=768`.
 5. Waits 6 seconds for Next.js route initialization.
-6. Probes `http://145.79.58.61:3000` and displays the live health status table.
+6. Probes `http://127.0.0.1:3000` and displays the live health status table.
 
 ---
 
@@ -174,7 +175,7 @@ DevOps engineers can verify live application status with the following diagnosti
 
 ```bash
 # 1. Check HTTP response directly from internal listener
-curl -I http://145.79.58.61:3000
+curl -I http://127.0.0.1:3000
 
 # 2. Check public HTTPS edge response
 curl -I https://binaareartgallery.com

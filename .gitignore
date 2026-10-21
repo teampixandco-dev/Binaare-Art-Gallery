@@ -14,7 +14,7 @@
 /coverage
 
 # next.js
-/.next/cache/
+/.next/
 /out/
 
 # production
@@ -37,8 +37,13 @@ pnpm-debug.log*
 # pnpm
 .pnpm-store
 
-# env files (can opt-in for committing if needed)
-.env*
+# env files - ignore secrets but allow production config
+.env
+.env.local
+.env.development
+.env*.local
+# Allow .env.production (non-secret deployment config)
+!.env.production
 
 # vercel
 .vercel
@@ -65,3 +70,10 @@ next-env.d.ts
 /playwright-report/
 /.next-test/
 /.next-build/
+
+# Docker & VPS deploy files (local only)
+Dockerfile
+docker-compose.yml
+.dockerignore
+Caddyfile
+scripts/deploy-vps.sh

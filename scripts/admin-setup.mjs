@@ -43,12 +43,14 @@ try {
     ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, role = 'admin'
   `).run(adminUsername, hashPassword(adminPassword));
 
-  // Upsert binaaree (role: editor)
-  db.prepare(`
+  // Upsert binaaree and binaree (role: editor)
+  const upsertEditor = db.prepare(`
     INSERT INTO admins (username, password_hash, role)
     VALUES (?, ?, 'editor')
     ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, role = 'editor'
-  `).run(binaareeUsername, hashPassword(binaareePassword));
+  `);
+  upsertEditor.run(binaareeUsername, hashPassword(binaareePassword));
+  upsertEditor.run("binaree", hashPassword(binaareePassword));
 
   db.exec("COMMIT");
 } catch (error) {

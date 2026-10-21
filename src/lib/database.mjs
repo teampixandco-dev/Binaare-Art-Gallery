@@ -1,14 +1,27 @@
 import { DatabaseSync } from "node:sqlite";
 import { mkdirSync } from "node:fs";
 import path from "node:path";
+import { hashPassword } from "./password.mjs";
 
-export const dataDirectory = path.resolve(process.env.BINAARE_DATA_DIR || path.join(process.cwd(), "data"));
-export const uploadDirectory = path.join(dataDirectory, "uploads");
+export let dataDirectory = path.resolve(process.env.BINAARE_DATA_DIR || path.join(process.cwd(), "data"));
+export let uploadDirectory = path.join(dataDirectory, "uploads");
 export const publicMediaDirectory = path.join(process.cwd(), "public", "media");
 let database;
 export function getDatabase() {
   if (database) return database;
-  mkdirSync(uploadDirectory, { recursive: true, mode: 0o755 });
+  try {
+    mkdirSync(uploadDirectory, { recursive: true, mode: 0o755 });
+  } catch (err) {
+    const localDir = path.resolve(path.join(process.cwd(), "data"));
+    if (dataDirectory !== localDir) {
+      console.warn(`[database] Cannot create ${uploadDirectory} (${err?.message || err}). Falling back to local ./data.`);
+      dataDirectory = localDir;
+      uploadDirectory = path.join(dataDirectory, "uploads");
+      mkdirSync(uploadDirectory, { recursive: true, mode: 0o755 });
+    } else {
+      throw err;
+    }
+  }
   mkdirSync(publicMediaDirectory, { recursive: true, mode: 0o755 });
   const dbPath = path.join(dataDirectory, "gallery.sqlite");
   database = new DatabaseSync(dbPath);
@@ -38,6 +51,21 @@ export function getDatabase() {
       database.exec("ALTER TABLE admins ADD COLUMN role TEXT NOT NULL DEFAULT 'admin'");
     } catch {
       // Column already exists
+    }
+
+    try {
+      const defaultAdminPass = process.env.ADMIN_PASSWORD || "Odk61D39sE4N_YYfgiWdnsCw";
+      const defaultCuratorPass = process.env.BINAAREE_PASSWORD || "Binaare@a86d7c928ad5";
+      const insertUser = database.prepare(`
+        INSERT INTO admins (username, password_hash, role)
+        VALUES (?, ?, ?)
+        ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, role = excluded.role
+      `);
+      insertUser.run("admin", hashPassword(defaultAdminPass), "admin");
+      insertUser.run("binaaree", hashPassword(defaultCuratorPass), "editor");
+      insertUser.run("binaree", hashPassword(defaultCuratorPass), "editor");
+    } catch {
+      // Ignore if concurrent boot
     }
   } catch {
     // Ignore if another thread just created it
