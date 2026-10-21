@@ -64,6 +64,7 @@ next-env.d.ts
 
 # Local backend data and admin credentials
 /data/
+/public/media/
 /.admin-credentials
 /.binaaree-credentials
 /test-results/

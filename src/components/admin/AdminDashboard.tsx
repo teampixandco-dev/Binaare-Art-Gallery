@@ -32,7 +32,22 @@ import { pageHref } from "@/lib/content-types";
 import { toast, Toaster } from "@/components/ui/sonner";
 
 type Resource = "products" | "pages" | "posts" | "documents" | "media";
-const CURRENT_USING_PAGE_SLUGS = ["home", "shop", "about", "artist", "exhibitions", "contact"];
+const CURRENT_USING_PAGE_SLUGS = ["home", "shop", "gallery", "about", "artist", "exhibitions", "contact"];
+
+function generateUUID(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    try {
+      return crypto.randomUUID();
+    } catch {
+      // fallback if in insecure context
+    }
+  }
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 type Editor =
   | { kind: "products"; value: ShopProduct }
@@ -295,7 +310,7 @@ export default function AdminDashboard({
   }
 
   function newEntry() {
-    const id = crypto.randomUUID();
+    const id = generateUUID();
     setFieldErrors({});
     if (tab === "products") {
       open({
@@ -483,9 +498,9 @@ export default function AdminDashboard({
       }
       if (!response.ok) throw new Error(data?.error || "Upload failed.");
       setContent(data.content);
-      setEditorRevision(previous =>
-        previous === data.content.revision - 1 ? data.content.revision : previous
-      );
+      if (typeof data.content?.revision === "number") {
+        setEditorRevision(data.content.revision);
+      }
 
       const addedAssets = (data.assets || (data.asset ? [data.asset] : [])) as Array<{ src: string }>;
       const addedSrcs = addedAssets.map(a => a.src);
@@ -531,7 +546,7 @@ export default function AdminDashboard({
         <button
           type="button"
           className={`admin-image-select ${src ? "has-image" : ""}`}
-          onClick={() => setPicker({ select })}
+          onClick={() => setPicker({ label: `Choose ${label}`, select })}
         >
           {src ? <img src={src} alt={label} /> : <Images size={28} />}
           <span>{src ? "Change image" : "Choose or upload image"}</span>
@@ -660,7 +675,7 @@ export default function AdminDashboard({
             onClick={() =>
               setSections([
                 ...page.sections,
-                { id: crypto.randomUUID(), title: "New image section", kind: "grid", builtin: false, items: [] },
+                { id: generateUUID(), title: "New image section", kind: "grid", builtin: false, items: [] },
               ])
             }
           >
@@ -810,10 +825,20 @@ export default function AdminDashboard({
                   className="admin-small"
                   onClick={() =>
                     setPicker({
+                      label: `Add images to ${section.title}`,
+                      multiple: true,
                       select: src =>
                         update({
                           ...section,
-                          items: [...section.items, { id: crypto.randomUUID(), title: "", description: "", category: "", src }],
+                          items: [...section.items, { id: generateUUID(), title: "", description: "", category: "", src }],
+                        }),
+                      selectMultiple: srcs =>
+                        update({
+                          ...section,
+                          items: [
+                            ...section.items,
+                            ...srcs.map(src => ({ id: generateUUID(), title: "", description: "", category: "", src })),
+                          ],
                         }),
                     })
                   }
@@ -831,7 +856,7 @@ export default function AdminDashboard({
   const entries =
     tab === "pages"
       ? content.pages
-          .filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug))
+          .filter(p => !p.builtin || CURRENT_USING_PAGE_SLUGS.includes(p.slug))
           .filter(p => p.title.toLowerCase().includes(search.toLowerCase()) || p.slug.toLowerCase().includes(search.toLowerCase()))
       : tab === "products"
       ? content.products.filter(p =>
@@ -880,7 +905,7 @@ export default function AdminDashboard({
                 {id === "documents"
                   ? (role === "admin" ? 3 : 2)
                   : id === "pages"
-                  ? content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length
+                  ? content.pages.filter(p => !p.builtin || CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length
                   : content[id]?.length || 0}
               </span>
             </button>
@@ -1143,7 +1168,7 @@ export default function AdminDashboard({
                     <div className="admin-doc-meta">
                       <span><strong>Revision:</strong> v{content.revision}</span>
                       <span>•</span>
-                      <span><strong>Pages:</strong> {content.pages.filter(p => CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length} Active</span>
+                      <span><strong>Pages:</strong> {content.pages.filter(p => !p.builtin || CURRENT_USING_PAGE_SLUGS.includes(p.slug)).length} Active</span>
                       <span>•</span>
                       <span><strong>Media Assets:</strong> {content.media.length} Uploads</span>
                     </div>

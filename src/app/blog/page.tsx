@@ -5,17 +5,18 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import PageSections from "@/components/PageSections";
-import { useContent } from "@/context/ContentContext";
+import { useContent, usePageContent } from "@/context/ContentContext";
 
 export default function BlogPage() {
+  const page = usePageContent("blog");
   const posts = [...useContent().posts].sort((a, b) => b.date.localeCompare(a.date));
   return <main style={{ background: "var(--bg)" }}>
     <Navbar />
     <PageHero
-      title="Journal"
-      subtitle="A journal of art, emotion, and creative reflections"
+      title={page?.title || "Journal"}
+      subtitle={page?.subtitle || "A journal of art, emotion, and creative reflections"}
       tag="Studio Journal"
-      backgroundImage="/artworks/blooming-in-grace.webp"
+      backgroundImage={page?.hero || "/artworks/blooming-in-grace.webp"}
     />
     <section className="gallery-section">
       <p className="section-label">From the studio</p>

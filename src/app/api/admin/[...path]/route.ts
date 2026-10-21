@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { writeFile, unlink } from "node:fs/promises";
+import { writeFile, unlink, mkdir } from "node:fs/promises";
 import path from "node:path";
 import sharp from "sharp";
 import { z } from "zod";
@@ -188,6 +188,8 @@ export async function POST(request: Request, context: Context) {
           createdAt: new Date().toISOString(),
         };
 
+        await mkdir(uploadDirectory, { recursive: true, mode: 0o755 }).catch(() => {});
+        await mkdir(publicMediaDirectory, { recursive: true, mode: 0o755 }).catch(() => {});
         await writeFile(path.join(uploadDirectory, filename), result.data, { flag: "w", mode: 0o644 });
         try {
           await writeFile(path.join(publicMediaDirectory, filename), result.data, { flag: "w", mode: 0o644 });
@@ -204,6 +206,10 @@ export async function POST(request: Request, context: Context) {
             draft.media.unshift(asset);
           }
         });
+        try {
+          revalidatePath("/", "layout");
+          revalidatePath("/");
+        } catch {}
         return json(
           {
             asset: newAssets[0],
@@ -254,11 +260,21 @@ export async function POST(request: Request, context: Context) {
         validateContent(content);
       });
       try {
+        revalidatePath("/", "layout");
+        revalidatePath("/");
+        revalidatePath("/about");
+        revalidatePath("/artist");
+        revalidatePath("/exhibitions");
+        revalidatePath("/gallery");
         revalidatePath("/shop");
         revalidatePath("/shop/[slug]", "page");
-        revalidatePath("/gallery");
-        revalidatePath("/");
-      } catch {}
+        revalidatePath("/blog");
+        revalidatePath("/blog/[slug]", "page");
+        revalidatePath("/contact");
+        revalidatePath("/pages/[slug]", "page");
+      } catch (err) {
+        console.warn("Revalidation error:", err);
+      }
       return json(content);
     }
     if (action === "delete") {
@@ -285,11 +301,21 @@ export async function POST(request: Request, context: Context) {
         await unlink(path.join(publicMediaDirectory, filename)).catch(() => {});
       }
       try {
+        revalidatePath("/", "layout");
+        revalidatePath("/");
+        revalidatePath("/about");
+        revalidatePath("/artist");
+        revalidatePath("/exhibitions");
+        revalidatePath("/gallery");
         revalidatePath("/shop");
         revalidatePath("/shop/[slug]", "page");
-        revalidatePath("/gallery");
-        revalidatePath("/");
-      } catch {}
+        revalidatePath("/blog");
+        revalidatePath("/blog/[slug]", "page");
+        revalidatePath("/contact");
+        revalidatePath("/pages/[slug]", "page");
+      } catch (err) {
+        console.warn("Revalidation error:", err);
+      }
       return json(content);
     }
     return json({ error: "Not found" }, 404);

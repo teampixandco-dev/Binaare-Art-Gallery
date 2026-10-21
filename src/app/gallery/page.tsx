@@ -10,12 +10,14 @@ import PageHero from "@/components/PageHero";
 
 
 import Link from "next/link";
-import { useContent } from "@/context/ContentContext";
+import PageSections from "@/components/PageSections";
+import { useContent, usePageContent } from "@/context/ContentContext";
 import { PRODUCTS as STATIC_PRODUCTS } from "@/data/products";
 
 const ease = [0.22, 1, 0.36, 1] as const;
 
 export default function GalleryPage() {
+  const page = usePageContent("gallery");
   const { products: contentProducts } = useContent();
   const PRODUCTS = contentProducts && contentProducts.length > 0 ? contentProducts : STATIC_PRODUCTS;
 
@@ -50,10 +52,10 @@ export default function GalleryPage() {
     <main style={{ background: "var(--bg)" }}>
       <Navbar />
       <PageHero
-        title="Gallery"
-        subtitle="Explore the Complete Collection of Original Paintings"
+        title={page?.title || "Gallery"}
+        subtitle={page?.subtitle || "Explore the Complete Collection of Original Paintings"}
         tag="Original Collection"
-        backgroundImage="/artworks/reflections-of-a-golden-city.webp"
+        backgroundImage={page?.hero || "/artworks/reflections-of-a-golden-city.webp"}
       />
 
       <section className="gallery-section">
@@ -168,6 +170,7 @@ export default function GalleryPage() {
         )}
       </AnimatePresence>
 
+      <PageSections slug="gallery" />
       <Footer />
     </main>
   );

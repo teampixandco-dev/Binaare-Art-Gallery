@@ -13,7 +13,7 @@ try {
 }
 
 // 2. Setup/Reset 'admin' user (Super Admin / Site Designer)
-const adminUsername = "admin";
+const adminUsername = process.env.ADMIN_USERNAME || "admin";
 let adminPassword = process.env.ADMIN_PASSWORD;
 if (!adminPassword && existsSync(".admin-credentials")) {
   const match = readFileSync(".admin-credentials", "utf-8").match(/Password:\s*([^\s]+)/);

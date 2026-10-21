@@ -5,6 +5,10 @@ import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 import PageSections from "@/components/PageSections";
 type Props = { params: Promise<{ slug: string }> };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const dynamicParams = true;
 export async function generateStaticParams() {
   return getPublicContent().pages.map((p) => ({ slug: p.slug }));
 }

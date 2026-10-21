@@ -61,7 +61,7 @@ export default function ShopPage() {
   const { products: contentProducts, pages } = useContent();
   const shopPage = pages?.find((p) => p.slug === "shop");
   const heroImage = shopPage?.hero || "/artworks/together-we-bloom.webp";
-  const heroTitle = shopPage?.title && shopPage.title !== "Shop" ? shopPage.title : "Art for a More Beautiful Everyday";
+  const heroTitle = shopPage?.title ? shopPage.title : "Art for a More Beautiful Everyday";
   const heroSubtitle = shopPage?.subtitle || "Timeless paintings celebrating resilience, friendship, and the quiet richness of life.";
   const PRODUCTS =
     contentProducts && contentProducts.length > 0

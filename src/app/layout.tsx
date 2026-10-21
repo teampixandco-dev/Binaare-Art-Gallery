@@ -4,7 +4,8 @@ import "./globals.css";
 import Providers from "@/components/Providers";
 import { getPublicContent } from "@/lib/content-store";
 
-
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 export const metadata: Metadata = {
   title: "Binaare Art Gallery | Colors of Love",

@@ -11,7 +11,6 @@ export class ContentError extends Error {
   }
 }
 export function getContent(): SiteContent {
-  const db = getDatabase();
   const initial: SiteContent = {
     revision: 1,
     products: PRODUCTS.map((p) => ({
@@ -25,11 +24,12 @@ export function getContent(): SiteContent {
     media: [],
   };
 
-  db.prepare("INSERT OR IGNORE INTO content (id, document) VALUES (1, ?)").run(JSON.stringify(initial));
-  const row = db.prepare("SELECT document FROM content WHERE id = 1").get() as { document: string } | undefined;
-  if (!row?.document) return initial;
-
   try {
+    const db = getDatabase();
+    db.prepare("INSERT OR IGNORE INTO content (id, document) VALUES (1, ?)").run(JSON.stringify(initial));
+    const row = db.prepare("SELECT document FROM content WHERE id = 1").get() as { document: string } | undefined;
+    if (!row?.document) return initial;
+
     const content = JSON.parse(row.document) as SiteContent;
 
     let changed = false;
@@ -51,6 +51,19 @@ export function getContent(): SiteContent {
       if (p.price !== null) {
         p.price = null;
         changed = true;
+      }
+    }
+
+    if (!Array.isArray(content.pages)) {
+      content.pages = seed.pages as SiteContent["pages"];
+      changed = true;
+    } else {
+      const existingPageSlugs = new Set(content.pages.map(p => p.slug));
+      for (const sp of seed.pages) {
+        if (!existingPageSlugs.has(sp.slug)) {
+          content.pages.push(sp as SiteContent["pages"][0]);
+          changed = true;
+        }
       }
     }
 
@@ -114,8 +127,28 @@ export function getContent(): SiteContent {
   }
 }
 export function getPublicContent(): PublicContent {
-  const content = getContent();
-  return { revision: content.revision, products: content.products.filter(p => p.published), pages: content.pages.filter(p => p.published), posts: content.posts.filter(p => p.published) };
+  try {
+    const content = getContent();
+    return {
+      revision: content?.revision || 1,
+      products: Array.isArray(content?.products) ? content.products.filter(p => p?.published) : [],
+      pages: Array.isArray(content?.pages) ? content.pages.filter(p => p?.published) : [],
+      posts: Array.isArray(content?.posts) ? content.posts.filter(p => p?.published) : [],
+    };
+  } catch (err) {
+    console.error("[content-store] Error in getPublicContent:", err);
+    return {
+      revision: 1,
+      products: PRODUCTS.map((p) => ({
+        ...p,
+        id: p.slug,
+        images: Array.isArray(p.images) && p.images.length ? p.images : [p.src],
+        published: true,
+      })),
+      pages: (seed.pages as SiteContent["pages"]).filter(p => p.published),
+      posts: (seed.posts as SiteContent["posts"]).filter(p => p.published),
+    };
+  }
 }
 export function updateContent(revision: number | null, change: (content: SiteContent) => void): SiteContent {
   const db = getDatabase();

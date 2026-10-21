@@ -130,7 +130,8 @@ test("page image placement, custom pages and referenced media protection", async
   let saved = await page.request.post("/api/admin/save", { headers, data: { resource: "pages", revision: state.revision, value: about } }); expect(saved.status()).toBe(200); state = await saved.json();
   await page.goto("/about");
   await expect(page.locator(".page-hero")).toHaveCSS("background-image", `url("${origin}${asset.src}")`);
-  expect(await page.locator('main img').first().getAttribute("src")).toContain(encodeURIComponent(asset.src));
+  const mainImgSrc = (await page.locator('main img').first().getAttribute("src")) || "";
+  expect(mainImgSrc.includes(asset.src) || mainImgSrc.includes(encodeURIComponent(asset.src))).toBeTruthy();
   await page.goto("/artist"); await expect(page.locator(".page-hero")).toHaveCSS("background-image", `url("${originalArtist}")`);
   const custom = { id: randomUUID(), slug: "studio-notes", title: "Studio Notes", subtitle: "A look inside", hero: asset.src, body: "Welcome to the studio.", builtin: false, published: false, showInNav: true, sections: [{ id: randomUUID(), title: "New paintings", kind: "grid", builtin: false, items: [{ id: randomUUID(), title: "Morning light", description: "The latest work.", category: "", src: asset.src }] }] };
   saved = await page.request.post("/api/admin/save", { headers, data: { resource: "pages", revision: state.revision, value: custom } }); expect(saved.status()).toBe(200); state = await saved.json();

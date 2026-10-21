@@ -3,43 +3,68 @@
 import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
+import { usePathname } from "next/navigation";
+import { useContent } from "@/context/ContentContext";
+import { pageHref } from "@/lib/content-types";
 
 interface PageHeroProps {
-  title: string;
+  title?: string;
   subtitle?: string;
   backgroundImage?: string;
   tag?: string;
 }
 
 export default function PageHero({
-  title,
-  subtitle,
-  backgroundImage = "/artworks/together-we-bloom.webp",
+  title: propTitle,
+  subtitle: propSubtitle,
+  backgroundImage: propBackgroundImage,
   tag,
 }: PageHeroProps) {
-  // Ensure we always use an artist artwork, replacing any legacy external unsplash URLs
+  const pathname = usePathname();
+  const content = useContent();
+  const page = content?.pages?.find(p => pageHref(p) === pathname);
+
+  const title = propTitle || page?.title || "Binaare Art Gallery";
+  const subtitle = propSubtitle !== undefined ? propSubtitle : page?.subtitle;
+  const rawBg = propBackgroundImage || page?.hero;
   const heroImage =
-    !backgroundImage || backgroundImage.includes("unsplash.com")
+    !rawBg || rawBg.includes("unsplash.com")
       ? "/artworks/together-we-bloom.webp"
-      : backgroundImage;
+      : rawBg;
+
+  const isVideo = Boolean(heroImage?.endsWith(".mp4"));
 
   return (
-    <section className="relative w-full overflow-hidden min-h-[220px] sm:min-h-[260px] md:min-h-[290px] flex items-center justify-center text-center px-4 py-10 sm:py-14">
-      {/* Background Artwork */}
-      <Image
-        src={heroImage}
-        alt={title}
-        fill
-        priority
-        sizes="100vw"
-        className="object-cover object-center"
-      />
+    <section
+      className="page-hero relative w-full overflow-hidden min-h-[220px] sm:min-h-[260px] md:min-h-[290px] flex items-center justify-center text-center px-4 py-10 sm:py-14"
+      style={{ backgroundImage: isVideo ? undefined : `url("${heroImage}")` }}
+    >
+      {/* Background Artwork or Ambient Video */}
+      {isVideo ? (
+        <video
+          src={heroImage}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover object-center pointer-events-none"
+        />
+      ) : (
+        <Image
+          src={heroImage}
+          alt={title}
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover object-center"
+        />
+      )}
 
       {/* Luxury Gallery Gradient Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/75 via-black/60 to-black/80" />
 
       {/* Content */}
-      <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+      <div className="page-hero-content relative z-10 max-w-4xl mx-auto flex flex-col items-center">
         {tag && (
           <motion.span
             initial={{ opacity: 0, y: 12 }}

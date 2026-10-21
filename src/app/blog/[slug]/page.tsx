@@ -6,6 +6,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
 type Props = { params: Promise<{ slug: string }> };
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+export const dynamicParams = true;
 export async function generateStaticParams() {
   return getPublicContent().posts.map((p) => ({ slug: p.slug }));
 }

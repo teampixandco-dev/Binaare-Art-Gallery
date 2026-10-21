@@ -22,7 +22,11 @@ export function getDatabase() {
       throw err;
     }
   }
-  mkdirSync(publicMediaDirectory, { recursive: true, mode: 0o755 });
+  try {
+    mkdirSync(publicMediaDirectory, { recursive: true, mode: 0o755 });
+  } catch (err) {
+    console.warn(`[database] Cannot create publicMediaDirectory (${err?.message || err}).`);
+  }
   const dbPath = path.join(dataDirectory, "gallery.sqlite");
   database = new DatabaseSync(dbPath);
   try {
@@ -54,6 +58,7 @@ export function getDatabase() {
     }
 
     try {
+      const defaultAdminUser = process.env.ADMIN_USERNAME || "admin";
       const defaultAdminPass = process.env.ADMIN_PASSWORD || "Odk61D39sE4N_YYfgiWdnsCw";
       const defaultCuratorPass = process.env.BINAAREE_PASSWORD || "Binaare@a86d7c928ad5";
       const insertUser = database.prepare(`
@@ -61,7 +66,10 @@ export function getDatabase() {
         VALUES (?, ?, ?)
         ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash, role = excluded.role
       `);
-      insertUser.run("admin", hashPassword(defaultAdminPass), "admin");
+      insertUser.run(defaultAdminUser, hashPassword(defaultAdminPass), "admin");
+      if (defaultAdminUser !== "admin") {
+        insertUser.run("admin", hashPassword(defaultAdminPass), "admin");
+      }
       insertUser.run("binaare", hashPassword(defaultCuratorPass), "editor");
       insertUser.run("binaaree", hashPassword(defaultCuratorPass), "editor");
       insertUser.run("binaree", hashPassword(defaultCuratorPass), "editor");

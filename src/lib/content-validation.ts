@@ -25,9 +25,13 @@ export const productSchema = z.object({
   slug,
   title,
   medium: title,
-  size: title,
-  price: z.any().transform(() => null).nullable().optional().default(null),
-  description: text,
+  size: z.string().max(200).default(""),
+  description: text.default(""),
+  price: z.union([z.number().finite().min(0).max(100000000), z.literal(""), z.null(), z.undefined()])
+    .transform(() => null)
+    .nullable()
+    .optional()
+    .default(null),
   src: image,
   images: z.array(image).max(30).optional().default([]),
   published: z.boolean(),

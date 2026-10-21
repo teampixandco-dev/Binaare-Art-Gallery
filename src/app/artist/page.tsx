@@ -5,6 +5,7 @@ import Image from "next/image";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import PageHero from "@/components/PageHero";
+import PageSections from "@/components/PageSections";
 import SectionReveal from "@/components/SectionReveal";
 import { usePageContent } from "@/context/ContentContext";
 
@@ -25,8 +26,8 @@ export default function ArtistPage() {
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-20 items-start">
             <div className="lg:w-5/12 lg:sticky lg:top-32">
               <Image
-                src="/binari-gamage-painting.webp"
-                alt="Binari Gamage - Artist"
+                src={page?.sections.find(s => s.id === "image-0")?.items[0]?.src || "/binari-gamage-painting.webp"}
+                alt={page?.sections.find(s => s.id === "image-0")?.items[0]?.title || "Binari Gamage - Artist"}
                 width={600}
                 height={800}
                 sizes="(max-width: 1024px) 100vw, 42vw"
@@ -95,6 +96,7 @@ export default function ArtistPage() {
         </section>
       </SectionReveal>
 
+      <PageSections slug="artist" />
       <Footer />
     </main>
   );

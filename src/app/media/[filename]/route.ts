@@ -8,7 +8,7 @@ export const revalidate = 0;
 
 export async function GET(_request: Request, { params }: { params: Promise<{ filename: string }> }) {
   const { filename } = await params;
-  if (!/^[a-f0-9-]{36}\.webp$/.test(filename)) return new Response("Not found", { status: 404 });
+  if (!/^[a-zA-Z0-9_\-.]{1,100}\.(webp|png|jpg|jpeg|avif)$/i.test(filename) || filename.includes("..")) return new Response("Not found", { status: 404 });
   try {
     let bytes;
     try {
@@ -16,9 +16,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ fil
     } catch {
       bytes = await readFile(path.join(uploadDirectory, filename));
     }
+    const ext = path.extname(filename).toLowerCase();
+    const contentType = ext === ".png" ? "image/png" : ext === ".jpg" || ext === ".jpeg" ? "image/jpeg" : ext === ".avif" ? "image/avif" : "image/webp";
     return new Response(bytes, {
       headers: {
-        "Content-Type": "image/webp",
+        "Content-Type": contentType,
         "Cache-Control": "public, max-age=31536000, immutable",
         "X-Content-Type-Options": "nosniff",
       },

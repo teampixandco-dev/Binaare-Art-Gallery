@@ -93,16 +93,35 @@ export default function Home() {
   const { products: contentProducts } = useContent();
   const allProducts = contentProducts && contentProducts.length > 0 ? contentProducts : STATIC_PRODUCTS;
 
-  const featuredWorks = featuredSlugs
-    .map(slug => allProducts.find(p => p.slug === slug))
-    .filter(Boolean)
-    .map(p => ({
-      id: p!.slug,
-      src: (p!.images || []).find(img => img.includes("showcase")) || p!.src || p!.images?.[0] || "",
-      title: p!.title,
-      medium: p!.medium,
-      slug: p!.slug,
-    }));
+  const featuredSection = page?.sections?.find(s => s.id === "featured");
+  const featuredItems = featuredSection?.items || [];
+
+  const featuredWorks = featuredItems.length > 0
+    ? featuredItems.map((item, index) => {
+        const matched = allProducts.find(
+          p => p.slug === item.id ||
+               (item.title && p.title.trim().toLowerCase() === item.title.trim().toLowerCase()) ||
+               (item.src && (p.src === item.src || (p.images || []).includes(item.src)))
+        );
+        const slug = matched?.slug || (item.title ? item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") : "");
+        return {
+          id: item.id || `featured-${index}`,
+          src: item.src || matched?.src || "/artworks/together-we-bloom.webp",
+          title: item.title || matched?.title || "Featured Artwork",
+          medium: item.category || item.description || matched?.medium || "Original Artwork",
+          slug,
+        };
+      })
+    : featuredSlugs
+        .map(slug => allProducts.find(p => p.slug === slug))
+        .filter(Boolean)
+        .map(p => ({
+          id: p!.slug,
+          src: (p!.images || []).find(img => img.includes("showcase")) || p!.src || p!.images?.[0] || "",
+          title: p!.title,
+          medium: p!.medium,
+          slug: p!.slug,
+        }));
   useEffect(() => {
     gsap.registerPlugin(ScrollTrigger);
 
@@ -234,9 +253,9 @@ export default function Home() {
                 className="absolute"
                 style={{ top: "-6%", left: "-6%", right: "-6%", bottom: "-6%" }}
               >
-                {/* Fallback image underneath: Always visible immediately. Never triggers iOS play button overlay. */}
+                {/* Hero image: shows custom hero image if chosen, or HERO_POSTER as video poster / default */}
                 <Image
-                  src={HERO_POSTER}
+                  src={page?.hero && !page.hero.endsWith(".mp4") ? page.hero : HERO_POSTER}
                   alt={page?.title || "Binaare Art Gallery"}
                   fill
                   priority
@@ -364,11 +383,13 @@ export default function Home() {
         <div className="gallery-section" style={{ paddingTop: 0, paddingBottom: 0 }}>
           <div className="text-center" style={{ marginBottom: "2.5rem" }}>
             <p className="section-label">Featured Collection</p>
-            <h2 className="section-title">Selected Works</h2>
+            <h2 className="section-title">{featuredSection?.title || "Selected Works"}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredWorks.map((work, i) => (
+            {featuredWorks.map((work, i) => {
+              const cardHref = work.slug ? `/shop/${work.slug}` : "/shop";
+              return (
               <motion.div
                 key={work.id}
                 className="group flex flex-col h-full bg-white p-4 sm:p-5 rounded-xs border border-[#EBE5DA] shadow-xs hover:shadow-md transition-all duration-300 hover:-translate-y-1"
@@ -379,7 +400,7 @@ export default function Home() {
               >
                 {/* Artwork display box with extra-small radius and object-contain */}
                 <div className="relative w-full aspect-[4/4.5] bg-[#FAF8F5] p-3 rounded-xs flex items-center justify-center mb-3.5">
-                  <Link href={`/shop/${work.slug}`} className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xs">
+                  <Link href={cardHref} className="relative w-full h-full flex items-center justify-center overflow-hidden rounded-xs">
                     <Image
                       src={work.src}
                       alt={work.title}
@@ -396,7 +417,7 @@ export default function Home() {
                   <div className="w-8 h-[1px] bg-[#B78646] mx-auto my-2" />
 
                   <h3 className="font-serif text-[1.08rem] sm:text-[1.12rem] font-normal leading-snug px-1 text-[#24211F] line-clamp-2">
-                    <Link href={`/shop/${work.slug}`} className="transition-colors hover:text-[#8C704F]">
+                    <Link href={cardHref} className="transition-colors hover:text-[#8C704F]">
                       {work.title}
                     </Link>
                   </h3>
@@ -407,7 +428,7 @@ export default function Home() {
                   {/* Centered circular outline arrow button */}
                   <div className="mt-auto flex justify-center pb-1">
                     <Link
-                      href={`/shop/${work.slug}`}
+                      href={cardHref}
                       className="w-9 h-9 rounded-full border border-[#B78646]/70 flex items-center justify-center text-[#B78646] hover:bg-[#8C704F] hover:text-white hover:border-[#8C704F] transition-all"
                       aria-label={`View ${work.title}`}
                     >
@@ -416,7 +437,8 @@ export default function Home() {
                   </div>
                 </div>
               </motion.div>
-            ))}
+            );
+            })}
           </div>
 
           <div className="text-center" style={{ marginTop: "2.5rem" }}>
@@ -436,8 +458,8 @@ export default function Home() {
               <div className="lg:w-4/12">
                 <div style={{ overflow: "hidden", borderRadius: "2px" }}>
                   <Image
-                    src="/binari-gamage-painting.webp"
-                    alt="Binari Gamage - Artist"
+                    src={page?.sections?.find(s => s.id === "artist")?.items[0]?.src || "/binari-gamage-painting.webp"}
+                    alt={page?.sections?.find(s => s.id === "artist")?.items[0]?.title || "Binari Gamage - Artist"}
                     width={800}
                     height={1200}
                     sizes="(max-width: 1024px) 100vw, 33vw"
@@ -475,7 +497,7 @@ export default function Home() {
           className="relative flex items-center justify-center text-center overflow-hidden"
           style={{
             minHeight: "55vh",
-            backgroundImage: "url(/artworks/whispers-of-serenity.webp)",
+            backgroundImage: `url("${page?.sections?.find(s => s.id === "quote")?.items[0]?.src || "/artworks/whispers-of-serenity.webp"}")`,
             backgroundSize: "cover",
             backgroundPosition: "50% 100%",
           }}

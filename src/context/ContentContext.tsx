@@ -7,6 +7,11 @@ const ContentContext = createContext<PublicContent | null>(null);
 export function ContentProvider({ initial, children }: { initial: PublicContent; children: React.ReactNode }) {
   const [content, setContent] = useState(initial);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setContent(initial);
+  }, [initial]);
+
   useEffect(() => {
     if (pathname.startsWith("/admin")) return;
     const controller = new AbortController();
@@ -27,7 +32,7 @@ export function ContentProvider({ initial, children }: { initial: PublicContent;
     };
     window.addEventListener("focus", refresh);
     document.addEventListener("visibilitychange", onVisibility);
-    const timer = window.setInterval(refresh, 10000);
+    const timer = window.setInterval(refresh, 5000);
     return () => {
       controller.abort();
       window.removeEventListener("focus", refresh);
